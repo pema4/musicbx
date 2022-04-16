@@ -2,10 +2,9 @@ package ru.pema4.musicbx.ui
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -15,23 +14,23 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.composed
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.pointerMoveFilter
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import ru.pema4.musicbx.WithKoin
+import ru.pema4.musicbx.model.Cable
 import ru.pema4.musicbx.model.CableEnd
 import ru.pema4.musicbx.model.CableFrom
 import ru.pema4.musicbx.model.CableTo
@@ -39,7 +38,6 @@ import ru.pema4.musicbx.model.DefaultPatch
 import ru.pema4.musicbx.model.Module
 import ru.pema4.musicbx.model.Patch
 import ru.pema4.musicbx.util.Scrollable
-import ru.pema4.musicbx.util.offsetByPadding
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -49,31 +47,34 @@ fun EditorView(
 ) {
     val density = LocalDensity.current
 
+    // Used for finding cursor location
+    var parent: LayoutCoordinates? by mutableStateOf(null)
+    var child: LayoutCoordinates? by mutableStateOf(null)
+
     Scrollable(
         horizontalScrollState = state.horizontalScroll,
         verticalScrollState = state.verticalScroll,
         modifier = modifier
+            .onGloballyPositioned { parent = it }
             .onPointerEvent(PointerEventType.Press) {
                 if (it.buttons.isSecondaryPressed) {
                     state.draftCable = null
                 }
-            },
-        // .background(Color.LightGray)
-        // .padding(2000.dp),
+            }
+            .pointerMoveFilter(
+                onMove = { offset ->
+                    val localOffset = child!!.localPositionOf(parent!!, offset)
+                    state.cursorOffset = with(density) {
+                        DpOffset(x = localOffset.x.toDp(), y = localOffset.y.toDp())
+                    }
+                    false
+                }
+            ),
         hideHorizontalScrollbarAutomatically = true,
     ) {
-        Box(Modifier.fillMaxSize().background(Color.Green.copy(alpha = 0.1f)))
         Box(
             modifier = Modifier
-                // .matchParentSize()
-                // .scale(0.6f)
-                .pointerMoveFilter(
-                    onMove = { offset ->
-                        state.cursorOffset = with(density) { DpOffset(x = offset.x.toDp(), y = offset.y.toDp()) }
-                        false
-                    }
-                )
-                .fillMaxSize()
+                .onGloballyPositioned { child = it }
         ) {
             EditorContentView(state)
         }
@@ -89,10 +90,9 @@ private fun EditorContentView(state: EditorState) {
             var rawModuleOffset by remember { mutableStateOf(module.offset) }
             Box(
                 modifier = Modifier
-                    .background(Color.Black.copy(alpha = 0.1f))
-                    // .offset(x = module.offset.x, y = module.offset.y)
-                    // .padding(start = module.offset.x, top = module.offset.y)
-                    .offsetByPadding(module.offset)
+                    .composed {
+                        absolutePadding(left = module.offset.x, top = module.offset.y)
+                    }
                     .diagonallyDraggable(module) { delta ->
                         rawModuleOffset += delta
                         module.offset = DpOffset(
@@ -144,9 +144,9 @@ class EditorState(
     val verticalScroll: ScrollState = ScrollState(initial = 0),
     val horizontalScroll: ScrollState = ScrollState(initial = 0),
 ) {
-    val modules = modules.toMutableStateList()
-    val cables = cables.toMutableStateList()
-    var cursorOffset by mutableStateOf(DpOffset.Unspecified)
+    val modules: MutableList<ModuleState> = modules.toMutableStateList()
+    val cables: MutableList<FullCableState> = cables.toMutableStateList()
+    var cursorOffset: DpOffset by mutableStateOf(DpOffset.Unspecified)
     var draftCable: DraftCableState? by mutableStateOf(null)
 
     fun addModule() {
@@ -155,10 +155,10 @@ class EditorState(
             id = id,
             name = "New module #$id",
             inputs = List(1) { number ->
-                SocketState(type = SocketType.Input, number = number)
+                SocketState(type = SocketType.Input, number = number, name = "name")
             },
             outputs = List(2) { number ->
-                SocketState(type = SocketType.Output, number = number)
+                SocketState(type = SocketType.Output, number = number, name = "name")
             }
         )
         modules += newModuleState
@@ -169,9 +169,19 @@ class EditorState(
         to: CableTo? = null,
     ) {
         draftCable = DraftCableState(
+            from = from?.let {
+                CableFromState(
+                    end = from,
+                    offsetCalculation = getSocketOffsetCalculation(from),
+                )
+            } ?: draftCable?.from,
+            to = to?.let {
+                CableToState(
+                    end = to,
+                    offsetCalculation = getSocketOffsetCalculation(to),
+                )
+            } ?: draftCable?.to,
             cursorOffsetCalculation = ::cursorOffset,
-            fromCalculation = from?.let(this::getSocketOffsetCalculation) ?: draftCable?.fromCalculation,
-            toCalculation = to?.let(this::getSocketOffsetCalculation) ?: draftCable?.toCalculation,
         )
 
         val newCable = draftCable?.toFullCableStateOrNull()
@@ -205,13 +215,31 @@ fun Patch.toEditorState(): EditorState {
     state.cables += cables.map { (from, to) ->
         with(state) {
             FullCableState(
-                fromCalculation = getSocketOffsetCalculation(from),
-                toCalculation = getSocketOffsetCalculation(to),
+                from = CableFromState(
+                    end = from,
+                    offsetCalculation = getSocketOffsetCalculation(from),
+                ),
+                to = CableToState(
+                    end = to,
+                    offsetCalculation = getSocketOffsetCalculation(to),
+                )
             )
         }
     }
 
     return state
+}
+
+fun EditorState.toPatch(): Patch {
+    return Patch(
+        modules = modules.map { it.toModule() },
+        cables = cables.map { (from, to) ->
+            Cable(
+                from = from.end,
+                to = to.end,
+            )
+        }
+    )
 }
 
 @Composable

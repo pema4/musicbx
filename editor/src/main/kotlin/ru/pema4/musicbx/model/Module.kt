@@ -1,10 +1,12 @@
 package ru.pema4.musicbx.model
 
 import androidx.compose.runtime.Immutable
+import kotlinx.serialization.Serializable
 import ru.pema4.musicbx.util.GridOffset
 import ru.pema4.musicbx.util.GridSize
 
 @Immutable
+@Serializable
 data class Module(
     val id: Int,
     val name: String = "Module $id",

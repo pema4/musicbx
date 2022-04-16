@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
 import ru.pema4.musicbx.util.toDpOffset
+import ru.pema4.musicbx.util.toGridOffset
 import kotlin.random.Random
 
 @Stable
@@ -54,6 +55,16 @@ fun ru.pema4.musicbx.model.Module.toModuleState(): ModuleState {
         offset = offset.toDpOffset(),
         inputs = inputs.map { it.toSocketState() },
         outputs = outputs.map { it.toSocketState() },
+    )
+}
+
+fun ModuleState.toModule(): ru.pema4.musicbx.model.Module {
+    return ru.pema4.musicbx.model.Module(
+        id = id,
+        name = name,
+        inputs = inputs.map { it.toInputSocket() },
+        outputs = outputs.map { it.toOutputSocket() },
+        offset = offset.toGridOffset(),
     )
 }
 
@@ -96,37 +107,35 @@ fun ModuleView(
         ) {
             LogCompositions("ModuleView Column Row ${state.name}")
             Column {
-                for (i in state.inputs.reversed()) {
-                    val socket = SocketState(SocketType.Input, i.number)
+                for (input in state.inputs.reversed()) {
                     SocketView(
-                        state = socket,
+                        state = input,
                         modifier = Modifier
                             .onGloballyPositioned {
                                 val offset = moduleLayoutCoordinates!!
                                     .localPositionOf(it, it.size.center.toOffset())
-                                i.offsetInModule = with(density) {
+                                input.offsetInModule = with(density) {
                                     DpOffset(x = offset.x.toDp(), y = offset.y.toDp())
                                 }
                             },
-                        onClick = { onInputClick(i.number) },
+                        onClick = { onInputClick(input.number) },
                     )
                 }
             }
 
             Column {
-                for (o in state.outputs.reversed()) {
-                    val socket = SocketState(SocketType.Output, o.number)
+                for (output in state.outputs.reversed()) {
                     SocketView(
-                        state = socket,
+                        state = output,
                         modifier = Modifier
                             .onGloballyPositioned {
                                 val offset = moduleLayoutCoordinates!!
                                     .localPositionOf(it, it.size.center.toOffset())
-                                o.offsetInModule = with(density) {
+                                output.offsetInModule = with(density) {
                                     DpOffset(x = offset.x.toDp(), y = offset.y.toDp())
                                 }
                             },
-                        onClick = { onOutputClick(o.number) },
+                        onClick = { onOutputClick(output.number) },
                     )
                 }
             }
@@ -144,16 +153,19 @@ private fun ModuleViewPreview() {
             SocketState(
                 type = SocketType.Input,
                 number = 0,
+                name = "name",
             ),
         ),
         outputs = mutableStateListOf(
             SocketState(
                 type = SocketType.Output,
                 number = 0,
+                name = "name",
             ),
             SocketState(
                 type = SocketType.Output,
                 number = 1,
+                name = "name",
             ),
         ),
     )
