@@ -1,19 +1,26 @@
 package ru.pema4.musicbx.model
 
+import androidx.compose.runtime.Immutable
+import kotlinx.serialization.Serializable
+
+@Immutable
 sealed interface Socket {
-    val index: Int
+    val number: Int
     val name: String
     val description: String
 }
 
+@Immutable
+@Serializable
 data class InputSocket(
-    override val index: Int,
-    override val name: String = "In $index",
-    override val description: String = "Input $index"
+    override val number: Int,
+    override val name: String = "In $number",
+    override val description: String = "Input $number"
 ) : Socket
 
+@Serializable
 data class OutputSocket(
-    override val index: Int,
-    override val name: String = "Out $index",
-    override val description: String = "Output $index"
+    override val number: Int,
+    override val name: String = "Out $number",
+    override val description: String = "Output $number"
 ) : Socket

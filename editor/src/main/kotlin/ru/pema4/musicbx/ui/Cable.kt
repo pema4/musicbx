@@ -1,15 +1,9 @@
 package ru.pema4.musicbx.ui
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,17 +16,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusTarget
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
+import ru.pema4.musicbx.model.CableEnd
+import ru.pema4.musicbx.model.CableFrom
+import ru.pema4.musicbx.model.CableTo
 
 @Composable
 fun CableView(
@@ -61,8 +54,8 @@ fun CableView(
 
     ) {
         val cursor = (state as? DraftCableState)?.cursorOffset?.let(::toOffset)
-        val from = state.from?.let(::toOffset)
-        val to = state.to?.let(::toOffset)
+        val from = state.fromOffset?.let(::toOffset)
+        val to = state.toOffset?.let(::toOffset)
 
         drawLine(
             color = color,
@@ -103,37 +96,60 @@ val LocalCableStyle = staticCompositionLocalOf { defaultCableStyle() }
 
 @Stable
 sealed interface CableState {
-    val from: DpOffset?
-    val to: DpOffset?
+    val from: CableFromState?
+    val to: CableToState?
+    val fromOffset: DpOffset?
+        get() = from?.offset
+    val toOffset: DpOffset?
+        get() = to?.offset
 }
 
 @Stable
-class FullCableState(
-    val fromCalculation: () -> DpOffset,
-    val toCalculation: () -> DpOffset,
+sealed interface CableEndState {
+    val end: CableEnd
+    val offset: DpOffset
+}
+
+data class CableFromState(
+    override val end: CableFrom,
+    val offsetCalculation: () -> DpOffset,
+) : CableEndState {
+    override val offset: DpOffset by derivedStateOf(offsetCalculation)
+}
+
+data class CableToState(
+    override val end: CableTo,
+    val offsetCalculation: () -> DpOffset,
+) : CableEndState {
+    override val offset: DpOffset by derivedStateOf(offsetCalculation)
+}
+
+@Stable
+data class FullCableState(
+    override val from: CableFromState,
+    override val to: CableToState,
 ) : CableState {
-    override val from: DpOffset? by derivedStateOf(fromCalculation)
-    override val to: DpOffset? by derivedStateOf(toCalculation)
+    override val fromOffset: DpOffset? by from::offset
+    override val toOffset: DpOffset? by to::offset
     var isHovered by mutableStateOf(false)
 }
 
 @Stable
-class DraftCableState(
+data class DraftCableState(
+    override val from: CableFromState?,
+    override val to: CableToState?,
     val cursorOffsetCalculation: () -> DpOffset,
-    val fromCalculation: (() -> DpOffset)?,
-    val toCalculation: (() -> DpOffset)?,
 ) : CableState {
     val cursorOffset: DpOffset by derivedStateOf(cursorOffsetCalculation)
-    override val from: DpOffset? by derivedStateOf { fromCalculation?.invoke() }
-    override val to: DpOffset? by derivedStateOf { toCalculation?.invoke() }
+    override val fromOffset: DpOffset? by derivedStateOf { from?.offset }
+    override val toOffset: DpOffset? by derivedStateOf { to?.offset }
 }
 
 fun DraftCableState.toFullCableStateOrNull(): FullCableState? {
-
-    return if (fromCalculation != null && toCalculation != null) {
+    return if (from != null && to != null) {
         return FullCableState(
-            fromCalculation = fromCalculation,
-            toCalculation = toCalculation
+            from = from,
+            to = to,
         )
     } else {
         null
