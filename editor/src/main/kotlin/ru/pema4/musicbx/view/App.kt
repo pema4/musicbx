@@ -1,6 +1,5 @@
-package ru.pema4.musicbx.ui
+package ru.pema4.musicbx.view
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,10 +14,6 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -29,68 +24,38 @@ import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
-import dev.burnoo.cokoin.get
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
-import ru.pema4.musicbx.WithKoin
-import ru.pema4.musicbx.model.DefaultPatch
-import ru.pema4.musicbx.model.Patch
-import ru.pema4.musicbx.model.TestPatch
-import ru.pema4.musicbx.service.FileService
 import ru.pema4.musicbx.util.FileDialog
 import ru.pema4.musicbx.util.FileDialogMode
+import ru.pema4.musicbx.viewmodel.rememberAppViewModel
 import java.nio.file.Path
 import kotlin.io.path.exists
 
 @Composable
-fun FrameWindowScope.App() {
-    val initialPatch = TestPatch
-    val state = rememberAppState(initialPatch)
-
-    AppContent(state)
-
-    AppMenuBar(state)
-
-    if (state.isOpenDialogOpen) {
-        FileDialog(
-            title = "Choose a file",
-            mode = FileDialogMode.Load,
-        ) { path ->
-            state.isOpenDialogOpen = false
-            if (path?.exists() == true) {
-                state.open(path)
-            }
-        }
-    }
-
-    if (state.isSaveDialogOpen) {
-        FileDialog(
-            title = "Saving a file",
-            mode = FileDialogMode.Save,
-        ) { path ->
-            state.isSaveDialogOpen = false
-            if (path != null) {
-                state.save(path)
-            }
-        }
-    }
+fun FrameWindowScope.App(
+    viewModel: AppViewModel = rememberAppViewModel(),
+) {
+    AppMenuBar(viewModel)
+    AppContent(viewModel)
+    AppDialogWindows(viewModel)
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun FrameWindowScope.AppMenuBar(
-    state: AppState,
+    viewModel: AppViewModel,
 ) {
     MenuBar {
         Menu(text = "File") {
             Item(
                 text = "Save As...",
                 shortcut = KeyShortcut(Key.S, meta = true),
-                onClick = { state.isSaveDialogOpen = true }
+                onClick = viewModel::showSaveDialog,
             )
             Item(
                 text = "Open...",
-                onClick = { state.isOpenDialogOpen = true }
+                onClick = viewModel::showOpenDialog,
             )
         }
     }
@@ -98,12 +63,15 @@ private fun FrameWindowScope.AppMenuBar(
 
 @Composable
 fun AppContent(
-    state: AppState = rememberAppState(),
+    viewModel: AppViewModel,
+    // state: AppState = rememberAppState(),
     modifier: Modifier = Modifier,
 ) {
+    val uiState = viewModel.uiState
+
     LaunchedEffect(Unit) {
-        snapshotFlow { state.editorState }
-            .onEach { println(state.editorState) }
+        snapshotFlow { uiState.editorState }
+            .onEach { println(uiState.editorState) }
             .collect()
     }
 
@@ -128,12 +96,41 @@ fun AppContent(
         }
         Column {
             EditorView(
-                state = state.editorState,
+                state = uiState.editorState,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1.0f)
             )
             Tooltip()
+        }
+    }
+}
+
+@Composable
+private fun AppDialogWindows(
+    viewModel: AppViewModel,
+) {
+    val uiState = viewModel.uiState
+
+    if (uiState.showingOpenDialog) {
+        FileDialog(
+            title = "Choose a file",
+            mode = FileDialogMode.Load,
+        ) { path ->
+            if (path?.exists() == true) {
+                viewModel.open(path)
+            }
+        }
+    }
+
+    if (uiState.showingSaveDialog) {
+        FileDialog(
+            title = "Saving a file",
+            mode = FileDialogMode.Save,
+        ) { path ->
+            if (path != null) {
+                viewModel.save(path)
+            }
         }
     }
 }
@@ -148,44 +145,37 @@ fun EditorMaterialTheme(
 }
 
 @Stable
-class AppState(
-    activePatch: Patch = DefaultPatch,
-    private val fileService: FileService,
-) {
-    var editorState: EditorState by mutableStateOf(activePatch.toEditorState())
-    var isOpenDialogOpen by mutableStateOf(false)
-    var isSaveDialogOpen by mutableStateOf(false)
-
-    fun save(path: Path) {
-        val patch = editorState.toPatch()
-        fileService.save(
-            patch = patch,
-            path = path,
-        )
-        editorState = patch.toEditorState()
-    }
-
-    fun open(path: Path) {
-        val patch = fileService.load(path)
-        editorState = patch.toEditorState()
-    }
+interface AppViewModel {
+    val uiState: AppState
+    fun showOpenDialog()
+    fun showSaveDialog()
+    fun save(path: Path?)
+    fun open(path: Path?)
 }
 
-@Composable
-fun rememberAppState(patch: Patch = DefaultPatch): AppState {
-    val fileService = get<FileService>()
-    return remember {
-        AppState(patch, fileService)
-    }
+@Stable
+interface AppState {
+    val editorState: EditorState
+    val showingOpenDialog: Boolean
+    val showingSaveDialog: Boolean
 }
 
-@Preview
-@Composable
-fun AppViewPreview() {
-    WithKoin {
-        AppContent()
-    }
-}
+//
+// @Composable
+// fun rememberAppState(patch: Patch = DefaultPatch): AppState {
+//     val fileService = get<FileService>()
+//     return remember {
+//         AppState(patch, fileService)
+//     }
+// }
+
+// @Preview
+// @Composable
+// fun AppViewPreview() {
+//     WithKoin {
+//         AppContent()
+//     }
+// }
 
 /*
 fun App() {

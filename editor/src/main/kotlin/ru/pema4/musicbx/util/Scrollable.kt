@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,8 +89,10 @@ private fun AnimatedScrollbarVisibility(
     content: @Composable () -> Unit,
 ) {
     if (enabled) {
-        val scrollChanged by snapshotFlow { IntSize(scrollState.value, scrollState.maxValue) }
+        val currentScrollState by rememberUpdatedState(scrollState)
+        val scrollChanged by snapshotFlow { IntSize(currentScrollState.value, currentScrollState.maxValue) }
             .wasEmittingIn(1.seconds)
+
         AnimatedVisibility(
             visible = scrollChanged,
             modifier = modifier,

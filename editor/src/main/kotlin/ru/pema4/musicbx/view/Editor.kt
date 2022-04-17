@@ -1,34 +1,25 @@
-package ru.pema4.musicbx.ui
+package ru.pema4.musicbx.view
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.consumeAllChanges
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.pointerMoveFilter
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.coerceAtLeast
-import androidx.compose.ui.unit.dp
 import ru.pema4.musicbx.WithKoin
 import ru.pema4.musicbx.model.Cable
 import ru.pema4.musicbx.model.CableEnd
@@ -38,6 +29,8 @@ import ru.pema4.musicbx.model.DefaultPatch
 import ru.pema4.musicbx.model.Module
 import ru.pema4.musicbx.model.Patch
 import ru.pema4.musicbx.util.Scrollable
+import ru.pema4.musicbx.util.diagonallyDraggable
+import ru.pema4.musicbx.util.pointerMoveFilter
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -45,9 +38,7 @@ fun EditorView(
     state: EditorState = rememberEditorState(DefaultPatch),
     modifier: Modifier = Modifier,
 ) {
-    val density = LocalDensity.current
-
-    // Used for finding cursor location
+    // Used for determining cursor location inside the scrollable area
     var parent: LayoutCoordinates? by mutableStateOf(null)
     var child: LayoutCoordinates? by mutableStateOf(null)
 
@@ -64,9 +55,7 @@ fun EditorView(
             .pointerMoveFilter(
                 onMove = { offset ->
                     val localOffset = child!!.localPositionOf(parent!!, offset)
-                    state.cursorOffset = with(density) {
-                        DpOffset(x = localOffset.x.toDp(), y = localOffset.y.toDp())
-                    }
+                    state.cursorOffset = DpOffset(x = localOffset.x.toDp(), y = localOffset.y.toDp())
                     false
                 }
             ),
@@ -74,6 +63,11 @@ fun EditorView(
     ) {
         Box(
             modifier = Modifier
+                // .graphicsLayer {
+                //     scaleX = 1.8f
+                //     scaleY = 1.8f
+                //     transformOrigin = TransformOrigin(0.0f, 0.0f)
+                // }
                 .onGloballyPositioned { child = it }
         ) {
             EditorContentView(state)
@@ -82,55 +76,50 @@ fun EditorView(
 }
 
 @Composable
-private fun EditorContentView(state: EditorState) {
-    val modules = state.modules
-    for (idx in modules.indices) {
-        key(modules[idx].id) {
-            val module by rememberUpdatedState(modules[idx])
-            var rawModuleOffset by remember { mutableStateOf(module.offset) }
+private fun EditorContentView(
+    state: EditorState,
+) {
+    EditorModulesView(state)
+    EditorCablesView(state)
+    EditorDraftCableView(state)
+}
+
+@Composable
+private fun EditorModulesView(state: EditorState) {
+    val actionHandler = rememberModuleActionHandler(state)
+    for (module in state.modules) {
+        key(module.id) {
             Box(
                 modifier = Modifier
                     .composed {
-                        absolutePadding(left = module.offset.x, top = module.offset.y)
-                    }
-                    .diagonallyDraggable(module) { delta ->
-                        rawModuleOffset += delta
-                        module.offset = DpOffset(
-                            x = rawModuleOffset.x.coerceAtLeast(0.0.dp),
-                            y = rawModuleOffset.y.coerceAtLeast(0.0.dp)
+                        diagonallyDraggable(
+                            key1 = module,
+                            offset = module.offset,
+                            onChange = { module.offset = it }
                         )
                     }
             ) {
                 ModuleView(
                     state = module,
                     modifier = Modifier,
-                    onInputClick = { socketNumber ->
-                        state.createCable(
-                            to = CableTo(
-                                moduleId = module.id,
-                                socketNumber = socketNumber,
-                            )
-                        )
-                    },
-                    onOutputClick = { socketNumber ->
-                        state.createCable(
-                            from = CableFrom(
-                                moduleId = module.id,
-                                socketNumber = socketNumber,
-                            )
-                        )
-                    },
+                    actionHandler = actionHandler,
                 )
             }
         }
     }
+}
 
+@Composable
+private fun EditorCablesView(state: EditorState) {
     for (cable in state.cables) {
-        key(cable) {
+        key(cable.from.end, cable.to.end) {
             CableView(cable)
         }
     }
+}
 
+@Composable
+private fun EditorDraftCableView(state: EditorState) {
     val draftCable = state.draftCable
     if (draftCable != null) {
         CableView(draftCable)
@@ -144,8 +133,8 @@ class EditorState(
     val verticalScroll: ScrollState = ScrollState(initial = 0),
     val horizontalScroll: ScrollState = ScrollState(initial = 0),
 ) {
-    val modules: MutableList<ModuleState> = modules.toMutableStateList()
-    val cables: MutableList<FullCableState> = cables.toMutableStateList()
+    val modules = modules.toMutableStateList()
+    val cables = cables.toMutableStateList()
     var cursorOffset: DpOffset by mutableStateOf(DpOffset.Unspecified)
     var draftCable: DraftCableState? by mutableStateOf(null)
 
@@ -165,22 +154,25 @@ class EditorState(
     }
 
     fun createCable(
-        from: CableFrom? = null,
-        to: CableTo? = null,
+        end: CableEnd,
     ) {
         draftCable = DraftCableState(
-            from = from?.let {
-                CableFromState(
-                    end = from,
-                    offsetCalculation = getSocketOffsetCalculation(from),
-                )
-            } ?: draftCable?.from,
-            to = to?.let {
-                CableToState(
-                    end = to,
-                    offsetCalculation = getSocketOffsetCalculation(to),
-                )
-            } ?: draftCable?.to,
+            from = (end as? CableFrom)
+                ?.let {
+                    CableFromState(
+                        end = it,
+                        offsetCalculation = getSocketOffsetCalculation(it),
+                    )
+                }
+                ?: draftCable?.from,
+            to = (end as? CableTo)
+                ?.let {
+                    CableToState(
+                        end = end,
+                        offsetCalculation = getSocketOffsetCalculation(end),
+                    )
+                }
+                ?: draftCable?.to,
             cursorOffsetCalculation = ::cursorOffset,
         )
 
@@ -189,6 +181,25 @@ class EditorState(
             draftCable = null
             cables += newCable
         }
+    }
+
+    fun editCable(
+        end: CableEnd,
+    ) {
+        val editedCable = cables.run {
+            val idx = indexOfLast { it.from.end == end || it.to.end == end }
+            if (idx != -1) {
+                removeAt(idx)
+            } else {
+                return
+            }
+        }
+
+        draftCable = DraftCableState(
+            from = editedCable.from.takeIf { it.end != end },
+            to = editedCable.to.takeIf { it.end != end },
+            cursorOffsetCalculation = ::cursorOffset,
+        )
     }
 }
 
@@ -250,17 +261,6 @@ fun rememberEditorState(
         basePatch.toEditorState()
     }
 }
-
-fun Modifier.diagonallyDraggable(
-    key1: Any? = null,
-    onChange: (DpOffset) -> Unit,
-): Modifier =
-    pointerInput(key1) {
-        detectDragGestures { change, dragAmount ->
-            change.consumeAllChanges()
-            onChange(DpOffset(dragAmount.x.toDp(), dragAmount.y.toDp()))
-        }
-    }
 
 @Preview
 @Composable
