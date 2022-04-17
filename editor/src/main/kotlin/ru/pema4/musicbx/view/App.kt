@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -24,8 +22,6 @@ import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 import ru.pema4.musicbx.util.FileDialog
 import ru.pema4.musicbx.util.FileDialogMode
 import ru.pema4.musicbx.viewmodel.rememberAppViewModel
@@ -64,17 +60,8 @@ private fun FrameWindowScope.AppMenuBar(
 @Composable
 fun AppContent(
     viewModel: AppViewModel,
-    // state: AppState = rememberAppState(),
     modifier: Modifier = Modifier,
 ) {
-    val uiState = viewModel.uiState
-
-    LaunchedEffect(Unit) {
-        snapshotFlow { uiState.editorState }
-            .onEach { println(uiState.editorState) }
-            .collect()
-    }
-
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -96,7 +83,7 @@ fun AppContent(
         }
         Column {
             EditorView(
-                state = uiState.editorState,
+                viewModel = viewModel.editorViewModel,
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1.0f)
@@ -147,6 +134,8 @@ fun EditorMaterialTheme(
 @Stable
 interface AppViewModel {
     val uiState: AppState
+    val editorViewModel: EditorViewModel
+
     fun showOpenDialog()
     fun showSaveDialog()
     fun save(path: Path?)
@@ -155,7 +144,6 @@ interface AppViewModel {
 
 @Stable
 interface AppState {
-    val editorState: EditorState
     val showingOpenDialog: Boolean
     val showingSaveDialog: Boolean
 }

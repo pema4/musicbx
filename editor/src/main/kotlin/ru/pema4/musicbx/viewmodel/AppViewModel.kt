@@ -12,9 +12,6 @@ import ru.pema4.musicbx.model.Patch
 import ru.pema4.musicbx.service.FileService
 import ru.pema4.musicbx.view.AppState
 import ru.pema4.musicbx.view.AppViewModel
-import ru.pema4.musicbx.view.EditorState
-import ru.pema4.musicbx.view.toEditorState
-import ru.pema4.musicbx.view.toPatch
 import java.nio.file.Path
 
 @Composable
@@ -35,8 +32,11 @@ class AppViewModelImpl(
     initialPatch: Patch = DefaultPatch,
     private val fileService: FileService,
 ) : AppViewModel {
-    private var _uiState: AppStateImpl by mutableStateOf(AppStateImpl(initialPatch))
+    private var _uiState: AppStateImpl by mutableStateOf(AppStateImpl())
     override val uiState: AppState by ::_uiState
+
+    private var _editorViewModel: EditorViewModelImpl by mutableStateOf(EditorViewModelImpl(initialPatch))
+    override val editorViewModel by ::_editorViewModel
 
     override fun showOpenDialog() {
         _uiState.showingOpenDialog = true
@@ -49,12 +49,12 @@ class AppViewModelImpl(
     override fun save(path: Path?) {
         _uiState.showingSaveDialog = false
         if (path != null) {
-            val patch = uiState.editorState.toPatch()
+            val patch = editorViewModel.extractPatch()
             fileService.save(
                 patch = patch,
                 path = path,
             )
-            _uiState.editorState = patch.toEditorState()
+            _editorViewModel = EditorViewModelImpl(patch)
         }
     }
 
@@ -62,16 +62,13 @@ class AppViewModelImpl(
         _uiState.showingOpenDialog = false
         if (path != null) {
             val patch = fileService.load(path)
-            _uiState.editorState = patch.toEditorState()
+            _editorViewModel = EditorViewModelImpl(patch)
         }
     }
 }
 
 @Stable
-private class AppStateImpl(
-    activePatch: Patch = DefaultPatch,
-) : AppState {
-    override var editorState: EditorState by mutableStateOf(activePatch.toEditorState())
+private class AppStateImpl : AppState {
     override var showingOpenDialog by mutableStateOf(false)
     override var showingSaveDialog by mutableStateOf(false)
 }
