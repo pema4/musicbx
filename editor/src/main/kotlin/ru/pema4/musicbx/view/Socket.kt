@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalTime::class)
 
-package ru.pema4.musicbx.ui
+package ru.pema4.musicbx.view
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Canvas
@@ -20,7 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
+import ru.pema4.musicbx.model.CableEnd
 import ru.pema4.musicbx.model.InputSocket
 import ru.pema4.musicbx.model.OutputSocket
 import kotlin.time.ExperimentalTime
@@ -43,15 +44,13 @@ fun SocketView(
     modifier: Modifier = Modifier,
     actionHandler: SocketActionHandler = SocketActionHandler(),
 ) {
-    val onAction = rememberUpdatedState(actionHandler)
-
     val color = when (state.type) {
         SocketType.Input -> MaterialTheme.colors.primary
         SocketType.Output -> MaterialTheme.colors.secondary
     }
 
     val isHovered by state.hoverInteractionSource.collectIsHoveredAsState()
-    LaunchedEffect(onAction) {
+    LaunchedEffect(actionHandler) {
         snapshotFlow { isHovered }
             .onEach {
                 if (it) {
@@ -102,6 +101,21 @@ fun SocketActionHandler(
         override fun editCable() = editCable()
         override fun startPreview() = startPreview()
         override fun endPreview() = endPreview()
+    }
+}
+
+@Composable
+fun rememberSocketActionHandler(
+    moduleActionHandler: ModuleActionHandler,
+    cableEnd: CableEnd,
+): SocketActionHandler {
+    return remember(moduleActionHandler, cableEnd) {
+        SocketActionHandler(
+            createCable = { moduleActionHandler.createCable(cableEnd) },
+            editCable = { moduleActionHandler.editCable(cableEnd) },
+            startPreview = { moduleActionHandler.startPreviewCable(cableEnd) },
+            endPreview = { moduleActionHandler.endPreviewCable(cableEnd) },
+        )
     }
 }
 

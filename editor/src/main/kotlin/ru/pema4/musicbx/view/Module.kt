@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.ui
+package ru.pema4.musicbx.view
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
@@ -17,12 +17,13 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -48,16 +49,22 @@ fun ModuleView(
 
     Column(
         modifier = modifier
-            .onGloballyPositioned { moduleLayoutCoordinates = it }
             .requiredWidth(100.dp)
             .defaultMinSize(minHeight = 100.dp)
-            .clip(RoundedCornerShape(size = 10.dp))
+            .graphicsLayer {
+                shadowElevation = 8.dp.toPx()
+                shape = RoundedCornerShape(size = 10.dp)
+                clip = true
+            }
+            // .shadow(elevation = 8.dp, RoundedCornerShape(size = 10.dp))
+            // .clip(RoundedCornerShape(size = 10.dp))
             .background(Color.LightGray.copy(red = Random.nextFloat()))
             .border(
                 width = 2.dp,
                 color = Color.Gray,
                 shape = RoundedCornerShape(size = 10.dp),
             )
+            .onGloballyPositioned { moduleLayoutCoordinates = it }
             .explainedAs(state.name),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
@@ -76,8 +83,6 @@ fun ModuleView(
             LogCompositions("ModuleView Column Row ${state.name}")
             Column {
                 for (input in state.inputs.reversed()) {
-                    val cableEnd = CableTo(moduleId = state.id, socketNumber = input.number)
-
                     SocketView(
                         state = input,
                         modifier = Modifier
@@ -88,11 +93,9 @@ fun ModuleView(
                                     DpOffset(x = offset.x.toDp(), y = offset.y.toDp())
                                 }
                             },
-                        actionHandler = SocketActionHandler(
-                            createCable = { actionHandler.createCable(cableEnd) },
-                            editCable = { actionHandler.editCable(cableEnd) },
-                            startPreview = { actionHandler.startPreviewCable(cableEnd) },
-                            endPreview = { actionHandler.endPreviewCable(cableEnd) },
+                        actionHandler = rememberSocketActionHandler(
+                            moduleActionHandler = actionHandler,
+                            cableEnd = CableTo(moduleId = state.id, socketNumber = input.number),
                         )
                     )
                 }
@@ -100,8 +103,6 @@ fun ModuleView(
 
             Column {
                 for (output in state.outputs.reversed()) {
-                    val cableEnd = CableFrom(moduleId = state.id, socketNumber = output.number)
-
                     SocketView(
                         state = output,
                         modifier = Modifier
@@ -112,11 +113,9 @@ fun ModuleView(
                                     DpOffset(x = offset.x.toDp(), y = offset.y.toDp())
                                 }
                             },
-                        actionHandler = SocketActionHandler(
-                            createCable = { actionHandler.createCable(cableEnd) },
-                            editCable = { actionHandler.editCable(cableEnd) },
-                            startPreview = { actionHandler.startPreviewCable(cableEnd) },
-                            endPreview = { actionHandler.endPreviewCable(cableEnd) },
+                        actionHandler = rememberSocketActionHandler(
+                            moduleActionHandler = actionHandler,
+                            cableEnd = CableFrom(moduleId = state.id, socketNumber = output.number),
                         )
                     )
                 }
@@ -125,6 +124,7 @@ fun ModuleView(
     }
 }
 
+@Stable
 interface ModuleActionHandler {
     fun createCable(end: CableEnd)
     fun editCable(end: CableEnd)
@@ -143,6 +143,26 @@ fun ModuleActionHandler(
         override fun editCable(end: CableEnd): Unit = editCable(end)
         override fun startPreviewCable(end: CableEnd) = startPreviewCable(end)
         override fun endPreviewCable(end: CableEnd) = endPreviewCable(end)
+    }
+}
+
+@Composable
+fun rememberModuleActionHandler(state: EditorState): ModuleActionHandler {
+    return remember(state) {
+        ModuleActionHandler(
+            createCable = state::createCable,
+            editCable = state::editCable,
+            startPreviewCable = { previewedEnd ->
+                state.cables
+                    .filter { it.from.end == previewedEnd || it.to.end == previewedEnd }
+                    .map { it.isHovered = true }
+            },
+            endPreviewCable = { previewedEnd ->
+                state.cables
+                    .filter { it.from.end == previewedEnd || it.to.end == previewedEnd }
+                    .map { it.isHovered = false }
+            },
+        )
     }
 }
 

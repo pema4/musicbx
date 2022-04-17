@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.ui
+package ru.pema4.musicbx.view
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.hoverable
