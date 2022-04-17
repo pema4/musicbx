@@ -26,54 +26,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
+import ru.pema4.musicbx.model.CableEnd
+import ru.pema4.musicbx.model.CableFrom
+import ru.pema4.musicbx.model.CableTo
 import ru.pema4.musicbx.util.toDpOffset
 import ru.pema4.musicbx.util.toGridOffset
 import kotlin.random.Random
-
-@Stable
-class ModuleState(
-    val id: Int,
-    val name: String,
-    offset: DpOffset = DpOffset(x = 0.dp, y = 0.dp),
-    inputs: List<SocketState> = emptyList(),
-    outputs: List<SocketState> = emptyList(),
-) {
-    var offset: DpOffset by mutableStateOf(offset)
-    val inputs = inputs.toMutableStateList()
-    val outputs = outputs.toMutableStateList()
-}
-
-fun ru.pema4.musicbx.model.Module.toModuleState(): ModuleState {
-    return ModuleState(
-        id = id,
-        name = name,
-        offset = offset.toDpOffset(),
-        inputs = inputs.map { it.toSocketState() },
-        outputs = outputs.map { it.toSocketState() },
-    )
-}
-
-fun ModuleState.toModule(): ru.pema4.musicbx.model.Module {
-    return ru.pema4.musicbx.model.Module(
-        id = id,
-        name = name,
-        inputs = inputs.map { it.toInputSocket() },
-        outputs = outputs.map { it.toOutputSocket() },
-        offset = offset.toGridOffset(),
-    )
-}
 
 @Composable
 fun ModuleView(
     state: ModuleState,
     modifier: Modifier = Modifier,
-    onInputClick: (number: Int) -> Unit = {},
-    onOutputClick: (number: Int) -> Unit = {},
+    actionHandler: ModuleActionHandler = ModuleActionHandler(),
 ) {
     val density = LocalDensity.current
     var moduleLayoutCoordinates: LayoutCoordinates? by mutableStateOf(null)
@@ -108,6 +76,8 @@ fun ModuleView(
             LogCompositions("ModuleView Column Row ${state.name}")
             Column {
                 for (input in state.inputs.reversed()) {
+                    val cableEnd = CableTo(moduleId = state.id, socketNumber = input.number)
+
                     SocketView(
                         state = input,
                         modifier = Modifier
@@ -118,13 +88,20 @@ fun ModuleView(
                                     DpOffset(x = offset.x.toDp(), y = offset.y.toDp())
                                 }
                             },
-                        onClick = { onInputClick(input.number) },
+                        actionHandler = SocketActionHandler(
+                            createCable = { actionHandler.createCable(cableEnd) },
+                            editCable = { actionHandler.editCable(cableEnd) },
+                            startPreview = { actionHandler.startPreviewCable(cableEnd) },
+                            endPreview = { actionHandler.endPreviewCable(cableEnd) },
+                        )
                     )
                 }
             }
 
             Column {
                 for (output in state.outputs.reversed()) {
+                    val cableEnd = CableFrom(moduleId = state.id, socketNumber = output.number)
+
                     SocketView(
                         state = output,
                         modifier = Modifier
@@ -135,12 +112,71 @@ fun ModuleView(
                                     DpOffset(x = offset.x.toDp(), y = offset.y.toDp())
                                 }
                             },
-                        onClick = { onOutputClick(output.number) },
+                        actionHandler = SocketActionHandler(
+                            createCable = { actionHandler.createCable(cableEnd) },
+                            editCable = { actionHandler.editCable(cableEnd) },
+                            startPreview = { actionHandler.startPreviewCable(cableEnd) },
+                            endPreview = { actionHandler.endPreviewCable(cableEnd) },
+                        )
                     )
                 }
             }
         }
     }
+}
+
+interface ModuleActionHandler {
+    fun createCable(end: CableEnd)
+    fun editCable(end: CableEnd)
+    fun startPreviewCable(end: CableEnd)
+    fun endPreviewCable(end: CableEnd)
+}
+
+fun ModuleActionHandler(
+    createCable: (CableEnd) -> Unit = {},
+    editCable: (CableEnd) -> Unit = {},
+    startPreviewCable: (CableEnd) -> Unit = {},
+    endPreviewCable: (CableEnd) -> Unit = {},
+): ModuleActionHandler {
+    return object : ModuleActionHandler {
+        override fun createCable(end: CableEnd) = createCable(end)
+        override fun editCable(end: CableEnd): Unit = editCable(end)
+        override fun startPreviewCable(end: CableEnd) = startPreviewCable(end)
+        override fun endPreviewCable(end: CableEnd) = endPreviewCable(end)
+    }
+}
+
+@Stable
+class ModuleState(
+    val id: Int,
+    val name: String,
+    offset: DpOffset = DpOffset(x = 0.dp, y = 0.dp),
+    inputs: List<SocketState> = emptyList(),
+    outputs: List<SocketState> = emptyList(),
+) {
+    var offset: DpOffset by mutableStateOf(offset)
+    val inputs = inputs.toMutableStateList()
+    val outputs = outputs.toMutableStateList()
+}
+
+fun ru.pema4.musicbx.model.Module.toModuleState(): ModuleState {
+    return ModuleState(
+        id = id,
+        name = name,
+        offset = offset.toDpOffset(),
+        inputs = inputs.map { it.toSocketState() },
+        outputs = outputs.map { it.toSocketState() },
+    )
+}
+
+fun ModuleState.toModule(): ru.pema4.musicbx.model.Module {
+    return ru.pema4.musicbx.model.Module(
+        id = id,
+        name = name,
+        inputs = inputs.map { it.toInputSocket() },
+        outputs = outputs.map { it.toOutputSocket() },
+        offset = offset.toGridOffset(),
+    )
 }
 
 @Preview
@@ -170,6 +206,5 @@ private fun ModuleViewPreview() {
         ),
     )
 
-    TextFieldValue
     ModuleView(moduleState)
 }

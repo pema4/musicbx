@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -82,12 +81,13 @@ fun EditorView(
 }
 
 @Composable
-private fun EditorContentView(state: EditorState) {
-    val modules = state.modules
-    for (idx in modules.indices) {
-        key(modules[idx].id) {
-            val module by rememberUpdatedState(modules[idx])
-            var rawModuleOffset by remember { mutableStateOf(module.offset) }
+private fun EditorContentView(
+    state: EditorState,
+) {
+    for (module in state.modules) {
+        key(module.id) {
+            // val module by rememberUpdatedState(modules[idx])
+            var rawModuleOffset by remember(module) { mutableStateOf(module.offset) }
             Box(
                 modifier = Modifier
                     .composed {
@@ -104,22 +104,20 @@ private fun EditorContentView(state: EditorState) {
                 ModuleView(
                     state = module,
                     modifier = Modifier,
-                    onInputClick = { socketNumber ->
-                        state.createCable(
-                            to = CableTo(
-                                moduleId = module.id,
-                                socketNumber = socketNumber,
-                            )
-                        )
-                    },
-                    onOutputClick = { socketNumber ->
-                        state.createCable(
-                            from = CableFrom(
-                                moduleId = module.id,
-                                socketNumber = socketNumber,
-                            )
-                        )
-                    },
+                    actionHandler = ModuleActionHandler(
+                        createCable = state::createCable,
+                        editCable = state::editCable,
+                        startPreviewCable = { previewedEnd ->
+                            state.cables
+                                .filter { it.from.end == previewedEnd || it.to.end == previewedEnd }
+                                .map { it.isHovered = true }
+                        },
+                        endPreviewCable = { previewedEnd ->
+                            state.cables
+                                .filter { it.from.end == previewedEnd || it.to.end == previewedEnd }
+                                .map { it.isHovered = false }
+                        },
+                    ),
                 )
             }
         }
@@ -165,22 +163,25 @@ class EditorState(
     }
 
     fun createCable(
-        from: CableFrom? = null,
-        to: CableTo? = null,
+        end: CableEnd,
     ) {
         draftCable = DraftCableState(
-            from = from?.let {
-                CableFromState(
-                    end = from,
-                    offsetCalculation = getSocketOffsetCalculation(from),
-                )
-            } ?: draftCable?.from,
-            to = to?.let {
-                CableToState(
-                    end = to,
-                    offsetCalculation = getSocketOffsetCalculation(to),
-                )
-            } ?: draftCable?.to,
+            from = (end as? CableFrom)
+                ?.let {
+                    CableFromState(
+                        end = it,
+                        offsetCalculation = getSocketOffsetCalculation(it),
+                    )
+                }
+                ?: draftCable?.from,
+            to = (end as? CableTo)
+                ?.let {
+                    CableToState(
+                        end = end,
+                        offsetCalculation = getSocketOffsetCalculation(end),
+                    )
+                }
+                ?: draftCable?.to,
             cursorOffsetCalculation = ::cursorOffset,
         )
 
@@ -189,6 +190,25 @@ class EditorState(
             draftCable = null
             cables += newCable
         }
+    }
+
+    fun editCable(
+        end: CableEnd,
+    ) {
+        val editedCable = cables.run {
+            val idx = indexOfLast { it.from.end == end || it.to.end == end }
+            if (idx != -1) {
+                removeAt(idx)
+            } else {
+                return
+            }
+        }
+
+        draftCable = DraftCableState(
+            from = editedCable.from.takeIf { it.end != end },
+            to = editedCable.to.takeIf { it.end != end },
+            cursorOffsetCalculation = ::cursorOffset,
+        )
     }
 }
 
