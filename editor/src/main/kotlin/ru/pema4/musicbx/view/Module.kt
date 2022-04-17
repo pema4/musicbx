@@ -147,7 +147,7 @@ fun ModuleActionHandler(
 }
 
 @Composable
-fun rememberModuleActionHandler(state: EditorState): ModuleActionHandler {
+fun rememberModuleActionHandler(state: EditorViewModel): ModuleActionHandler {
     return remember(state) {
         ModuleActionHandler(
             createCable = state::createCable,
