@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package ru.pema4.musicbx.view
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -32,10 +30,11 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
+import ru.pema4.musicbx.WithKoin
 import ru.pema4.musicbx.model.CableEnd
 import ru.pema4.musicbx.model.InputSocket
 import ru.pema4.musicbx.model.OutputSocket
-import kotlin.time.ExperimentalTime
+import ru.pema4.musicbx.util.explainedAs
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -111,10 +110,10 @@ fun rememberSocketActionHandler(
 ): SocketActionHandler {
     return remember(moduleActionHandler, cableEnd) {
         SocketActionHandler(
-            createCable = { moduleActionHandler.createCable(cableEnd) },
-            editCable = { moduleActionHandler.editCable(cableEnd) },
-            startPreview = { moduleActionHandler.startPreviewCable(cableEnd) },
-            endPreview = { moduleActionHandler.endPreviewCable(cableEnd) },
+            createCable = { moduleActionHandler.onCableCreated(cableEnd) },
+            editCable = { moduleActionHandler.onCableEdit(cableEnd) },
+            startPreview = { moduleActionHandler.onCablePreviewStart(cableEnd) },
+            endPreview = { moduleActionHandler.onCablePreviewEnd(cableEnd) },
         )
     }
 }
@@ -173,9 +172,11 @@ fun SocketState.toOutputSocket(): OutputSocket {
 @Preview
 @Composable
 private fun SocketViewPreview() {
-    Row {
-        SocketView(state = SocketState(SocketType.Input, 0, "socket"))
-        Spacer(Modifier.width(10.dp))
-        SocketView(state = SocketState(SocketType.Output, 0, "socket"))
+    WithKoin {
+        Row {
+            SocketView(state = SocketState(SocketType.Input, 0, "socket"))
+            Spacer(Modifier.width(10.dp))
+            SocketView(state = SocketState(SocketType.Output, 0, "socket"))
+        }
     }
 }

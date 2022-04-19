@@ -20,6 +20,9 @@ repositories {
 dependencies {
     implementation(compose.desktop.currentOs)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+    implementation("org.jetbrains.compose.components:components-splitpane-desktop:1.1.1")
+
+    implementation("io.insert-koin:koin-core:3.1.6")
     implementation("dev.burnoo:cokoin:0.3.3")
 }
 

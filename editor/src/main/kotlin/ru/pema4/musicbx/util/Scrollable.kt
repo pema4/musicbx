@@ -91,7 +91,7 @@ private fun AnimatedScrollbarVisibility(
     if (enabled) {
         val currentScrollState by rememberUpdatedState(scrollState)
         val scrollChanged by snapshotFlow { IntSize(currentScrollState.value, currentScrollState.maxValue) }
-            .wasEmittingIn(1.seconds)
+            .wasEmittingIn(1L.seconds)
 
         AnimatedVisibility(
             visible = scrollChanged,

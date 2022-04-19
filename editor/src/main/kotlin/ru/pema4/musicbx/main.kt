@@ -4,7 +4,6 @@ package ru.pema4.musicbx
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import dev.burnoo.cokoin.Koin
 import org.koin.core.KoinApplication
@@ -13,7 +12,6 @@ import ru.pema4.musicbx.model.TestPatch
 import ru.pema4.musicbx.service.FileService
 import ru.pema4.musicbx.service.PatchService
 import ru.pema4.musicbx.service.PlaybackService
-import ru.pema4.musicbx.service.TooltipService
 import ru.pema4.musicbx.view.App
 import ru.pema4.musicbx.view.AppViewModel
 import ru.pema4.musicbx.view.EditorMaterialTheme
@@ -24,12 +22,8 @@ fun main() {
     application {
         WithKoin {
             EditorMaterialTheme {
-                Window(
-                    onCloseRequest = ::exitApplication,
-                ) {
-                    val appViewModel = rememberAppViewModel(initialPatch = TestPatch)
-                    App(appViewModel)
-                }
+                val appViewModel = rememberAppViewModel(initialPatch = TestPatch)
+                App(appViewModel)
             }
         }
     }
@@ -48,7 +42,6 @@ fun WithKoin(content: @Composable () -> Unit) {
 
 private val koinModule = module {
     single<AppViewModel> { AppViewModelImpl(TestPatch, get()) }
-    single { TooltipService() }
     single { FileService() }
     single { PatchService() }
     single { PlaybackService() }
