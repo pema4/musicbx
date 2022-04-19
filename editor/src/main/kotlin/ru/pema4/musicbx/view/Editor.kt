@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.DpOffset
 import ru.pema4.musicbx.WithKoin
 import ru.pema4.musicbx.model.CableEnd
 import ru.pema4.musicbx.model.Patch
+import ru.pema4.musicbx.model.TestPatch
 import ru.pema4.musicbx.util.Scrollable
 import ru.pema4.musicbx.util.diagonallyDraggable
 import ru.pema4.musicbx.util.pointerMoveFilter
@@ -132,7 +133,8 @@ interface EditorViewModel {
     fun createCable(end: CableEnd)
     fun editCable(end: CableEnd)
     fun resetDraftCable()
-    fun addModule()
+    fun addModule(module: ru.pema4.musicbx.model.Module)
+    fun removeModule(moduleId: Int)
 }
 
 interface EditorState {
@@ -145,8 +147,8 @@ interface EditorState {
 @Composable
 fun EditorViewPreview() {
     val viewModel = EditorViewModelImpl()
-    viewModel.addModule()
-    viewModel.addModule()
+    viewModel.addModule(TestPatch.modules[0])
+    viewModel.addModule(TestPatch.modules[1])
     WithKoin {
         EditorView(viewModel = viewModel)
     }

@@ -1,9 +1,15 @@
 package ru.pema4.musicbx.view
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
@@ -13,6 +19,7 @@ import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -31,9 +38,11 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
+import ru.pema4.musicbx.WithKoin
 import ru.pema4.musicbx.model.CableEnd
 import ru.pema4.musicbx.model.CableFrom
 import ru.pema4.musicbx.model.CableTo
+import ru.pema4.musicbx.util.explainedAs
 import ru.pema4.musicbx.util.toDpOffset
 import ru.pema4.musicbx.util.toGridOffset
 import kotlin.random.Random
@@ -44,20 +53,28 @@ fun ModuleView(
     modifier: Modifier = Modifier,
     actionHandler: ModuleActionHandler = ModuleActionHandler(),
 ) {
-    val density = LocalDensity.current
     var moduleLayoutCoordinates: LayoutCoordinates? by mutableStateOf(null)
+    val isHovered by state.hoverInteractionSource.collectIsHoveredAsState()
+
+    val currentShadowElevation = Animatable(0.0f)
+
+    LaunchedEffect(state, isHovered) {
+        if (isHovered) {
+            currentShadowElevation.animateTo(8.0f)
+        } else {
+            currentShadowElevation.animateTo(0.0f)
+        }
+    }
 
     Column(
         modifier = modifier
             .requiredWidth(100.dp)
             .defaultMinSize(minHeight = 100.dp)
             .graphicsLayer {
-                shadowElevation = 8.dp.toPx()
+                shadowElevation = currentShadowElevation.value.dp.toPx()
                 shape = RoundedCornerShape(size = 10.dp)
                 clip = true
             }
-            // .shadow(elevation = 8.dp, RoundedCornerShape(size = 10.dp))
-            // .clip(RoundedCornerShape(size = 10.dp))
             .background(Color.LightGray.copy(red = Random.nextFloat()))
             .border(
                 width = 2.dp,
@@ -65,22 +82,37 @@ fun ModuleView(
                 shape = RoundedCornerShape(size = 10.dp),
             )
             .onGloballyPositioned { moduleLayoutCoordinates = it }
-            .explainedAs(state.name),
+            .explainedAs(state.name)
+            .hoverable(state.hoverInteractionSource),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(
-            text = state.name,
-            modifier = Modifier
-                .padding(5.dp)
-        )
+        Box(Modifier.fillMaxWidth()) {
+            Text(
+                text = state.name,
+                modifier = Modifier
+                    .padding(5.dp)
+                    .align(Alignment.Center)
+            )
+
+            if (isHovered) {
+                Text(
+                    text = "\u00D7",
+                    modifier = Modifier
+                        .clickable { actionHandler.onModuleRemoved(state.id) }
+                        .padding(5.dp)
+                        .align(Alignment.TopEnd)
+                )
+            }
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom,
         ) {
-            LogCompositions("ModuleView Column Row ${state.name}")
+            val density = LocalDensity.current
+
             Column {
                 for (input in state.inputs.reversed()) {
                     SocketView(
@@ -126,23 +158,26 @@ fun ModuleView(
 
 @Stable
 interface ModuleActionHandler {
-    fun createCable(end: CableEnd)
-    fun editCable(end: CableEnd)
-    fun startPreviewCable(end: CableEnd)
-    fun endPreviewCable(end: CableEnd)
+    fun onCableCreated(end: CableEnd)
+    fun onCableEdit(end: CableEnd)
+    fun onCablePreviewStart(end: CableEnd)
+    fun onCablePreviewEnd(end: CableEnd)
+    fun onModuleRemoved(moduleId: Int)
 }
 
 fun ModuleActionHandler(
-    createCable: (CableEnd) -> Unit = {},
-    editCable: (CableEnd) -> Unit = {},
-    startPreviewCable: (CableEnd) -> Unit = {},
-    endPreviewCable: (CableEnd) -> Unit = {},
+    onCableCreated: (CableEnd) -> Unit = {},
+    onCableEdit: (CableEnd) -> Unit = {},
+    onCablePreviewStart: (CableEnd) -> Unit = {},
+    onCablePreviewEnd: (CableEnd) -> Unit = {},
+    onRemoval: (moduleId: Int) -> Unit = {},
 ): ModuleActionHandler {
     return object : ModuleActionHandler {
-        override fun createCable(end: CableEnd) = createCable(end)
-        override fun editCable(end: CableEnd): Unit = editCable(end)
-        override fun startPreviewCable(end: CableEnd) = startPreviewCable(end)
-        override fun endPreviewCable(end: CableEnd) = endPreviewCable(end)
+        override fun onCableCreated(end: CableEnd) = onCableCreated(end)
+        override fun onCableEdit(end: CableEnd): Unit = onCableEdit(end)
+        override fun onCablePreviewStart(end: CableEnd) = onCablePreviewStart(end)
+        override fun onCablePreviewEnd(end: CableEnd) = onCablePreviewEnd(end)
+        override fun onModuleRemoved(moduleId: Int) = onRemoval(moduleId)
     }
 }
 
@@ -150,18 +185,19 @@ fun ModuleActionHandler(
 fun rememberModuleActionHandler(state: EditorViewModel): ModuleActionHandler {
     return remember(state) {
         ModuleActionHandler(
-            createCable = state::createCable,
-            editCable = state::editCable,
-            startPreviewCable = { previewedEnd ->
+            onCableCreated = state::createCable,
+            onCableEdit = state::editCable,
+            onCablePreviewStart = { previewedEnd ->
                 state.cables
                     .filter { it.from.end == previewedEnd || it.to.end == previewedEnd }
                     .map { it.isHovered = true }
             },
-            endPreviewCable = { previewedEnd ->
+            onCablePreviewEnd = { previewedEnd ->
                 state.cables
                     .filter { it.from.end == previewedEnd || it.to.end == previewedEnd }
                     .map { it.isHovered = false }
             },
+            onRemoval = state::removeModule,
         )
     }
 }
@@ -174,9 +210,10 @@ class ModuleState(
     inputs: List<SocketState> = emptyList(),
     outputs: List<SocketState> = emptyList(),
 ) {
-    var offset: DpOffset by mutableStateOf(offset)
     val inputs = inputs.toMutableStateList()
     val outputs = outputs.toMutableStateList()
+    var offset: DpOffset by mutableStateOf(offset)
+    var hoverInteractionSource = MutableInteractionSource()
 }
 
 fun ru.pema4.musicbx.model.Module.toModuleState(): ModuleState {
@@ -202,29 +239,33 @@ fun ModuleState.toModule(): ru.pema4.musicbx.model.Module {
 @Preview
 @Composable
 private fun ModuleViewPreview() {
-    val moduleState = ModuleState(
-        id = 0,
-        name = "Module",
-        inputs = listOf(
-            SocketState(
-                type = SocketType.Input,
-                number = 0,
-                name = "name",
-            ),
-        ),
-        outputs = mutableStateListOf(
-            SocketState(
-                type = SocketType.Output,
-                number = 0,
-                name = "name",
-            ),
-            SocketState(
-                type = SocketType.Output,
-                number = 1,
-                name = "name",
-            ),
-        ),
-    )
+    EditorMaterialTheme {
+        WithKoin {
+            val moduleState = ModuleState(
+                id = 0,
+                name = "Module",
+                inputs = listOf(
+                    SocketState(
+                        type = SocketType.Input,
+                        number = 0,
+                        name = "name",
+                    ),
+                ),
+                outputs = mutableStateListOf(
+                    SocketState(
+                        type = SocketType.Output,
+                        number = 0,
+                        name = "name",
+                    ),
+                    SocketState(
+                        type = SocketType.Output,
+                        number = 1,
+                        name = "name",
+                    ),
+                ),
+            )
 
-    ModuleView(moduleState)
+            ModuleView(moduleState)
+        }
+    }
 }

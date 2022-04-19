@@ -20,8 +20,6 @@ import ru.pema4.musicbx.view.EditorState
 import ru.pema4.musicbx.view.EditorViewModel
 import ru.pema4.musicbx.view.FullCableState
 import ru.pema4.musicbx.view.ModuleState
-import ru.pema4.musicbx.view.SocketState
-import ru.pema4.musicbx.view.SocketType
 import ru.pema4.musicbx.view.toFullCableStateOrNull
 import ru.pema4.musicbx.view.toModule
 import ru.pema4.musicbx.view.toModuleState
@@ -98,19 +96,15 @@ class EditorViewModelImpl(
         draftCable = null
     }
 
-    override fun addModule() {
-        val id = (modules.maxOfOrNull { it.id } ?: -1) + 1
-        val newModuleState = ModuleState(
-            id = id,
-            name = "New module #$id",
-            inputs = List(1) { number ->
-                SocketState(type = SocketType.Input, number = number, name = "name")
-            },
-            outputs = List(2) { number ->
-                SocketState(type = SocketType.Output, number = number, name = "name")
-            }
-        )
-        modules += newModuleState
+    override fun addModule(module: Module) {
+        modules += module
+            .copy(id = modules.maxOfOrNull { it.id + 1 } ?: 0)
+            .toModuleState()
+    }
+
+    override fun removeModule(moduleId: Int) {
+        modules.removeAll { it.id == moduleId }
+        cables.removeAll { it.to.end.moduleId == moduleId || it.from.end.moduleId == moduleId }
     }
 }
 
