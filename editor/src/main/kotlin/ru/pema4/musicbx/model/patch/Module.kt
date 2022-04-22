@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.model
+package ru.pema4.musicbx.model.patch
 
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable

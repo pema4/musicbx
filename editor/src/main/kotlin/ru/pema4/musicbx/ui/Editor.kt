@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.view
+package ru.pema4.musicbx.ui
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.ScrollState
@@ -17,10 +17,12 @@ import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.zIndex
 import ru.pema4.musicbx.WithKoin
-import ru.pema4.musicbx.model.CableEnd
-import ru.pema4.musicbx.model.Patch
-import ru.pema4.musicbx.model.TestPatch
+import ru.pema4.musicbx.model.patch.CableEnd
+import ru.pema4.musicbx.model.patch.Module
+import ru.pema4.musicbx.model.patch.Patch
+import ru.pema4.musicbx.model.patch.TestPatch
 import ru.pema4.musicbx.util.Scrollable
 import ru.pema4.musicbx.util.diagonallyDraggable
 import ru.pema4.musicbx.util.pointerMoveFilter
@@ -87,6 +89,7 @@ private fun EditorModulesView(viewModel: EditorViewModel) {
         key(module.id) {
             Box(
                 modifier = Modifier
+                    .zIndex(module.id.toFloat())
                     .composed {
                         diagonallyDraggable(
                             key1 = module,
@@ -129,12 +132,11 @@ interface EditorViewModel {
     val draftCable: DraftCableState?
 
     fun extractPatch(): Patch
-
-    fun createCable(end: CableEnd)
-    fun editCable(end: CableEnd)
-    fun resetDraftCable()
-    fun addModule(module: ru.pema4.musicbx.model.Module)
-    fun removeModule(moduleId: Int)
+    fun createCable(end: CableEnd) = Unit
+    fun editCable(end: CableEnd) = Unit
+    fun resetDraftCable() = Unit
+    fun addModule(module: Module) = Unit
+    fun removeModule(moduleId: Int) = Unit
 }
 
 interface EditorState {

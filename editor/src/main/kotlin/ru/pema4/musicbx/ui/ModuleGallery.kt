@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.view
+package ru.pema4.musicbx.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable

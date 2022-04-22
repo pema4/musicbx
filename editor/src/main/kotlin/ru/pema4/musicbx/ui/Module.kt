@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.view
+package ru.pema4.musicbx.ui
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.desktop.ui.tooling.preview.Preview
@@ -39,9 +39,10 @@ import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
 import ru.pema4.musicbx.WithKoin
-import ru.pema4.musicbx.model.CableEnd
-import ru.pema4.musicbx.model.CableFrom
-import ru.pema4.musicbx.model.CableTo
+import ru.pema4.musicbx.model.patch.CableEnd
+import ru.pema4.musicbx.model.patch.CableFrom
+import ru.pema4.musicbx.model.patch.CableTo
+import ru.pema4.musicbx.model.patch.Module
 import ru.pema4.musicbx.util.explainedAs
 import ru.pema4.musicbx.util.toDpOffset
 import ru.pema4.musicbx.util.toGridOffset
@@ -216,7 +217,7 @@ class ModuleState(
     var hoverInteractionSource = MutableInteractionSource()
 }
 
-fun ru.pema4.musicbx.model.Module.toModuleState(): ModuleState {
+fun Module.toModuleState(): ModuleState {
     return ModuleState(
         id = id,
         name = name,
@@ -226,8 +227,8 @@ fun ru.pema4.musicbx.model.Module.toModuleState(): ModuleState {
     )
 }
 
-fun ModuleState.toModule(): ru.pema4.musicbx.model.Module {
-    return ru.pema4.musicbx.model.Module(
+fun ModuleState.toModule(): Module {
+    return Module(
         id = id,
         name = name,
         inputs = inputs.map { it.toInputSocket() },

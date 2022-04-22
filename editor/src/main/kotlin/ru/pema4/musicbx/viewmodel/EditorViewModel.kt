@@ -7,22 +7,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.unit.DpOffset
-import ru.pema4.musicbx.model.Cable
-import ru.pema4.musicbx.model.CableEnd
-import ru.pema4.musicbx.model.CableFrom
-import ru.pema4.musicbx.model.CableTo
-import ru.pema4.musicbx.model.Module
-import ru.pema4.musicbx.model.Patch
-import ru.pema4.musicbx.view.CableFromState
-import ru.pema4.musicbx.view.CableToState
-import ru.pema4.musicbx.view.DraftCableState
-import ru.pema4.musicbx.view.EditorState
-import ru.pema4.musicbx.view.EditorViewModel
-import ru.pema4.musicbx.view.FullCableState
-import ru.pema4.musicbx.view.ModuleState
-import ru.pema4.musicbx.view.toFullCableStateOrNull
-import ru.pema4.musicbx.view.toModule
-import ru.pema4.musicbx.view.toModuleState
+import ru.pema4.musicbx.model.patch.Cable
+import ru.pema4.musicbx.model.patch.CableEnd
+import ru.pema4.musicbx.model.patch.CableFrom
+import ru.pema4.musicbx.model.patch.CableTo
+import ru.pema4.musicbx.model.patch.Module
+import ru.pema4.musicbx.model.patch.Patch
+import ru.pema4.musicbx.service.PlaybackService
+import ru.pema4.musicbx.ui.CableFromState
+import ru.pema4.musicbx.ui.CableToState
+import ru.pema4.musicbx.ui.DraftCableState
+import ru.pema4.musicbx.ui.EditorState
+import ru.pema4.musicbx.ui.EditorViewModel
+import ru.pema4.musicbx.ui.FullCableState
+import ru.pema4.musicbx.ui.ModuleState
+import ru.pema4.musicbx.ui.toFullCableStateOrNull
+import ru.pema4.musicbx.ui.toModule
+import ru.pema4.musicbx.ui.toModuleState
 
 @Stable
 class EditorViewModelImpl(
@@ -48,12 +49,14 @@ class EditorViewModelImpl(
     }
 
     override fun createCable(end: CableEnd) {
+        val zIndex = modules.first { it.id == end.moduleId }.id.toFloat() + 0.5f
         draftCable = DraftCableState(
             from = (end as? CableFrom)
-                ?.let {
+                ?.let { it ->
                     CableFromState(
                         end = it,
                         offsetCalculation = getSocketOffsetCalculation(it),
+                        zIndex = zIndex
                     )
                 }
                 ?: draftCable?.from,
@@ -62,6 +65,7 @@ class EditorViewModelImpl(
                     CableToState(
                         end = end,
                         offsetCalculation = getSocketOffsetCalculation(end),
+                        zIndex = zIndex
                     )
                 }
                 ?: draftCable?.to,
@@ -100,6 +104,7 @@ class EditorViewModelImpl(
         modules += module
             .copy(id = modules.maxOfOrNull { it.id + 1 } ?: 0)
             .toModuleState()
+        PlaybackService.addModule(module)
     }
 
     override fun removeModule(moduleId: Int) {
@@ -134,10 +139,12 @@ fun EditorViewModelImpl(patch: Patch): EditorViewModelImpl {
                 from = CableFromState(
                     end = from,
                     offsetCalculation = getSocketOffsetCalculation(from),
+                    zIndex = modules.first { it.id == from.moduleId }.id.toFloat() + 0.5f
                 ),
                 to = CableToState(
                     end = to,
                     offsetCalculation = getSocketOffsetCalculation(to),
+                    zIndex = modules.first { it.id == to.moduleId }.id.toFloat() + 0.5f
                 )
             )
         }

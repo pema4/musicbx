@@ -1,0 +1,23 @@
+[package]
+name = "audio-test"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cpal = "0.13.5"
+jni = "0.19.0"
+rand = "0.8.5"
+serde = { version = "1.0.136", features = ["derive"] }
+serde_json = "1.0.79"
+glicol_synth = { git = "https://github.com/pema4/glicol" }
+anyhow = "1.0.56"
+clap = "3.1.10"
+lazy_static = "1.4.0"
+
+[lib]
+crate_type = ["cdylib"]
+
+[profile.release]
+lto = true

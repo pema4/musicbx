@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.view
+package ru.pema4.musicbx.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.hoverable
@@ -22,10 +22,11 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import kotlinx.coroutines.flow.collect
-import ru.pema4.musicbx.model.CableEnd
-import ru.pema4.musicbx.model.CableFrom
-import ru.pema4.musicbx.model.CableTo
+import ru.pema4.musicbx.model.patch.CableEnd
+import ru.pema4.musicbx.model.patch.CableFrom
+import ru.pema4.musicbx.model.patch.CableTo
 
 @Composable
 fun CableView(
@@ -48,26 +49,65 @@ fun CableView(
         else -> style.primaryColor
     }
 
-    Canvas(
-        modifier = Modifier
-            .hoverable(hoverInteractionSource)
+    val stateFrom = state.from
+    if (stateFrom != null) {
+        Canvas(
+            modifier = Modifier
+                .zIndex(stateFrom.zIndex)
+                .hoverable(hoverInteractionSource)
+        ) {
+            val from = stateFrom.offset.let(::toOffset)
+            val to = run {
+                val otherEndOffset = state.to?.offset?.let(::toOffset)
+                if (otherEndOffset != null) {
+                    androidx.compose.ui.geometry.lerp(from, otherEndOffset, 0.5f)
+                } else {
+                    (state as? DraftCableState)?.cursorOffset?.let(::toOffset)!!
+                }
+            }
 
-    ) {
-        val cursor = (state as? DraftCableState)?.cursorOffset?.let(::toOffset)
-        val from = state.fromOffset?.let(::toOffset)
-        val to = state.toOffset?.let(::toOffset)
+            drawLine(
+                color = color,
+                start = from,
+                end = to,
+                strokeWidth = 3.dp.toPx(),
+            )
 
-        drawLine(
-            color = color,
-            start = from ?: cursor!!,
-            end = to ?: cursor!!,
-            strokeWidth = 3.dp.toPx(),
-        )
-
-        for (center in listOfNotNull(from, to)) {
             drawCircle(
                 color = color,
-                center = center,
+                center = from,
+                radius = 5.dp.toPx(),
+            )
+        }
+    }
+
+    val stateTo = state.to
+    if (stateTo != null) {
+        Canvas(
+            modifier = Modifier
+                .zIndex(stateTo.zIndex)
+                .hoverable(hoverInteractionSource)
+        ) {
+            val to = stateTo.offset.let(::toOffset)
+            val from = run {
+                val otherEndOffset = state.from?.offset?.let(::toOffset)
+                if (otherEndOffset != null) {
+                    androidx.compose.ui.geometry.lerp(to, otherEndOffset, 0.5f)
+                } else {
+                    (state as? DraftCableState)?.cursorOffset?.let(::toOffset)!!
+                }
+            }
+
+            drawLine(
+                color = color,
+                start = to,
+                end = from,
+                strokeWidth = 3.dp.toPx(),
+            )
+
+            drawCircle(
+                color = color,
+                center = to,
                 radius = 5.dp.toPx(),
             )
         }
@@ -98,21 +138,19 @@ val LocalCableStyle = staticCompositionLocalOf { defaultCableStyle() }
 sealed interface CableState {
     val from: CableFromState?
     val to: CableToState?
-    val fromOffset: DpOffset?
-        get() = from?.offset
-    val toOffset: DpOffset?
-        get() = to?.offset
 }
 
 @Stable
 sealed interface CableEndState {
     val end: CableEnd
     val offset: DpOffset
+    val zIndex: Float
 }
 
 data class CableFromState(
     override val end: CableFrom,
     val offsetCalculation: () -> DpOffset,
+    override val zIndex: Float,
 ) : CableEndState {
     override val offset: DpOffset by derivedStateOf(offsetCalculation)
 }
@@ -120,6 +158,7 @@ data class CableFromState(
 data class CableToState(
     override val end: CableTo,
     val offsetCalculation: () -> DpOffset,
+    override val zIndex: Float,
 ) : CableEndState {
     override val offset: DpOffset by derivedStateOf(offsetCalculation)
 }
@@ -129,8 +168,6 @@ data class FullCableState(
     override val from: CableFromState,
     override val to: CableToState,
 ) : CableState {
-    override val fromOffset: DpOffset? by from::offset
-    override val toOffset: DpOffset? by to::offset
     var isHovered by mutableStateOf(false)
 }
 
@@ -141,8 +178,6 @@ data class DraftCableState(
     val cursorOffsetCalculation: () -> DpOffset,
 ) : CableState {
     val cursorOffset: DpOffset by derivedStateOf(cursorOffsetCalculation)
-    override val fromOffset: DpOffset? by derivedStateOf { from?.offset }
-    override val toOffset: DpOffset? by derivedStateOf { to?.offset }
 }
 
 fun DraftCableState.toFullCableStateOrNull(): FullCableState? {

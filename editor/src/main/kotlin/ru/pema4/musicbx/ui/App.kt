@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.view
+package ru.pema4.musicbx.ui
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
@@ -27,7 +27,7 @@ import androidx.compose.ui.window.Window
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import ru.pema4.musicbx.WithKoin
-import ru.pema4.musicbx.model.TestPatch
+import ru.pema4.musicbx.model.patch.TestPatch
 import ru.pema4.musicbx.util.FileDialog
 import ru.pema4.musicbx.util.FileDialogMode
 import ru.pema4.musicbx.util.InstallTooltipManager
@@ -128,6 +128,19 @@ private fun FrameWindowScope.AppMenuBar(
                 onClick = viewModel::showOpenDialog,
             )
         }
+        Menu(text = "Settings") {
+            Menu(
+                text = "Select Output...",
+                enabled = viewModel.uiState.availableOutputs.isNotEmpty(),
+            ) {
+                for (output in viewModel.uiState.availableOutputs) {
+                    Item(
+                        text = output,
+                        onClick = { viewModel.changeOutput(output) },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -174,16 +187,19 @@ interface AppViewModel {
     val uiState: AppState
     val editorViewModel: EditorViewModel
 
-    fun showOpenDialog()
-    fun showSaveDialog()
-    fun save(path: Path?)
-    fun open(path: Path?)
+    fun showOpenDialog() = Unit
+    fun showSaveDialog() = Unit
+
+    fun save(path: Path?) = Unit
+    fun open(path: Path?) = Unit
+    fun changeOutput(newOutput: String) = Unit
 }
 
 @Stable
 interface AppState {
     val showingOpenDialog: Boolean
     val showingSaveDialog: Boolean
+    val availableOutputs: List<String>
 }
 
 @Preview

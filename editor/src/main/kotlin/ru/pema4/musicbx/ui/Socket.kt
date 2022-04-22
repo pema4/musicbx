@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.view
+package ru.pema4.musicbx.ui
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Canvas
@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import ru.pema4.musicbx.WithKoin
-import ru.pema4.musicbx.model.CableEnd
-import ru.pema4.musicbx.model.InputSocket
-import ru.pema4.musicbx.model.OutputSocket
+import ru.pema4.musicbx.model.patch.CableEnd
+import ru.pema4.musicbx.model.patch.InputSocket
+import ru.pema4.musicbx.model.patch.OutputSocket
 import ru.pema4.musicbx.util.explainedAs
 
 @OptIn(ExperimentalFoundationApi::class)

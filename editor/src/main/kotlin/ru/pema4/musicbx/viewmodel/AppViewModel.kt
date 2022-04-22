@@ -7,11 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import dev.burnoo.cokoin.get
-import ru.pema4.musicbx.model.DefaultPatch
-import ru.pema4.musicbx.model.Patch
+import ru.pema4.musicbx.model.patch.DefaultPatch
+import ru.pema4.musicbx.model.patch.Patch
+import ru.pema4.musicbx.service.ConfigurationService
 import ru.pema4.musicbx.service.FileService
-import ru.pema4.musicbx.view.AppState
-import ru.pema4.musicbx.view.AppViewModel
+import ru.pema4.musicbx.ui.AppState
+import ru.pema4.musicbx.ui.AppViewModel
 import java.nio.file.Path
 
 @Composable
@@ -71,4 +72,10 @@ class AppViewModelImpl(
 private class AppStateImpl : AppState {
     override var showingOpenDialog by mutableStateOf(false)
     override var showingSaveDialog by mutableStateOf(false)
+    override val availableOutputs: List<String>
+        get() = ConfigurationService
+            .currentConfiguration
+            ?.output
+            ?.available
+            .orEmpty()
 }

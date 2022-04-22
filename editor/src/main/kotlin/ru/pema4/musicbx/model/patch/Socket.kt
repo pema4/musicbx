@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.model
+package ru.pema4.musicbx.model.patch
 
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
@@ -15,12 +15,12 @@ sealed interface Socket {
 data class InputSocket(
     override val number: Int,
     override val name: String = "In $number",
-    override val description: String = "Input $number"
+    override val description: String = "Input $number",
 ) : Socket
 
 @Serializable
 data class OutputSocket(
     override val number: Int,
     override val name: String = "Out $number",
-    override val description: String = "Output $number"
+    override val description: String = "Output $number",
 ) : Socket

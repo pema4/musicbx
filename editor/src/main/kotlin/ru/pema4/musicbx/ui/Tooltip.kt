@@ -1,9 +1,11 @@
-package ru.pema4.musicbx.view
+package ru.pema4.musicbx.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -15,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.mapLatest
+import ru.pema4.musicbx.service.PlaybackService
 import ru.pema4.musicbx.util.LocalTooltipManager
 import ru.pema4.musicbx.util.explainedAs
 import kotlin.time.Duration.Companion.milliseconds
@@ -43,15 +46,20 @@ fun Tooltip(
     text: String?,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    Row(
         modifier = modifier
             .height(20.dp)
             .fillMaxWidth()
             .background(color = Color.LightGray)
-            .explainedAs("tooltip")
+            .explainedAs("tooltip"),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
             text = text.orEmpty(),
+        )
+        Text(
+            text = PlaybackService.sampleRate.toString(),
+            modifier = Modifier.padding(end = 20.dp),
         )
     }
 }
