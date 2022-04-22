@@ -13,8 +13,8 @@ object PlaybackService {
     init {
         val resource = ClassLoader
             .getSystemClassLoader()
-            .getResourceAsStream("libaudio_test.dylib")
-        check(resource != null)
+            .getResourceAsStream("libmusicbx-jni.dylib")
+        require(resource != null)
 
         with(kotlin.io.path.createTempFile()) {
             resource.copyTo(outputStream())

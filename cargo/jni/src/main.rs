@@ -4,7 +4,7 @@ extern crate cpal;
 
 use clap::arg;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::Sample;
+use cpal::{Device, Sample};
 use rand::distributions::{Distribution, Uniform};
 
 #[derive(Debug)]
