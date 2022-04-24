@@ -22,6 +22,7 @@ val TestPatch = Patch(
     modules = listOf(
         Module(
             id = 0,
+            uid = "Oscillator",
             inputs = listOf(
                 InputSocket(0),
                 InputSocket(1),
@@ -32,6 +33,7 @@ val TestPatch = Patch(
         ),
         Module(
             id = 1,
+            uid = "Filter",
             inputs = listOf(
                 InputSocket(0),
             ),
@@ -43,6 +45,7 @@ val TestPatch = Patch(
         ),
         Module(
             id = Random.nextInt(10, 10000),
+            uid = "Randomizer",
             inputs = listOf(
                 InputSocket(0),
             ),

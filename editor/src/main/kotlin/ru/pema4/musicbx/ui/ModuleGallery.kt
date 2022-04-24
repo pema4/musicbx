@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -18,16 +19,17 @@ fun ModuleGalleryView(
     appViewModel: AppViewModel,
     modifier: Modifier = Modifier,
 ) {
+    val modules by appViewModel.collectAvailableModulesAsState()
+
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
         contentPadding = PaddingValues(top = 10.dp, bottom = 10.dp)
     ) {
-        val modules = appViewModel.editorViewModel.modules
         items(
             count = modules.size,
-            key = { modules[it].id },
+            key = { modules[it].uid },
         ) {
             val module = modules[it]
             ModuleView(

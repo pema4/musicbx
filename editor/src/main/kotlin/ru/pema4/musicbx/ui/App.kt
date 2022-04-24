@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,7 +30,9 @@ import androidx.compose.ui.window.Window
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import ru.pema4.musicbx.WithKoin
+import ru.pema4.musicbx.model.config.InputOutputSettings
 import ru.pema4.musicbx.model.patch.TestPatch
+import ru.pema4.musicbx.service.PlaybackService
 import ru.pema4.musicbx.util.FileDialog
 import ru.pema4.musicbx.util.FileDialogMode
 import ru.pema4.musicbx.util.InstallTooltipManager
@@ -41,6 +46,11 @@ import kotlin.io.path.exists
 fun ApplicationScope.App(
     viewModel: AppViewModel = rememberAppViewModel(),
 ) {
+    LaunchedEffect(viewModel) {
+        PlaybackService.start()
+        PlaybackService.stop()
+    }
+
     Window(::exitApplication) {
         AppMenuBar(viewModel)
         AppDialogWindows(viewModel)
@@ -79,7 +89,7 @@ fun AppWindowContent(
                             .height(1.dp)
                             .background(Color.Black)
                     )
-                    Tooltip()
+                    Tooltip(viewModel)
                 }
             }
         }
@@ -128,12 +138,15 @@ private fun FrameWindowScope.AppMenuBar(
                 onClick = viewModel::showOpenDialog,
             )
         }
+
+        val ioSettings by viewModel.collectIoSettingsAsState()
+        val availableOutputs = ioSettings?.output?.available ?: emptyList()
         Menu(text = "Settings") {
             Menu(
                 text = "Select Output...",
-                enabled = viewModel.uiState.availableOutputs.isNotEmpty(),
+                enabled = availableOutputs.isNotEmpty(),
             ) {
-                for (output in viewModel.uiState.availableOutputs) {
+                for (output in availableOutputs) {
                     Item(
                         text = output,
                         onClick = { viewModel.changeOutput(output) },
@@ -187,6 +200,12 @@ interface AppViewModel {
     val uiState: AppState
     val editorViewModel: EditorViewModel
 
+    @Composable
+    fun collectIoSettingsAsState(): State<InputOutputSettings?>
+
+    @Composable
+    fun collectAvailableModulesAsState(): State<List<ModuleState>>
+
     fun showOpenDialog() = Unit
     fun showSaveDialog() = Unit
 
@@ -199,7 +218,6 @@ interface AppViewModel {
 interface AppState {
     val showingOpenDialog: Boolean
     val showingSaveDialog: Boolean
-    val availableOutputs: List<String>
 }
 
 @Preview
@@ -213,36 +231,3 @@ fun AppPreview() {
         }
     }
 }
-
-/*
-fun App() {
-    Row {
-        ActivityBar()
-        Spacer()
-        Column {
-            ControlPanel()
-            Spacer()
-            PatchEditor()
-            StatusBar()
-        }
-    }
-}
-
-fun ActivityBar() {
-    Column {
-        Modules()
-        Projects()
-    }
-}
-
-fun ControlPanel() {
-    Row {
-        Play()
-        Pause()
-        SampleRateSelection()
-        AudioDeviceChooser()
-        MidiDeviceChooser()
-        CpuMeter()
-    }
-}
- */

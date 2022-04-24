@@ -1,31 +1,8 @@
 package ru.pema4.musicbx.service
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import ru.pema4.musicbx.model.patch.Module
-import kotlin.io.path.outputStream
-import kotlin.io.path.pathString
 
 object PlaybackService {
-    init {
-        val resource = ClassLoader
-            .getSystemClassLoader()
-            .getResourceAsStream("libmusicbx-jni.dylib")
-        require(resource != null)
-
-        with(kotlin.io.path.createTempFile()) {
-            resource.copyTo(outputStream())
-            System.load(pathString)
-        }
-    }
-
-    val sampleRate: Double? by derivedStateOf {
-        ConfigurationService.currentConfiguration?.output?.sampleRate?.current
-    }
-
     val supportedSampleRates: List<Int>
         @Composable get() = listOf(44100)
 
@@ -47,17 +24,11 @@ object PlaybackService {
     val midiOutputDevices: List<String>
         @Composable get() = emptyList()
 
-    fun start() = Unit
+    external fun start()
 
-    fun stop() = Unit
+    external fun stop()
 
-    fun addModule(module: Module) {
-        val json = Json {
-            encodeDefaults = true
-        }
-        val moduleJson = json.encodeToString(module)
-        addModule(moduleJson)
-    }
+    external fun addModule(uid: String, id: Int)
 
-    private external fun addModule(moduleJson: String)
+    external fun removeModule(moduleId: Int)
 }

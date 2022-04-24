@@ -205,12 +205,14 @@ fun rememberModuleActionHandler(state: EditorViewModel): ModuleActionHandler {
 
 @Stable
 class ModuleState(
-    val id: Int,
-    val name: String,
+    val model: Module,
     offset: DpOffset = DpOffset(x = 0.dp, y = 0.dp),
     inputs: List<SocketState> = emptyList(),
     outputs: List<SocketState> = emptyList(),
 ) {
+    val uid: String by model::uid
+    val id: Int by model::id
+    val name: String by model::name
     val inputs = inputs.toMutableStateList()
     val outputs = outputs.toMutableStateList()
     var offset: DpOffset by mutableStateOf(offset)
@@ -219,8 +221,7 @@ class ModuleState(
 
 fun Module.toModuleState(): ModuleState {
     return ModuleState(
-        id = id,
-        name = name,
+        model = this,
         offset = offset.toDpOffset(),
         inputs = inputs.map { it.toSocketState() },
         outputs = outputs.map { it.toSocketState() },
@@ -228,9 +229,7 @@ fun Module.toModuleState(): ModuleState {
 }
 
 fun ModuleState.toModule(): Module {
-    return Module(
-        id = id,
-        name = name,
+    return model.copy(
         inputs = inputs.map { it.toInputSocket() },
         outputs = outputs.map { it.toOutputSocket() },
         offset = offset.toGridOffset(),
@@ -243,8 +242,11 @@ private fun ModuleViewPreview() {
     EditorMaterialTheme {
         WithKoin {
             val moduleState = ModuleState(
-                id = 0,
-                name = "Module",
+                model = Module(
+                    id = 0,
+                    uid = "Oscillator",
+                    name = "Sine Oscillator",
+                ),
                 inputs = listOf(
                     SocketState(
                         type = SocketType.Input,

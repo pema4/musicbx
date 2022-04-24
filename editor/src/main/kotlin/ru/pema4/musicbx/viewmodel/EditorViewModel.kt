@@ -101,13 +101,20 @@ class EditorViewModelImpl(
     }
 
     override fun addModule(module: Module) {
+        val id = modules
+            .maxOfOrNull { it.id + 1 }
+            ?.coerceAtLeast(0)
+            ?: 0
+
+        PlaybackService.addModule(module.uid, id)
+
         modules += module
-            .copy(id = modules.maxOfOrNull { it.id + 1 } ?: 0)
+            .copy(id = id)
             .toModuleState()
-        PlaybackService.addModule(module)
     }
 
     override fun removeModule(moduleId: Int) {
+        PlaybackService.removeModule(moduleId)
         modules.removeAll { it.id == moduleId }
         cables.removeAll { it.to.end.moduleId == moduleId || it.from.end.moduleId == moduleId }
     }

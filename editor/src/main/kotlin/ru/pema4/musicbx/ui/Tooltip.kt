@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.mapLatest
-import ru.pema4.musicbx.service.PlaybackService
 import ru.pema4.musicbx.util.LocalTooltipManager
 import ru.pema4.musicbx.util.explainedAs
 import kotlin.time.Duration.Companion.milliseconds
@@ -26,6 +25,7 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class, ExperimentalCoroutinesApi::class)
 @Composable
 fun Tooltip(
+    appViewModel: AppViewModel,
     modifier: Modifier = Modifier,
 ) {
     val tooltipManager = LocalTooltipManager.current
@@ -38,12 +38,19 @@ fun Tooltip(
         }
         .collectAsState(null)
 
-    Tooltip(text, modifier)
+    val ioSettings by appViewModel.collectIoSettingsAsState()
+
+    Tooltip(
+        text = text,
+        sampleRate = ioSettings?.output?.sampleRate?.current.toString(),
+        modifier = modifier
+    )
 }
 
 @Composable
 fun Tooltip(
     text: String?,
+    sampleRate: String,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -58,7 +65,7 @@ fun Tooltip(
             text = text.orEmpty(),
         )
         Text(
-            text = PlaybackService.sampleRate.toString(),
+            text = sampleRate,
             modifier = Modifier.padding(end = 20.dp),
         )
     }

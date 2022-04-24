@@ -15,6 +15,7 @@ glicol_synth = { git = "https://github.com/pema4/glicol" }
 anyhow = "1.0.56"
 clap = "3.1.10"
 lazy_static = "1.4.0"
+petgraph = "0.6.0"
 
 [lib]
 crate_type = ["cdylib"]

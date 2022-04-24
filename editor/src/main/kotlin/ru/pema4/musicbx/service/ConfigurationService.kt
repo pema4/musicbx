@@ -1,32 +1,31 @@
 package ru.pema4.musicbx.service
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import ru.pema4.musicbx.model.config.Configuration
+import ru.pema4.musicbx.model.config.InputOutputSettings
 import java.util.function.Consumer
 
 object ConfigurationService {
     private external fun registerListener(listener: ConfigurationListener)
     // private external fun removeListener(listener: ConfigurationListener)
 
-    var currentConfiguration: Configuration? by mutableStateOf(null)
-        private set
+    private val _ioSettings: MutableStateFlow<InputOutputSettings?> = MutableStateFlow(null)
+    val ioSettings: StateFlow<InputOutputSettings?> by ::_ioSettings
 
     init {
         val listener = ConfigurationListener {
-            currentConfiguration = it
+            _ioSettings.value = it
         }
         registerListener(listener)
     }
 }
 
 private fun interface ConfigurationListener : Consumer<String> {
-    fun acceptConfiguration(configuration: Configuration)
+    fun acceptSettings(ioSettings: InputOutputSettings)
 
     override fun accept(t: String) {
-        acceptConfiguration(Json.decodeFromString(t))
+        acceptSettings(Json.decodeFromString(t))
     }
 }

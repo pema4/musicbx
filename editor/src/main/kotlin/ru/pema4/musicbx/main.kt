@@ -5,23 +5,36 @@ import androidx.compose.ui.window.application
 import dev.burnoo.cokoin.Koin
 import org.koin.core.KoinApplication
 import org.koin.dsl.module
-import ru.pema4.musicbx.model.patch.TestPatch
+import ru.pema4.musicbx.service.AvailableModulesService
 import ru.pema4.musicbx.service.FileService
-import ru.pema4.musicbx.service.PatchService
 import ru.pema4.musicbx.ui.App
-import ru.pema4.musicbx.ui.AppViewModel
 import ru.pema4.musicbx.ui.EditorMaterialTheme
-import ru.pema4.musicbx.viewmodel.AppViewModelImpl
 import ru.pema4.musicbx.viewmodel.rememberAppViewModel
+import kotlin.io.path.outputStream
+import kotlin.io.path.pathString
 
 fun main() {
+    loadNativeBackend()
+
     application {
         WithKoin {
             EditorMaterialTheme {
-                val appViewModel = rememberAppViewModel(initialPatch = TestPatch)
+                val appViewModel = rememberAppViewModel()
                 App(appViewModel)
             }
         }
+    }
+}
+
+private fun loadNativeBackend() {
+    val resource = ClassLoader
+        .getSystemClassLoader()
+        .getResourceAsStream("libmusicbx-jni.dylib")
+    require(resource != null)
+
+    with(kotlin.io.path.createTempFile()) {
+        resource.copyTo(outputStream())
+        System.load(pathString)
     }
 }
 
@@ -37,8 +50,7 @@ fun WithKoin(content: @Composable () -> Unit) {
 }
 
 private val koinModule = module {
-    single<AppViewModel> { AppViewModelImpl(TestPatch, get()) }
     single { FileService() }
-    single { PatchService() }
+    single { AvailableModulesService }
     // single { PlaybackService() }
 }
