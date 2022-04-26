@@ -20,12 +20,13 @@ impl<T> Observable<T> {
         listener(&self.data)
     }
 
-    #[allow(clippy::vtable_address_comparisons)]
+    #[allow(clippy::vtable_address_comparisons, dead_code)]
     pub fn remove_listener(&self, listener: &Listener<T>) {
         let listeners = &mut self.listeners.lock().unwrap();
         listeners.retain(|x| !Arc::ptr_eq(x, listener));
     }
 
+    #[allow(dead_code)]
     pub fn notify_all(&mut self) {
         for listener in self.listeners.lock().unwrap().iter() {
             listener(&self.data)

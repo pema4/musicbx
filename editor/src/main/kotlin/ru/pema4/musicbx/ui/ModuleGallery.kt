@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
+import ru.pema4.musicbx.viewmodel.toModule
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -33,7 +34,7 @@ fun ModuleGalleryView(
         ) {
             val module = modules[it]
             ModuleView(
-                state = module,
+                viewModel = module,
                 modifier = Modifier
                     .combinedClickable(
                         enabled = true,

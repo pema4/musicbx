@@ -1,34 +1,34 @@
 package ru.pema4.musicbx.service
 
-import androidx.compose.runtime.Composable
+import ru.pema4.musicbx.model.patch.CableFrom
+import ru.pema4.musicbx.model.patch.CableTo
 
 object PlaybackService {
-    val supportedSampleRates: List<Int>
-        @Composable get() = listOf(44100)
+    fun start() = Unit
 
-    val currentAudioInputDevice: String?
-        @Composable get() = null
-
-    val audioInputDevices: List<String>
-        @Composable get() = emptyList()
-
-    val currentAudioOutputDevice: String
-        @Composable get() = "System Default"
-
-    val audioOutputDevices: List<String>
-        @Composable get() = listOf("System Default")
-
-    val midiInputDevices: List<String>
-        @Composable get() = emptyList()
-
-    val midiOutputDevices: List<String>
-        @Composable get() = emptyList()
-
-    external fun start()
-
-    external fun stop()
+    fun stop() = Unit
 
     external fun addModule(uid: String, id: Int)
 
     external fun removeModule(moduleId: Int)
+
+    private external fun connectModules(from: Int, fromOutput: Int, to: Int, toInput: Int)
+    fun connectModules(from: CableFrom, to: CableTo) {
+        connectModules(
+            from = from.moduleId,
+            fromOutput = from.socketNumber,
+            to = to.moduleId,
+            toInput = to.socketNumber,
+        )
+    }
+
+    private external fun disconnectModules(from: Int, fromOutput: Int, to: Int, toInput: Int)
+    fun disconnectModules(from: CableFrom, to: CableTo) {
+        disconnectModules(
+            from = from.moduleId,
+            fromOutput = from.socketNumber,
+            to = to.moduleId,
+            toInput = to.socketNumber,
+        )
+    }
 }

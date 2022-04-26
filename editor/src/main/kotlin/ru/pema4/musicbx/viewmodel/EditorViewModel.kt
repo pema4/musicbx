@@ -2,9 +2,11 @@ package ru.pema4.musicbx.viewmodel
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.unit.DpOffset
 import ru.pema4.musicbx.model.patch.Cable
@@ -20,21 +22,22 @@ import ru.pema4.musicbx.ui.DraftCableState
 import ru.pema4.musicbx.ui.EditorState
 import ru.pema4.musicbx.ui.EditorViewModel
 import ru.pema4.musicbx.ui.FullCableState
-import ru.pema4.musicbx.ui.ModuleState
+import ru.pema4.musicbx.ui.ModuleViewModel
 import ru.pema4.musicbx.ui.toFullCableStateOrNull
-import ru.pema4.musicbx.ui.toModule
-import ru.pema4.musicbx.ui.toModuleState
 
 @Stable
 class EditorViewModelImpl(
-    modules: Collection<ModuleState> = emptyList(),
+    modules: Collection<ModuleViewModel> = emptyList(),
     cables: Collection<FullCableState> = emptyList(),
 ) : EditorViewModel {
     override val uiState = EditorStateImpl()
 
-    override val modules: MutableList<ModuleState> = modules.toMutableStateList()
-    override val cables: MutableList<FullCableState> = cables.toMutableStateList()
+    override val modules: SnapshotStateList<ModuleViewModel> = modules.toMutableStateList()
+    override val cables: SnapshotStateList<FullCableState> = cables.toMutableStateList()
     override var draftCable: DraftCableState? by mutableStateOf(null)
+
+    var scalingIndex by mutableStateOf(ScalingSteps.indexOf(1.0f))
+    override val scale: Float by derivedStateOf { ScalingSteps[scalingIndex] }
 
     override fun extractPatch(): Patch {
         return Patch(
@@ -72,22 +75,28 @@ class EditorViewModelImpl(
             cursorOffsetCalculation = uiState::cursorOffset,
         )
 
-        val newCable = draftCable?.toFullCableStateOrNull()
-        if (newCable != null) {
-            draftCable = null
-            cables += newCable
-        }
+        val newCable = draftCable?.toFullCableStateOrNull() ?: return
+        PlaybackService.connectModules(
+            from = newCable.from.end,
+            to = newCable.to.end,
+        )
+
+        draftCable = null
+        cables += newCable
     }
 
     override fun editCable(end: CableEnd) {
-        val editedCable = cables.run {
-            val idx = indexOfLast { it.from.end == end || it.to.end == end }
-            if (idx != -1) {
-                removeAt(idx)
-            } else {
-                return
-            }
-        }
+        val editedCable = cables
+            .filter { it.from.end == end || it.to.end == end }
+            .asReversed()
+            .maxByOrNull { it.isHovered }
+            ?.also { cables.remove(it) }
+            ?: return
+
+        PlaybackService.disconnectModules(
+            from = editedCable.from.end,
+            to = editedCable.to.end,
+        )
 
         draftCable = DraftCableState(
             from = editedCable.from.takeIf { it.end != end },
@@ -108,9 +117,10 @@ class EditorViewModelImpl(
 
         PlaybackService.addModule(module.uid, id)
 
-        modules += module
-            .copy(id = id)
-            .toModuleState()
+        modules += ModuleViewModelImpl(
+            module = module.copy(id = id),
+            editorViewModel = this,
+        )
     }
 
     override fun removeModule(moduleId: Int) {
@@ -119,6 +129,26 @@ class EditorViewModelImpl(
         cables.removeAll { it.to.end.moduleId == moduleId || it.from.end.moduleId == moduleId }
     }
 }
+
+val ScalingSteps: List<Float> = listOf(
+    0.25f,
+    1f / 3f,
+    0.50f,
+    2f / 3f,
+    0.75f,
+    0.8f,
+    0.9f,
+    1.0f,
+    1.1f,
+    1.25f,
+    1.5f,
+    1.75f,
+    2.0f,
+    2.5f,
+    3f,
+    4f,
+    5f,
+)
 
 private fun EditorViewModelImpl.getSocketOffsetCalculation(cableEnd: CableEnd): () -> DpOffset {
     val module = modules.first { it.id == cableEnd.moduleId }
@@ -129,7 +159,7 @@ private fun EditorViewModelImpl.getSocketOffsetCalculation(cableEnd: CableEnd): 
     val socket = sockets.first { it.number == cableEnd.socketNumber }
 
     return {
-        module.offset + socket.offsetInModule
+        module.uiState.offset + socket.offsetInModule
     }
 }
 
@@ -137,7 +167,7 @@ fun EditorViewModelImpl(patch: Patch): EditorViewModelImpl {
     val viewModel = EditorViewModelImpl()
 
     val moduleStatesById = patch.modules
-        .associateBy(Module::id) { it.toModuleState() }
+        .associateBy(Module::id) { ModuleViewModelImpl(it, viewModel) }
     viewModel.modules += moduleStatesById.values
 
     viewModel.cables += patch.cables.map { (from, to) ->

@@ -29,7 +29,6 @@ import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
-import ru.pema4.musicbx.WithKoin
 import ru.pema4.musicbx.model.config.InputOutputSettings
 import ru.pema4.musicbx.model.patch.TestPatch
 import ru.pema4.musicbx.service.PlaybackService
@@ -41,6 +40,7 @@ import ru.pema4.musicbx.viewmodel.rememberAppViewModel
 import java.awt.Cursor
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.math.abs
 
 @Composable
 fun ApplicationScope.App(
@@ -139,6 +139,25 @@ private fun FrameWindowScope.AppMenuBar(
             )
         }
 
+        Menu(text = "View") {
+            Item(
+                text = "Actual Size",
+                enabled = abs(viewModel.editorViewModel.scale - 1.0f) > 1e-5,
+                shortcut = KeyShortcut(Key.Zero, meta = true),
+                onClick = viewModel::actualSize,
+            )
+            Item(
+                text = "Zoom In",
+                shortcut = KeyShortcut(Key.Equals, meta = true),
+                onClick = viewModel::zoomIn,
+            )
+            Item(
+                text = "Zoom Out",
+                shortcut = KeyShortcut(Key.Minus, meta = true),
+                onClick = viewModel::zoomOut,
+            )
+        }
+
         val ioSettings by viewModel.collectIoSettingsAsState()
         val availableOutputs = ioSettings?.output?.available ?: emptyList()
         Menu(text = "Settings") {
@@ -187,7 +206,7 @@ private fun AppDialogWindows(
 }
 
 @Composable
-fun EditorMaterialTheme(
+fun EditorTheme(
     content: @Composable () -> Unit,
 ) {
     MaterialTheme {
@@ -204,13 +223,16 @@ interface AppViewModel {
     fun collectIoSettingsAsState(): State<InputOutputSettings?>
 
     @Composable
-    fun collectAvailableModulesAsState(): State<List<ModuleState>>
+    fun collectAvailableModulesAsState(): State<List<ModuleViewModel>>
 
     fun showOpenDialog() = Unit
     fun showSaveDialog() = Unit
 
     fun save(path: Path?) = Unit
     fun open(path: Path?) = Unit
+    fun actualSize() = Unit
+    fun zoomIn() = Unit
+    fun zoomOut() = Unit
     fun changeOutput(newOutput: String) = Unit
 }
 
@@ -223,11 +245,9 @@ interface AppState {
 @Preview
 @Composable
 fun AppPreview() {
-    EditorMaterialTheme {
-        WithKoin {
-            AppWindowContent(
-                viewModel = rememberAppViewModel(TestPatch)
-            )
-        }
+    EditorTheme {
+        AppWindowContent(
+            viewModel = rememberAppViewModel(TestPatch)
+        )
     }
 }

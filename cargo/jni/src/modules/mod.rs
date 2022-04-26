@@ -1,4 +1,5 @@
-use glicol_synth::{AudioContext, BoxedNode, Node, NodeData};
+use glicol_synth::AudioContext;
+use petgraph::graph::NodeIndex;
 use serde::{Deserialize, Serialize};
 
 pub use output::OutputModule;
@@ -7,30 +8,17 @@ pub use sin::SinModule;
 mod output;
 mod sin;
 
-pub trait Module: ModuleDescription {
-    fn id(&self) -> Option<usize>;
-    fn add_to_context(&mut self, context: &mut AudioContext<1>);
-    fn remove_from_context(&mut self, context: &mut AudioContext<1>);
+pub trait ModuleDescription {
+    fn uid(&self) -> &'static str;
+    fn info(&self) -> ModuleInfo;
+    fn create_instance(&self, id: usize) -> Box<dyn Module>;
 }
 
-pub trait ModuleDescription {
-    fn create_instance(&self, id: usize) -> Box<dyn Module>;
-
-    fn uid(&self) -> &str;
-    fn name(&self) -> &str;
-    fn description(&self) -> &str;
-    fn inputs(&self) -> &[ModuleInput];
-    fn outputs(&self) -> &[ModuleOutput];
-
-    fn get_info(&self) -> ModuleInfo {
-        ModuleInfo {
-            uid: self.uid().into(),
-            name: self.name().into(),
-            description: self.description().into(),
-            inputs: self.inputs().into(),
-            outputs: self.outputs().into(),
-        }
-    }
+pub trait Module {
+    fn id(&self) -> usize;
+    fn input(&self, pos: usize) -> Option<NodeIndex>;
+    fn output(&self, pos: usize) -> Option<NodeIndex>;
+    fn add_to_context(&mut self, context: &mut AudioContext<1>);
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]

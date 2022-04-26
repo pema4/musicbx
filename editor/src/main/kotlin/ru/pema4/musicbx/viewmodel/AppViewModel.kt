@@ -9,26 +9,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import dev.burnoo.cokoin.get
 import ru.pema4.musicbx.model.config.InputOutputSettings
 import ru.pema4.musicbx.model.patch.DefaultPatch
-import ru.pema4.musicbx.model.patch.Module
 import ru.pema4.musicbx.model.patch.Patch
 import ru.pema4.musicbx.service.AvailableModulesService
 import ru.pema4.musicbx.service.ConfigurationService
 import ru.pema4.musicbx.service.FileService
 import ru.pema4.musicbx.ui.AppState
 import ru.pema4.musicbx.ui.AppViewModel
-import ru.pema4.musicbx.ui.ModuleState
-import ru.pema4.musicbx.ui.toModuleState
+import ru.pema4.musicbx.ui.ModuleViewModel
 import java.nio.file.Path
 
 @Composable
 fun rememberAppViewModel(
     initialPatch: Patch = DefaultPatch,
 ): AppViewModel {
-    val fileService = get<FileService>()
-    val availableModuleService = get<AvailableModulesService>()
+    val fileService = FileService()
+    val availableModuleService = AvailableModulesService
 
     return remember {
         AppViewModelImpl(
@@ -59,10 +56,10 @@ class AppViewModelImpl(
     }
 
     @Composable
-    override fun collectAvailableModulesAsState(): State<List<ModuleState>> {
+    override fun collectAvailableModulesAsState(): State<List<ModuleViewModel>> {
         val modules by availableModuleService.availableModules.collectAsState()
         return derivedStateOf {
-            modules.map(Module::toModuleState)
+            modules.map(::ModuleViewModelImpl)
         }
     }
 
@@ -92,6 +89,18 @@ class AppViewModelImpl(
             val patch = fileService.load(path)
             _editorViewModel = EditorViewModelImpl(patch)
         }
+    }
+
+    override fun actualSize() {
+        editorViewModel.scalingIndex = ScalingSteps.indexOf(1.0f)
+    }
+
+    override fun zoomIn() {
+        editorViewModel.scalingIndex = (editorViewModel.scalingIndex + 1).coerceIn(ScalingSteps.indices)
+    }
+
+    override fun zoomOut() {
+        editorViewModel.scalingIndex = (editorViewModel.scalingIndex - 1).coerceIn(ScalingSteps.indices)
     }
 }
 

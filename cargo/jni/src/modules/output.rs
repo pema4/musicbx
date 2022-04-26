@@ -1,59 +1,60 @@
 use glicol_synth::AudioContext;
-use lazy_static::lazy_static;
+use petgraph::graph::NodeIndex;
 
-use crate::modules::{Module, ModuleDescription, ModuleInput, ModuleOutput};
+use crate::modules::{Module, ModuleDescription, ModuleInfo, ModuleInput};
 
 #[derive(Default)]
-pub struct OutputModule {
-    pub id: Option<usize>,
+pub struct OutputModule;
+
+impl ModuleDescription for OutputModule {
+    fn uid(&self) -> &'static str {
+        "std.v1.output"
+    }
+
+    fn info(&self) -> ModuleInfo {
+        ModuleInfo {
+            uid: self.uid().to_string(),
+            name: "Output Module".into(),
+            description: "The output module".into(),
+            inputs: vec![ModuleInput {
+                number: 0,
+                name: "Left".to_string(),
+                description: "The left output".to_string(),
+            }],
+            outputs: vec![],
+        }
+    }
+
+    fn create_instance(&self, id: usize) -> Box<dyn Module> {
+        Box::new(OutputNode {
+            id,
+            node_index: None,
+        })
+    }
 }
 
-impl Module for OutputModule {
-    fn id(&self) -> Option<usize> {
+struct OutputNode {
+    id: usize,
+    node_index: Option<NodeIndex>,
+}
+
+impl Module for OutputNode {
+    fn id(&self) -> usize {
         self.id
     }
 
+    fn input(&self, pos: usize) -> Option<NodeIndex> {
+        match pos {
+            0 => self.node_index,
+            _ => None,
+        }
+    }
+
+    fn output(&self, _: usize) -> Option<NodeIndex> {
+        None
+    }
+
     fn add_to_context(&mut self, context: &mut AudioContext<1>) {
-        let id = self.id;
-        println!("Added OutputModule with id {id:?}");
-        // OutputModule is a special one, because it is already in the graph
+        self.node_index = Some(context.destination);
     }
-
-    fn remove_from_context(&mut self, context: &mut AudioContext<1>) {
-        // OutputModule cannot be deleted from the graph
-    }
-}
-
-impl ModuleDescription for OutputModule {
-    fn create_instance(&self, id: usize) -> Box<dyn Module> {
-        Box::new(Self { id: Some(id) })
-    }
-
-    fn uid(&self) -> &str {
-        "output"
-    }
-
-    fn name(&self) -> &str {
-        "Output Module"
-    }
-
-    fn description(&self) -> &str {
-        "The output module"
-    }
-
-    fn inputs(&self) -> &[ModuleInput] {
-        &INPUTS[..]
-    }
-
-    fn outputs(&self) -> &[ModuleOutput] {
-        &[]
-    }
-}
-
-lazy_static! {
-    static ref INPUTS: [ModuleInput; 1] = [ModuleInput {
-        number: 0,
-        name: "Left".to_string(),
-        description: "The left output".to_string(),
-    }];
 }

@@ -1,16 +1,15 @@
+use std::collections::HashMap;
 use std::sync::mpsc::Sender;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Stream;
-use glicol_synth::operator::Mul;
-use glicol_synth::oscillator::SinOsc;
-use glicol_synth::{AudioContext, AudioContextBuilder};
+use glicol_synth::{AudioContext, AudioContextBuilder, Message};
 use lazy_static::lazy_static;
-use rand::{distributions, Rng};
 
 use crate::modules::{Module, ModuleDescription, ModuleInfo, OutputModule, SinModule};
+use crate::patch::Cable;
 use crate::util::Observable;
 
 pub struct App {
@@ -48,7 +47,7 @@ impl App {
 
     pub fn accept_message(&self, msg: AppMsg) {
         let sender = self.message_sender.lock().unwrap();
-        sender.send(msg).unwrap();
+        sender.send(msg).unwrap()
     }
 }
 
@@ -63,12 +62,12 @@ lazy_static! {
 }
 
 struct AppState {
-    _audio_stream: Mutex<Stream>,
+    // контекст используется и модифицируется в разных потоках, поэтому мьютекс
     context: Arc<Mutex<AudioContext<1>>>,
-    // контекст используется и модифицируется в разных потоках
+    _audio_stream: Mutex<Stream>,
     available_modules: Observable<Vec<Box<dyn ModuleDescription>>>,
-    modules: Vec<Box<dyn Module>>,
-    sample_rate: usize,
+    modules: HashMap<usize, Box<dyn Module>>,
+    cables: Vec<Cable>,
 }
 
 // внутри _audio_stream лежит сырой указатель, для которого нет типажа Send
@@ -76,24 +75,11 @@ struct AppState {
 unsafe impl Send for AppState {}
 
 pub enum AppMsg {
-    Start,
-    Stop,
-    AddModule {
-        uid: String,
-        id: usize,
-    },
-    RemoveModule {
-        id: usize,
-    },
-    ConnectModules {
-        from: (usize, usize),
-        to: (usize, usize),
-    },
-    DisconnectModules {
-        from: (usize, usize),
-        to: (usize, usize),
-    },
-    ChangeConfiguration,
+    AddModule { uid: String, id: usize },
+    RemoveModule { id: usize },
+    AddCable(Cable),
+    RemoveCable(Cable),
+    ChangeConfiguration { output: String },
     RegisterAvailableModulesListener(Arc<dyn Fn(&[ModuleInfo])>),
 }
 
@@ -128,8 +114,8 @@ impl AppState {
             _audio_stream: Mutex::new(stream),
             context,
             available_modules: Observable::new(available_modules()),
-            modules: vec![],
-            sample_rate: sr,
+            modules: HashMap::new(),
+            cables: vec![],
         };
 
         Ok(result)
@@ -137,55 +123,52 @@ impl AppState {
 
     fn update(&mut self, msg: &AppMsg) {
         match msg {
-            AppMsg::Start => self.start(),
-            AppMsg::Stop => self.stop(),
             AppMsg::AddModule { uid, id } => self.add_module(uid, *id),
             AppMsg::RemoveModule { id } => self.remove_module(*id),
-            AppMsg::ConnectModules { .. } => {}
-            AppMsg::DisconnectModules { .. } => {}
-            AppMsg::ChangeConfiguration => {}
+            AppMsg::AddCable(cable) => self.add_cable(cable),
+            AppMsg::RemoveCable(cable) => self.remove_cable(cable),
+            AppMsg::ChangeConfiguration { .. } => {}
             AppMsg::RegisterAvailableModulesListener(listener) => {
                 self.add_available_modules_listener(listener.clone())
             }
         }
     }
 
-    fn stop(&mut self) {
-        println!("Stop!")
-    }
-
-    fn start(&mut self) {
-        println!("Start!")
-    }
-
     fn add_module(&mut self, uid: &str, id: usize) {
         let module_desc = self.available_modules.data.iter().find(|x| x.uid() == uid);
 
         if let Some(module_desc) = module_desc {
-            let module = module_desc.create_instance(id);
-            self.modules.push(module);
-            self.recreate_context();
+            let mut module = module_desc.create_instance(id);
+            let context = &mut self.context.lock().unwrap();
+            module.add_to_context(context);
+            self.modules.insert(id, module);
         } else {
             eprintln!("Node description with uid {uid} not found");
         }
     }
 
     fn remove_module(&mut self, id: usize) {
-        self.modules.retain(|x| x.id() != Some(id));
+        self.modules.remove(&id);
+        self.cables
+            .retain(|x| x.from.module != id && x.to.module != id);
         self.recreate_context();
+    }
 
-        // if let Some(module) = module {
-        //     let context = &mut self.context.lock().unwrap();
-        //     module.remove_from_context(context);
-        //     println!("Removed Node with id {id}");
-        // } else {
-        //     eprintln!("Node with id {id} not found");
-        // }
+    fn add_cable(&mut self, cable: &Cable) {
+        self.cables.push(*cable);
+        let context = &mut self.context.lock().unwrap();
+        self.do_connect_modules(context, cable);
+    }
+
+    fn remove_cable(&mut self, cable: &Cable) {
+        println!("Here: {cable:?}");
+        self.cables.retain(|x| x != cable);
+        self.recreate_context();
     }
 
     pub fn add_available_modules_listener(&mut self, listener: Arc<dyn Fn(&[ModuleInfo])>) {
         let listener = move |module_descriptions: &Vec<Box<dyn ModuleDescription>>| {
-            let module_infos: Vec<_> = module_descriptions.iter().map(|x| x.get_info()).collect();
+            let module_infos: Vec<_> = module_descriptions.iter().map(|x| x.info()).collect();
             listener(&module_infos);
         };
         let listener = Arc::new(listener);
@@ -197,9 +180,25 @@ impl AppState {
         let context = &mut self.context.lock().unwrap();
         context.reset();
 
-        for module in &mut self.modules {
+        for module in &mut self.modules.values_mut() {
             module.add_to_context(context)
         }
+
+        for cable in &self.cables {
+            self.do_connect_modules(context, cable);
+        }
+    }
+
+    fn do_connect_modules(&self, context: &mut AudioContext<1>, cable: &Cable) {
+        let from = self.modules[&cable.from.module]
+            .output(cable.from.socket)
+            .unwrap();
+        let to = self.modules[&cable.to.module]
+            .input(cable.to.socket)
+            .unwrap();
+        context.connect(from, to);
+        context.send_msg_to_all(Message::ResetOrder);
+        println!("Connecting {} with {}", from.index(), to.index());
     }
 }
 
@@ -210,7 +209,9 @@ fn start_audio_stream<T: cpal::Sample, const N: usize>(
 ) -> Result<cpal::Stream, anyhow::Error> {
     let channels = config.channels as usize;
 
-    let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
+    let err_fn = |err| {
+        eprintln!("an error occurred on stream: {}", err);
+    };
 
     let stream = device.build_output_stream(
         config,

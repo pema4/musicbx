@@ -9,7 +9,6 @@ import java.util.function.Consumer
 
 object AvailableModulesService {
     private external fun registerListener(listener: AvailableModulesListener)
-
     private val _availableModules = MutableStateFlow(emptyList<Module>())
     val availableModules: StateFlow<List<Module>> by ::_availableModules
 
@@ -23,7 +22,6 @@ object AvailableModulesService {
 
 private fun interface AvailableModulesListener : Consumer<String> {
     fun acceptModules(modules: List<Module>)
-
     override fun accept(t: String) {
         acceptModules(Json.decodeFromString(t))
     }

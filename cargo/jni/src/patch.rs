@@ -4,36 +4,36 @@ use crate::modules::{ModuleInput, ModuleOutput};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct PatchInfo {
-    modules: Vec<ModuleInfo>,
-    cables: Vec<CableInfo>,
+    pub modules: Vec<ModuleInfo>,
+    pub cables: Vec<Cable>,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct ModuleInfo {
-    id: usize,
-    uid: String,
-    name: String,
-    inputs: Vec<ModuleInput>,
-    outputs: Vec<ModuleOutput>,
-    offset: GridOffset,
+    pub id: usize,
+    pub uid: String,
+    pub name: String,
+    pub inputs: Vec<ModuleInput>,
+    pub outputs: Vec<ModuleOutput>,
+    pub offset: GridOffset,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct GridOffset {
-    x: i32,
-    y: i32,
+    pub x: i32,
+    pub y: i32,
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub struct CableInfo {
-    from: CableEnd,
-    to: CableEnd,
+#[derive(Eq, PartialEq, Hash, Copy, Clone, Debug, Serialize, Deserialize)]
+pub struct Cable {
+    pub from: CableEnd,
+    pub to: CableEnd,
 }
 
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
-struct CableEnd {
-    module_id: i32,
-    socket_number: i32,
+#[derive(Eq, PartialEq, Hash, Copy, Clone, Debug, Serialize, Deserialize)]
+pub struct CableEnd {
+    pub module: usize,
+    pub socket: usize,
 }
 
 #[cfg(test)]
@@ -48,25 +48,25 @@ mod test {
             let json = json!({
                 "modules": [
                     {
-                        "id": 0i32,
+                        "id": 0usize,
                         "name": "First",
                         "inputs": [],
                         "outputs": [],
                         "offset": {
-                            "x": 10i32,
-                            "y": 20i32,
+                            "x": 10usize,
+                            "y": 20usize,
                         }
                     }
                 ],
                 "cables": [
                     {
                         "from": {
-                            "module_id": 0i32,
-                            "socket_number": 0i32,
+                            "module": 0usize,
+                            "socket": 0usize,
                         },
                         "to": {
-                            "module_id": 1i32,
-                            "socket_number": 1i32,
+                            "module": 1usize,
+                            "socket": 1usize,
                         }
                     }
                 ],
