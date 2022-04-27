@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.view
+package ru.pema4.musicbx.ui
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Canvas
@@ -30,10 +30,9 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
-import ru.pema4.musicbx.WithKoin
-import ru.pema4.musicbx.model.CableEnd
-import ru.pema4.musicbx.model.InputSocket
-import ru.pema4.musicbx.model.OutputSocket
+import ru.pema4.musicbx.model.patch.CableEnd
+import ru.pema4.musicbx.model.patch.InputSocket
+import ru.pema4.musicbx.model.patch.OutputSocket
 import ru.pema4.musicbx.util.explainedAs
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -67,8 +66,8 @@ fun SocketView(
             .size(20.dp)
             .mouseClickable {
                 when {
-                    keyboardModifiers.isMetaPressed -> actionHandler.editCable()
-                    else -> actionHandler.createCable()
+                    keyboardModifiers.isMetaPressed -> actionHandler.edit()
+                    else -> actionHandler.create()
                 }
             }
             .hoverable(state.hoverInteractionSource)
@@ -83,21 +82,21 @@ fun SocketView(
 }
 
 interface SocketActionHandler {
-    fun createCable()
-    fun editCable()
+    fun create()
+    fun edit()
     fun startPreview()
     fun endPreview()
 }
 
 fun SocketActionHandler(
-    createCable: () -> Unit = {},
-    editCable: () -> Unit = {},
+    create: () -> Unit = {},
+    edit: () -> Unit = {},
     startPreview: () -> Unit = {},
     endPreview: () -> Unit = {},
 ): SocketActionHandler {
     return object : SocketActionHandler {
-        override fun createCable() = createCable()
-        override fun editCable() = editCable()
+        override fun create() = create()
+        override fun edit() = edit()
         override fun startPreview() = startPreview()
         override fun endPreview() = endPreview()
     }
@@ -105,15 +104,15 @@ fun SocketActionHandler(
 
 @Composable
 fun rememberSocketActionHandler(
-    moduleActionHandler: ModuleActionHandler,
+    moduleViewModel: ModuleViewModel,
     cableEnd: CableEnd,
 ): SocketActionHandler {
-    return remember(moduleActionHandler, cableEnd) {
+    return remember(moduleViewModel, cableEnd) {
         SocketActionHandler(
-            createCable = { moduleActionHandler.onCableCreated(cableEnd) },
-            editCable = { moduleActionHandler.onCableEdit(cableEnd) },
-            startPreview = { moduleActionHandler.onCablePreviewStart(cableEnd) },
-            endPreview = { moduleActionHandler.onCablePreviewEnd(cableEnd) },
+            create = { moduleViewModel.createCable(cableEnd) },
+            edit = { moduleViewModel.editCable(cableEnd) },
+            startPreview = { moduleViewModel.startCablePreview(cableEnd) },
+            endPreview = { moduleViewModel.endCablePreview(cableEnd) },
         )
     }
 }
@@ -172,11 +171,9 @@ fun SocketState.toOutputSocket(): OutputSocket {
 @Preview
 @Composable
 private fun SocketViewPreview() {
-    WithKoin {
-        Row {
-            SocketView(state = SocketState(SocketType.Input, 0, "socket"))
-            Spacer(Modifier.width(10.dp))
-            SocketView(state = SocketState(SocketType.Output, 0, "socket"))
-        }
+    Row {
+        SocketView(state = SocketState(SocketType.Input, 0, "socket"))
+        Spacer(Modifier.width(10.dp))
+        SocketView(state = SocketState(SocketType.Output, 0, "socket"))
     }
 }

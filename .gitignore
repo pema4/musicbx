@@ -12,3 +12,6 @@ gradle-app.setting
 !gradle-wrapper.properties
 
 **/.idea/
+
+**/target
+**/*.dylib

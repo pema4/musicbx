@@ -3,7 +3,7 @@ package ru.pema4.musicbx.service
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import ru.pema4.musicbx.model.Patch
+import ru.pema4.musicbx.model.patch.Patch
 import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.io.path.writeText

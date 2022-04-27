@@ -1,4 +1,4 @@
-package ru.pema4.musicbx.view
+package ru.pema4.musicbx.ui
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,8 +29,9 @@ import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
-import ru.pema4.musicbx.WithKoin
-import ru.pema4.musicbx.model.TestPatch
+import ru.pema4.musicbx.model.config.InputOutputSettings
+import ru.pema4.musicbx.model.patch.TestPatch
+import ru.pema4.musicbx.service.PlaybackService
 import ru.pema4.musicbx.util.FileDialog
 import ru.pema4.musicbx.util.FileDialogMode
 import ru.pema4.musicbx.util.InstallTooltipManager
@@ -36,11 +40,17 @@ import ru.pema4.musicbx.viewmodel.rememberAppViewModel
 import java.awt.Cursor
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.math.abs
 
 @Composable
 fun ApplicationScope.App(
     viewModel: AppViewModel = rememberAppViewModel(),
 ) {
+    LaunchedEffect(viewModel) {
+        PlaybackService.start()
+        PlaybackService.stop()
+    }
+
     Window(::exitApplication) {
         AppMenuBar(viewModel)
         AppDialogWindows(viewModel)
@@ -79,7 +89,7 @@ fun AppWindowContent(
                             .height(1.dp)
                             .background(Color.Black)
                     )
-                    Tooltip()
+                    Tooltip(viewModel)
                 }
             }
         }
@@ -128,6 +138,41 @@ private fun FrameWindowScope.AppMenuBar(
                 onClick = viewModel::showOpenDialog,
             )
         }
+
+        Menu(text = "View") {
+            Item(
+                text = "Actual Size",
+                enabled = abs(viewModel.editorViewModel.scale - 1.0f) > 1e-5,
+                shortcut = KeyShortcut(Key.Zero, meta = true),
+                onClick = viewModel::actualSize,
+            )
+            Item(
+                text = "Zoom In",
+                shortcut = KeyShortcut(Key.Equals, meta = true),
+                onClick = viewModel::zoomIn,
+            )
+            Item(
+                text = "Zoom Out",
+                shortcut = KeyShortcut(Key.Minus, meta = true),
+                onClick = viewModel::zoomOut,
+            )
+        }
+
+        val ioSettings by viewModel.collectIoSettingsAsState()
+        val availableOutputs = ioSettings?.output?.available ?: emptyList()
+        Menu(text = "Settings") {
+            Menu(
+                text = "Select Output...",
+                enabled = availableOutputs.isNotEmpty(),
+            ) {
+                for (output in availableOutputs) {
+                    Item(
+                        text = output,
+                        onClick = { viewModel.changeOutput(output) },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -161,7 +206,7 @@ private fun AppDialogWindows(
 }
 
 @Composable
-fun EditorMaterialTheme(
+fun EditorTheme(
     content: @Composable () -> Unit,
 ) {
     MaterialTheme {
@@ -174,10 +219,21 @@ interface AppViewModel {
     val uiState: AppState
     val editorViewModel: EditorViewModel
 
-    fun showOpenDialog()
-    fun showSaveDialog()
-    fun save(path: Path?)
-    fun open(path: Path?)
+    @Composable
+    fun collectIoSettingsAsState(): State<InputOutputSettings?>
+
+    @Composable
+    fun collectAvailableModulesAsState(): State<List<ModuleViewModel>>
+
+    fun showOpenDialog() = Unit
+    fun showSaveDialog() = Unit
+
+    fun save(path: Path?) = Unit
+    fun open(path: Path?) = Unit
+    fun actualSize() = Unit
+    fun zoomIn() = Unit
+    fun zoomOut() = Unit
+    fun changeOutput(newOutput: String) = Unit
 }
 
 @Stable
@@ -189,44 +245,9 @@ interface AppState {
 @Preview
 @Composable
 fun AppPreview() {
-    EditorMaterialTheme {
-        WithKoin {
-            AppWindowContent(
-                viewModel = rememberAppViewModel(TestPatch)
-            )
-        }
+    EditorTheme {
+        AppWindowContent(
+            viewModel = rememberAppViewModel(TestPatch)
+        )
     }
 }
-
-/*
-fun App() {
-    Row {
-        ActivityBar()
-        Spacer()
-        Column {
-            ControlPanel()
-            Spacer()
-            PatchEditor()
-            StatusBar()
-        }
-    }
-}
-
-fun ActivityBar() {
-    Column {
-        Modules()
-        Projects()
-    }
-}
-
-fun ControlPanel() {
-    Row {
-        Play()
-        Pause()
-        SampleRateSelection()
-        AudioDeviceChooser()
-        MidiDeviceChooser()
-        CpuMeter()
-    }
-}
- */
