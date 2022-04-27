@@ -6,11 +6,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
@@ -31,7 +31,6 @@ import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import ru.pema4.musicbx.model.config.InputOutputSettings
 import ru.pema4.musicbx.model.patch.TestPatch
-import ru.pema4.musicbx.service.PlaybackService
 import ru.pema4.musicbx.util.FileDialog
 import ru.pema4.musicbx.util.FileDialogMode
 import ru.pema4.musicbx.util.InstallTooltipManager
@@ -39,22 +38,19 @@ import ru.pema4.musicbx.util.MutableTooltipManager
 import ru.pema4.musicbx.viewmodel.rememberAppViewModel
 import java.awt.Cursor
 import java.nio.file.Path
-import kotlin.io.path.exists
 import kotlin.math.abs
 
 @Composable
 fun ApplicationScope.App(
     viewModel: AppViewModel = rememberAppViewModel(),
 ) {
-    LaunchedEffect(viewModel) {
-        PlaybackService.start()
-        PlaybackService.stop()
-    }
-
     Window(::exitApplication) {
         AppMenuBar(viewModel)
         AppDialogWindows(viewModel)
-        AppWindowContent(viewModel)
+        AppWindowContent(
+            viewModel = viewModel,
+            modifier = Modifier.background(MaterialTheme.colors.background),
+        )
     }
 }
 
@@ -71,7 +67,6 @@ fun AppWindowContent(
             ModuleGalleryView(
                 appViewModel = viewModel,
                 modifier = Modifier
-                    .background(SolidColor(Color.Blue), alpha = 0.05f)
                     .fillMaxSize(),
             )
         }
@@ -86,10 +81,11 @@ fun AppWindowContent(
                     )
                     Spacer(
                         modifier = Modifier
+                            .background(MaterialTheme.colors.onSurface)
                             .height(1.dp)
-                            .background(Color.Black)
+                            .fillMaxWidth()
                     )
-                    Tooltip(viewModel)
+                    StatusBar(viewModel)
                 }
             }
         }
@@ -98,7 +94,7 @@ fun AppWindowContent(
             visiblePart {
                 Spacer(
                     modifier = Modifier
-                        .background(Color.Black)
+                        .background(MaterialTheme.colors.onSurface)
                         .width(1.dp)
                         .fillMaxHeight()
                 )
@@ -129,12 +125,18 @@ private fun FrameWindowScope.AppMenuBar(
     MenuBar {
         Menu(text = "File") {
             Item(
-                text = "Save As...",
+                text = "Save",
                 shortcut = KeyShortcut(Key.S, meta = true),
                 onClick = viewModel::showSaveDialog,
             )
             Item(
+                text = "Save As...",
+                shortcut = KeyShortcut(Key.S, meta = true, shift = true),
+                onClick = viewModel::showSaveDialog,
+            )
+            Item(
                 text = "Open...",
+                shortcut = KeyShortcut(Key.O, meta = true),
                 onClick = viewModel::showOpenDialog,
             )
         }
@@ -187,9 +189,7 @@ private fun AppDialogWindows(
             title = "Choose a file",
             mode = FileDialogMode.Load,
         ) { path ->
-            if (path?.exists() == true) {
-                viewModel.open(path)
-            }
+            viewModel.open(path)
         }
     }
 
@@ -198,19 +198,8 @@ private fun AppDialogWindows(
             title = "Saving a file",
             mode = FileDialogMode.Save,
         ) { path ->
-            if (path != null) {
-                viewModel.save(path)
-            }
+            viewModel.save(path)
         }
-    }
-}
-
-@Composable
-fun EditorTheme(
-    content: @Composable () -> Unit,
-) {
-    MaterialTheme {
-        content()
     }
 }
 
@@ -223,7 +212,7 @@ interface AppViewModel {
     fun collectIoSettingsAsState(): State<InputOutputSettings?>
 
     @Composable
-    fun collectAvailableModulesAsState(): State<List<ModuleViewModel>>
+    fun collectAvailableModulesAsState(): State<List<ModuleState>>
 
     fun showOpenDialog() = Unit
     fun showSaveDialog() = Unit

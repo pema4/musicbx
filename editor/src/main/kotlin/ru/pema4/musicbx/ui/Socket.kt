@@ -8,7 +8,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.mouseClickable
@@ -18,7 +17,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
@@ -30,17 +28,20 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
-import ru.pema4.musicbx.model.patch.CableEnd
+import ru.pema4.musicbx.model.patch.CableFrom
+import ru.pema4.musicbx.model.patch.CableTo
 import ru.pema4.musicbx.model.patch.InputSocket
+import ru.pema4.musicbx.model.patch.Module
 import ru.pema4.musicbx.model.patch.OutputSocket
+import ru.pema4.musicbx.model.patch.Socket
 import ru.pema4.musicbx.util.explainedAs
+import ru.pema4.musicbx.viewmodel.ModuleStateImpl
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SocketView(
     state: SocketState,
     modifier: Modifier = Modifier,
-    actionHandler: SocketActionHandler = SocketActionHandler(),
 ) {
     val color = when (state.type) {
         SocketType.Input -> MaterialTheme.colors.primary
@@ -48,13 +49,13 @@ fun SocketView(
     }
 
     val isHovered by state.hoverInteractionSource.collectIsHoveredAsState()
-    LaunchedEffect(actionHandler) {
+    LaunchedEffect(state) {
         snapshotFlow { isHovered }
             .onEach {
                 if (it) {
-                    actionHandler.startPreview()
+                    state.startPreview()
                 } else {
-                    actionHandler.endPreview()
+                    state.endPreview()
                 }
             }
             .collect()
@@ -62,16 +63,15 @@ fun SocketView(
 
     Canvas(
         modifier = modifier
-            .padding(all = 5.dp)
-            .size(20.dp)
+            .size(24.dp)
             .mouseClickable {
                 when {
-                    keyboardModifiers.isMetaPressed -> actionHandler.edit()
-                    else -> actionHandler.create()
+                    keyboardModifiers.isMetaPressed -> state.edit()
+                    else -> state.create()
                 }
             }
             .hoverable(state.hoverInteractionSource)
-            .explainedAs("${state.type} socket #${state.number}"),
+            .explainedAs(state.description),
     ) {
         drawCircle(color = color)
         drawCircle(
@@ -81,51 +81,27 @@ fun SocketView(
     }
 }
 
-interface SocketActionHandler {
-    fun create()
-    fun edit()
-    fun startPreview()
-    fun endPreview()
-}
-
-fun SocketActionHandler(
-    create: () -> Unit = {},
-    edit: () -> Unit = {},
-    startPreview: () -> Unit = {},
-    endPreview: () -> Unit = {},
-): SocketActionHandler {
-    return object : SocketActionHandler {
-        override fun create() = create()
-        override fun edit() = edit()
-        override fun startPreview() = startPreview()
-        override fun endPreview() = endPreview()
-    }
-}
-
-@Composable
-fun rememberSocketActionHandler(
-    moduleViewModel: ModuleViewModel,
-    cableEnd: CableEnd,
-): SocketActionHandler {
-    return remember(moduleViewModel, cableEnd) {
-        SocketActionHandler(
-            create = { moduleViewModel.createCable(cableEnd) },
-            edit = { moduleViewModel.editCable(cableEnd) },
-            startPreview = { moduleViewModel.startCablePreview(cableEnd) },
-            endPreview = { moduleViewModel.endCablePreview(cableEnd) },
-        )
-    }
-}
-
 @Stable
 data class SocketState(
     val type: SocketType,
-    val number: Int,
-    val name: String,
-    val description: String = "description",
+    val model: Socket,
+    private val moduleState: ModuleState,
 ) {
-    var offsetInModule by mutableStateOf(DpOffset.Unspecified)
+    var offsetInModule by mutableStateOf(DpOffset.Zero)
     var hoverInteractionSource = MutableInteractionSource()
+    private val end = when (type) {
+        SocketType.Input -> CableTo(moduleId = moduleState.id, socketNumber = number)
+        SocketType.Output -> CableFrom(moduleId = moduleState.id, socketNumber = number)
+    }
+
+    val number: Int get() = model.number
+    val name: String get() = model.name
+    val description: String get() = model.description
+
+    fun create() = moduleState.createCable(end)
+    fun edit() = moduleState.editCable(end)
+    fun startPreview() = moduleState.startCablePreview(end)
+    fun endPreview() = moduleState.endCablePreview(end)
 }
 
 enum class SocketType {
@@ -133,20 +109,14 @@ enum class SocketType {
     Output,
 }
 
-fun InputSocket.toSocketState(): SocketState {
+fun SocketState(model: Socket, moduleState: ModuleState): SocketState {
     return SocketState(
-        type = SocketType.Input,
-        number = number,
-        name = name,
-    )
-}
-
-fun OutputSocket.toSocketState(): SocketState {
-    return SocketState(
-        type = SocketType.Output,
-        number = number,
-        name = name,
-        description = description,
+        type = when (model) {
+            is InputSocket -> SocketType.Input
+            is OutputSocket -> SocketType.Output
+        },
+        model = model,
+        moduleState = moduleState
     )
 }
 
@@ -171,9 +141,19 @@ fun SocketState.toOutputSocket(): OutputSocket {
 @Preview
 @Composable
 private fun SocketViewPreview() {
+    val module = Module(
+        uid = "test",
+        inputs = listOf(
+            InputSocket(number = 0)
+        ),
+        outputs = listOf(
+            OutputSocket(number = 0)
+        )
+    )
+    val moduleState = ModuleStateImpl(module)
     Row {
-        SocketView(state = SocketState(SocketType.Input, 0, "socket"))
+        SocketView(state = SocketState(module.inputs[0], moduleState))
         Spacer(Modifier.width(10.dp))
-        SocketView(state = SocketState(SocketType.Output, 0, "socket"))
+        SocketView(state = SocketState(module.outputs[0], moduleState))
     }
 }

@@ -1,14 +1,14 @@
 use std::collections::HashMap;
+use std::sync::{Arc, mpsc, Mutex};
 use std::sync::mpsc::Sender;
-use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::Stream;
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use glicol_synth::{AudioContext, AudioContextBuilder, Message};
 use lazy_static::lazy_static;
 
-use crate::modules::{Module, ModuleDescription, ModuleInfo, OutputModule, SinModule};
+use crate::modules::{Module, ModuleDescription, ModuleInfo, MulModule, OutputModule, SinModule};
 use crate::patch::Cable;
 use crate::util::Observable;
 
@@ -68,6 +68,7 @@ struct AppState {
     available_modules: Observable<Vec<Box<dyn ModuleDescription>>>,
     modules: HashMap<usize, Box<dyn Module>>,
     cables: Vec<Cable>,
+    parameters: HashMap<(usize, u8), f32>,
 }
 
 // внутри _audio_stream лежит сырой указатель, для которого нет типажа Send
@@ -75,12 +76,14 @@ struct AppState {
 unsafe impl Send for AppState {}
 
 pub enum AppMsg {
+    Reset,
     AddModule { uid: String, id: usize },
     RemoveModule { id: usize },
     AddCable(Cable),
     RemoveCable(Cable),
     ChangeConfiguration { output: String },
     RegisterAvailableModulesListener(Arc<dyn Fn(&[ModuleInfo])>),
+    SetParameter { id: usize, index: u8, value: f32 },
 }
 
 unsafe impl Send for AppMsg {}
@@ -116,6 +119,7 @@ impl AppState {
             available_modules: Observable::new(available_modules()),
             modules: HashMap::new(),
             cables: vec![],
+            parameters: HashMap::new(),
         };
 
         Ok(result)
@@ -123,6 +127,7 @@ impl AppState {
 
     fn update(&mut self, msg: &AppMsg) {
         match msg {
+            AppMsg::Reset => self.reset(),
             AppMsg::AddModule { uid, id } => self.add_module(uid, *id),
             AppMsg::RemoveModule { id } => self.remove_module(*id),
             AppMsg::AddCable(cable) => self.add_cable(cable),
@@ -131,7 +136,15 @@ impl AppState {
             AppMsg::RegisterAvailableModulesListener(listener) => {
                 self.add_available_modules_listener(listener.clone())
             }
+            AppMsg::SetParameter { id, index, value } => self.set_parameter(*id, *index, *value),
         }
+    }
+
+    fn reset(&mut self) {
+        self.modules.clear();
+        self.cables.clear();
+        self.parameters.clear();
+        self.recreate_context();
     }
 
     fn add_module(&mut self, uid: &str, id: usize) {
@@ -187,6 +200,14 @@ impl AppState {
         for cable in &self.cables {
             self.do_connect_modules(context, cable);
         }
+
+        for ((id, index), value) in &self.parameters {
+            eprintln!("id: {id}, index: {index}, value: {value}");
+            let module = self.modules.get(id);
+            if let Some(module) = module {
+                module.set_parameter(context, *index, *value);
+            }
+        }
     }
 
     fn do_connect_modules(&self, context: &mut AudioContext<1>, cable: &Cable) {
@@ -199,6 +220,15 @@ impl AppState {
         context.connect(from, to);
         context.send_msg_to_all(Message::ResetOrder);
         println!("Connecting {} with {}", from.index(), to.index());
+    }
+
+    fn set_parameter(&mut self, id: usize, index: u8, value: f32) {
+        let module = self.modules.get(&id).unwrap();
+        let context = &mut self.context.lock().unwrap();
+
+        self.parameters.insert((id, index), value);
+
+        module.set_parameter(context, index, value);
     }
 }
 
@@ -237,5 +267,6 @@ fn available_modules() -> Vec<Box<dyn ModuleDescription>> {
     vec![
         Box::new(SinModule::default()),
         Box::new(OutputModule::default()),
+        Box::new(MulModule::default()),
     ]
 }

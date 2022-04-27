@@ -4,9 +4,7 @@ import ru.pema4.musicbx.model.patch.CableFrom
 import ru.pema4.musicbx.model.patch.CableTo
 
 object PlaybackService {
-    fun start() = Unit
-
-    fun stop() = Unit
+    external fun reset()
 
     external fun addModule(uid: String, id: Int)
 
@@ -31,4 +29,6 @@ object PlaybackService {
             toInput = to.socketNumber,
         )
     }
+
+    external fun setParameter(moduleId: Int, parameterNum: Int, normalizedValue: Float)
 }

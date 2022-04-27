@@ -3,6 +3,7 @@ package ru.pema4.musicbx.ui
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -23,6 +24,7 @@ import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import ru.pema4.musicbx.model.patch.CableEnd
 import ru.pema4.musicbx.model.patch.Module
@@ -65,7 +67,7 @@ fun EditorView(
             ),
         hideHorizontalScrollbarAutomatically = true,
     ) {
-        ScaledSizeLayout(viewModel.scale) {
+        ScaledLayout(scale = viewModel.scale) {
             Box(
                 modifier = Modifier
                     .graphicsLayer {
@@ -82,7 +84,7 @@ fun EditorView(
 }
 
 @Composable
-private fun ScaledSizeLayout(
+private fun ScaledLayout(
     scale: Float,
     content: @Composable () -> Unit,
 ) {
@@ -91,7 +93,7 @@ private fun ScaledSizeLayout(
             val placeables = measurables.map { it.measure(constraints) }
             val width = (placeables.maxOf { it.measuredWidth } * scale).roundToInt()
             val height = (placeables.maxOf { it.measuredHeight } * scale).roundToInt()
-            layout(width, height) {
+            layout(width = width, height = height) {
                 for (placeable in placeables) {
                     placeable.place(IntOffset.Zero)
                 }
@@ -112,22 +114,27 @@ private fun EditorContentView(
 
 @Composable
 private fun EditorModulesView(viewModel: EditorViewModel) {
-    for (moduleViewModel in viewModel.modules) {
-        key(moduleViewModel.id) {
+    for (moduleState in viewModel.modules) {
+        key(moduleState.id) {
+            var zIndex = moduleState.id.toFloat()
+            if (!moduleState.expanded) {
+                zIndex -= 1_000_000
+            }
+
             Box(
                 modifier = Modifier
-                    .zIndex(moduleViewModel.id.toFloat())
+                    .zIndex(zIndex)
                     .composed {
                         diagonallyDraggable(
-                            key1 = moduleViewModel,
-                            offset = moduleViewModel.uiState.offset,
-                            onChange = { moduleViewModel.uiState.offset = it }
+                            key1 = moduleState,
+                            offset = moduleState.offset,
+                            onChange = { moduleState.offset = it }
                         )
                     }
             ) {
                 ModuleView(
-                    viewModel = moduleViewModel,
-                    modifier = Modifier,
+                    state = moduleState,
+                    modifier = Modifier.widthIn(max = 150.dp),
                 )
             }
         }
@@ -153,11 +160,12 @@ private fun EditorDraftCableView(viewModel: EditorViewModel) {
 
 interface EditorViewModel {
     val uiState: EditorState
-    val modules: List<ModuleViewModel>
+    val modules: List<ModuleState>
     val cables: List<FullCableState>
     val draftCable: DraftCableState?
     val scale: Float
 
+    fun recreateGraphOnBackend()
     fun extractPatch(): Patch
     fun createCable(end: CableEnd) = Unit
     fun editCable(end: CableEnd) = Unit

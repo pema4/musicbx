@@ -1,25 +1,17 @@
-use jni::objects::{JClass, JString};
-use jni::sys::jint;
 use jni::JNIEnv;
+use jni::objects::{JClass, JString};
+use jni::sys::{jfloat, jint};
 
 use crate::app::{App, AppMsg};
 use crate::patch::{Cable, CableEnd};
 use crate::util::throw_illegal_state_exception;
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_PlaybackService_start(
+pub extern "system" fn Java_ru_pema4_musicbx_service_PlaybackService_reset(
     _env: JNIEnv,
     _class: JClass,
 ) {
-    // App::current().accept_message(AppMsg::Start);
-}
-
-#[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_PlaybackService_stop(
-    _env: JNIEnv,
-    _class: JClass,
-) {
-    // App::current().accept_message(AppMsg::Stop);
+    App::current().accept_message(AppMsg::Reset);
 }
 
 #[no_mangle]
@@ -147,4 +139,29 @@ fn cable(
             socket: to_output.try_into()?,
         },
     })
+}
+
+#[no_mangle]
+pub extern "system" fn Java_ru_pema4_musicbx_service_PlaybackService_setParameter(
+    env: JNIEnv,
+    _: JClass,
+    module_id: jint,
+    parameter_index: jint,
+    value: jfloat,
+) {
+    let result = set_parameter(module_id, parameter_index, value);
+
+    if let Err(error) = result {
+        throw_illegal_state_exception(&env, &error);
+    }
+}
+
+fn set_parameter(module_id: jint, parameter_index: jint, value: jfloat) -> anyhow::Result<()> {
+    let msg = AppMsg::SetParameter {
+        id: module_id.try_into()?,
+        index: parameter_index.try_into()?,
+        value: value.into(),
+    };
+    App::current().accept_message(msg);
+    Ok(())
 }

@@ -17,8 +17,9 @@ import ru.pema4.musicbx.service.ConfigurationService
 import ru.pema4.musicbx.service.FileService
 import ru.pema4.musicbx.ui.AppState
 import ru.pema4.musicbx.ui.AppViewModel
-import ru.pema4.musicbx.ui.ModuleViewModel
+import ru.pema4.musicbx.ui.ModuleState
 import java.nio.file.Path
+import kotlin.io.path.exists
 
 @Composable
 fun rememberAppViewModel(
@@ -56,10 +57,10 @@ class AppViewModelImpl(
     }
 
     @Composable
-    override fun collectAvailableModulesAsState(): State<List<ModuleViewModel>> {
+    override fun collectAvailableModulesAsState(): State<List<ModuleState>> {
         val modules by availableModuleService.availableModules.collectAsState()
         return derivedStateOf {
-            modules.map(::ModuleViewModelImpl)
+            modules.map { ModuleStateImpl(it, expanded = false) }
         }
     }
 
@@ -79,15 +80,23 @@ class AppViewModelImpl(
                 patch = patch,
                 path = path,
             )
+
+            val scaling = _editorViewModel.scalingIndex
             _editorViewModel = EditorViewModelImpl(patch)
+            _editorViewModel.scalingIndex = scaling
         }
     }
 
     override fun open(path: Path?) {
         _uiState.showingOpenDialog = false
-        if (path != null) {
+        if (path?.exists() == true) {
             val patch = fileService.load(path)
+
+            val scaling = _editorViewModel.scalingIndex
             _editorViewModel = EditorViewModelImpl(patch)
+            _editorViewModel.scalingIndex = scaling
+
+            editorViewModel.recreateGraphOnBackend()
         }
     }
 

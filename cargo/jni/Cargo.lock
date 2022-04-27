@@ -577,6 +577,7 @@ dependencies = [
  "clap",
  "cpal",
  "glicol_synth",
+ "hashbrown 0.12.0",
  "jni",
  "lazy_static",
  "petgraph",

@@ -12,7 +12,8 @@ data class Module(
     val uid: String,
     val name: String = "Module $id",
     val description: String = "description",
+    val offset: GridOffset = GridOffset(x = GridSize(0), y = GridSize(1)),
     val inputs: List<InputSocket> = emptyList(),
     val outputs: List<OutputSocket> = emptyList(),
-    val offset: GridOffset = GridOffset(x = GridSize(0), y = GridSize(1)),
+    val parameters: List<ModuleParameter> = emptyList(),
 )

@@ -1,3 +1,3 @@
-mod available_modules_service;
-mod configuration_service;
-mod playback_service;
+mod available_modules;
+mod configuration;
+mod playback;

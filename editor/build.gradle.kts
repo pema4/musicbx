@@ -15,6 +15,7 @@ repositories {
     google()
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    maven("https://jitpack.io")
 }
 
 dependencies {
@@ -22,8 +23,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     implementation("org.jetbrains.compose.components:components-splitpane-desktop:1.1.1")
 
-    implementation("io.insert-koin:koin-core:3.1.6")
-    implementation("dev.burnoo:cokoin:0.3.3")
+    implementation("com.github.Dansoftowner:jSystemThemeDetector:3.6")
 }
 
 tasks.withType<KotlinCompile> {

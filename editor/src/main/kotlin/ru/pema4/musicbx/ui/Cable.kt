@@ -4,8 +4,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
@@ -14,7 +14,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -31,7 +30,6 @@ import ru.pema4.musicbx.model.patch.CableTo
 @Composable
 fun CableView(
     state: CableState,
-    style: CableStyle = LocalCableStyle.current,
 ) {
     val hoverInteractionSource = remember { MutableInteractionSource() }
     val isHovered by hoverInteractionSource.collectIsHoveredAsState()
@@ -44,9 +42,15 @@ fun CableView(
     }
 
     val color = when {
-        state is DraftCableState -> style.draftColor
-        state is FullCableState && state.isHovered -> style.previewColor
-        else -> style.primaryColor
+        state is DraftCableState -> MaterialTheme.colors.onSurface.copy(alpha = 0.5f)
+        state is FullCableState && state.isHovered -> {
+            lerp(
+                MaterialTheme.colors.onSurface,
+                Color.Red,
+                0.5f,
+            )
+        }
+        else -> MaterialTheme.colors.onSurface
     }
 
     val stateFrom = state.from
@@ -116,23 +120,6 @@ fun CableView(
 
 private fun Density.toOffset(dpOffset: DpOffset): Offset =
     Offset(dpOffset.x.toPx(), dpOffset.y.toPx())
-
-@Immutable
-data class CableStyle(
-    val primaryColor: Color,
-    val previewColor: Color,
-    val draftColor: Color,
-)
-
-fun defaultCableStyle(): CableStyle {
-    return CableStyle(
-        primaryColor = Color.Black,
-        previewColor = lerp(Color.Black, Color.Red, 0.5f),
-        draftColor = Color.Black.copy(alpha = 0.5f),
-    )
-}
-
-val LocalCableStyle = staticCompositionLocalOf { defaultCableStyle() }
 
 @Stable
 sealed interface CableState {

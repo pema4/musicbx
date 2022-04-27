@@ -22,22 +22,37 @@ import ru.pema4.musicbx.ui.DraftCableState
 import ru.pema4.musicbx.ui.EditorState
 import ru.pema4.musicbx.ui.EditorViewModel
 import ru.pema4.musicbx.ui.FullCableState
-import ru.pema4.musicbx.ui.ModuleViewModel
+import ru.pema4.musicbx.ui.ModuleState
 import ru.pema4.musicbx.ui.toFullCableStateOrNull
 
 @Stable
 class EditorViewModelImpl(
-    modules: Collection<ModuleViewModel> = emptyList(),
+    modules: Collection<ModuleState> = emptyList(),
     cables: Collection<FullCableState> = emptyList(),
 ) : EditorViewModel {
     override val uiState = EditorStateImpl()
 
-    override val modules: SnapshotStateList<ModuleViewModel> = modules.toMutableStateList()
+    override val modules: SnapshotStateList<ModuleState> = modules.toMutableStateList()
     override val cables: SnapshotStateList<FullCableState> = cables.toMutableStateList()
     override var draftCable: DraftCableState? by mutableStateOf(null)
 
     var scalingIndex by mutableStateOf(ScalingSteps.indexOf(1.0f))
     override val scale: Float by derivedStateOf { ScalingSteps[scalingIndex] }
+
+    override fun recreateGraphOnBackend() {
+        PlaybackService.reset()
+
+        for (module in modules) {
+            PlaybackService.addModule(module.uid, module.id)
+            for (parameter in module.parameters) {
+                PlaybackService.setParameter(module.id, parameter.model.number, parameter.current.normalized)
+            }
+        }
+
+        for (cable in cables) {
+            PlaybackService.connectModules(cable.from.end, cable.to.end)
+        }
+    }
 
     override fun extractPatch(): Patch {
         return Patch(
@@ -47,7 +62,7 @@ class EditorViewModelImpl(
                     from = from.end,
                     to = to.end,
                 )
-            }
+            },
         )
     }
 
@@ -116,8 +131,15 @@ class EditorViewModelImpl(
             ?: 0
 
         PlaybackService.addModule(module.uid, id)
+        for (parameter in module.parameters) {
+            PlaybackService.setParameter(
+                moduleId = id,
+                parameterNum = parameter.number,
+                normalizedValue = parameter.kind.normalize(parameter.default),
+            )
+        }
 
-        modules += ModuleViewModelImpl(
+        modules += ModuleStateImpl(
             module = module.copy(id = id),
             editorViewModel = this,
         )
@@ -159,7 +181,7 @@ private fun EditorViewModelImpl.getSocketOffsetCalculation(cableEnd: CableEnd): 
     val socket = sockets.first { it.number == cableEnd.socketNumber }
 
     return {
-        module.uiState.offset + socket.offsetInModule
+        module.offset + socket.offsetInModule
     }
 }
 
@@ -167,7 +189,7 @@ fun EditorViewModelImpl(patch: Patch): EditorViewModelImpl {
     val viewModel = EditorViewModelImpl()
 
     val moduleStatesById = patch.modules
-        .associateBy(Module::id) { ModuleViewModelImpl(it, viewModel) }
+        .associateBy(Module::id) { ModuleStateImpl(it, expanded = true, viewModel) }
     viewModel.modules += moduleStatesById.values
 
     viewModel.cables += patch.cables.map { (from, to) ->
@@ -194,5 +216,5 @@ fun EditorViewModelImpl(patch: Patch): EditorViewModelImpl {
 class EditorStateImpl : EditorState {
     override val verticalScroll: ScrollState = ScrollState(initial = 0)
     override val horizontalScroll: ScrollState = ScrollState(initial = 0)
-    override var cursorOffset: DpOffset by mutableStateOf(DpOffset.Unspecified)
+    override var cursorOffset: DpOffset by mutableStateOf(DpOffset.Zero)
 }

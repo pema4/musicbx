@@ -21,7 +21,7 @@ impl ModuleDescription for OutputModule {
                 name: "Left".to_string(),
                 description: "The left output".to_string(),
             }],
-            outputs: vec![],
+            ..ModuleInfo::default()
         }
     }
 
@@ -57,4 +57,6 @@ impl Module for OutputNode {
     fn add_to_context(&mut self, context: &mut AudioContext<1>) {
         self.node_index = Some(context.destination);
     }
+
+    fn set_parameter(&self, _: &mut AudioContext<1>, _: u8, _: f32) {}
 }

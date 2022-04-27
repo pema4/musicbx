@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use jni::objects::{JClass, JObject, JValue};
 use jni::JNIEnv;
+use jni::objects::{JClass, JObject, JValue};
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 

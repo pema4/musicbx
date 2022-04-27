@@ -5,17 +5,15 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.platform.LocalClipboardManager
-import kotlinx.coroutines.flow.collect
 
 interface TooltipManager {
     val activeTooltip: String?
@@ -59,17 +57,13 @@ fun Modifier.explainedAs(
 
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
+    val tooltipText by rememberUpdatedState(text)
 
-    LocalClipboardManager
-    LaunchedEffect(Unit) {
-        snapshotFlow { isHovered }
-            .collect { isHovered ->
-                if (isHovered) {
-                    tooltipManager.push(text)
-                } else {
-                    tooltipManager.pop()
-                }
-            }
+    if (isHovered) {
+        DisposableEffect(tooltipText) {
+            tooltipManager.push(tooltipText)
+            onDispose { tooltipManager.pop() }
+        }
     }
 
     hoverable(interactionSource)
