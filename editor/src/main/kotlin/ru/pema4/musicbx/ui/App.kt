@@ -31,6 +31,9 @@ import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import ru.pema4.musicbx.model.config.InputOutputSettings
 import ru.pema4.musicbx.model.patch.TestPatch
+import ru.pema4.musicbx.model.preferences.PreferredTheme
+import ru.pema4.musicbx.model.preferences.Zoom
+import ru.pema4.musicbx.service.PreferencesService
 import ru.pema4.musicbx.util.FileDialog
 import ru.pema4.musicbx.util.FileDialogMode
 import ru.pema4.musicbx.util.InstallTooltipManager
@@ -44,13 +47,17 @@ import kotlin.math.abs
 fun ApplicationScope.App(
     viewModel: AppViewModel = rememberAppViewModel(),
 ) {
-    Window(::exitApplication) {
+    Window(
+        onCloseRequest = ::exitApplication,
+    ) {
         AppMenuBar(viewModel)
-        AppDialogWindows(viewModel)
-        AppWindowContent(
-            viewModel = viewModel,
-            modifier = Modifier.background(MaterialTheme.colors.background),
-        )
+        EditorTheme {
+            AppDialogWindows(viewModel)
+            AppWindowContent(
+                viewModel = viewModel,
+                modifier = Modifier.background(MaterialTheme.colors.background),
+            )
+        }
     }
 }
 
@@ -75,7 +82,7 @@ fun AppWindowContent(
             Column {
                 InstallTooltipManager(MutableTooltipManager()) {
                     EditorView(
-                        viewModel = viewModel.editorViewModel,
+                        viewModel = viewModel.editor,
                         modifier = Modifier
                             .weight(1.0f)
                     )
@@ -142,27 +149,49 @@ private fun FrameWindowScope.AppMenuBar(
         }
 
         Menu(text = "View") {
+            Menu(
+                text = "Appearance",
+            ) {
+                RadioButtonItem(
+                    text = "System Theme",
+                    selected = PreferencesService.theme == PreferredTheme.Auto,
+                    onClick = { PreferencesService.theme = PreferredTheme.Auto },
+                )
+                RadioButtonItem(
+                    text = "Light Theme",
+                    selected = PreferencesService.theme == PreferredTheme.Light,
+                    onClick = { PreferencesService.theme = PreferredTheme.Light },
+                )
+                RadioButtonItem(
+                    text = "Dark Theme",
+                    selected = PreferencesService.theme == PreferredTheme.Dark,
+                    onClick = { PreferencesService.theme = PreferredTheme.Dark },
+                )
+            }
+
+            Separator()
+
             Item(
                 text = "Actual Size",
-                enabled = abs(viewModel.editorViewModel.scale - 1.0f) > 1e-5,
+                enabled = abs(viewModel.editor.scale - 1.0f) > 1e-5,
                 shortcut = KeyShortcut(Key.Zero, meta = true),
-                onClick = viewModel::actualSize,
+                onClick = { viewModel.preferences.zoom = Zoom.One },
             )
             Item(
                 text = "Zoom In",
                 shortcut = KeyShortcut(Key.Equals, meta = true),
-                onClick = viewModel::zoomIn,
+                onClick = { viewModel.preferences.zoom++ },
             )
             Item(
                 text = "Zoom Out",
                 shortcut = KeyShortcut(Key.Minus, meta = true),
-                onClick = viewModel::zoomOut,
+                onClick = { viewModel.preferences.zoom-- },
             )
         }
 
-        val ioSettings by viewModel.collectIoSettingsAsState()
-        val availableOutputs = ioSettings?.output?.available ?: emptyList()
         Menu(text = "Settings") {
+            val ioSettings by viewModel.collectIoSettingsAsState()
+            val availableOutputs = ioSettings?.output?.available ?: emptyList()
             Menu(
                 text = "Select Output...",
                 enabled = availableOutputs.isNotEmpty(),
@@ -174,6 +203,10 @@ private fun FrameWindowScope.AppMenuBar(
                     )
                 }
             }
+        }
+
+        Menu(text = "Help") {
+            Item(text = "About", onClick = {})
         }
     }
 }
@@ -206,7 +239,8 @@ private fun AppDialogWindows(
 @Stable
 interface AppViewModel {
     val uiState: AppState
-    val editorViewModel: EditorViewModel
+    val editor: EditorViewModel
+    val preferences: PreferencesService
 
     @Composable
     fun collectIoSettingsAsState(): State<InputOutputSettings?>

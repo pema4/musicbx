@@ -1,10 +1,10 @@
-use jni::JNIEnv;
 use jni::objects::{JClass, JString};
 use jni::sys::{jfloat, jint};
+use jni::JNIEnv;
 
 use crate::app::{App, AppMsg};
+use crate::bindings::throw_illegal_state_exception;
 use crate::patch::{Cable, CableEnd};
-use crate::util::throw_illegal_state_exception;
 
 #[no_mangle]
 pub extern "system" fn Java_ru_pema4_musicbx_service_PlaybackService_reset(

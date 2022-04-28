@@ -2,7 +2,6 @@ package ru.pema4.musicbx
 
 import androidx.compose.ui.window.application
 import ru.pema4.musicbx.ui.App
-import ru.pema4.musicbx.ui.EditorTheme
 import ru.pema4.musicbx.viewmodel.rememberAppViewModel
 import kotlin.io.path.outputStream
 import kotlin.io.path.pathString
@@ -10,10 +9,8 @@ import kotlin.io.path.pathString
 fun main() {
     loadNativeBackend()
     application {
-        EditorTheme {
-            val appViewModel = rememberAppViewModel()
-            App(appViewModel)
-        }
+        val appViewModel = rememberAppViewModel()
+        App(appViewModel)
     }
 }
 

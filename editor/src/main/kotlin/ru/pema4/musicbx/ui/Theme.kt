@@ -10,6 +10,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.jthemedetecor.OsThemeDetector
+import ru.pema4.musicbx.model.preferences.PreferredTheme
+import ru.pema4.musicbx.service.PreferencesService
 
 private val themeDetector = OsThemeDetector.getDetector()
 
@@ -17,15 +19,21 @@ private val themeDetector = OsThemeDetector.getDetector()
 fun EditorTheme(
     content: @Composable () -> Unit,
 ) {
+    val isDarkTheme = when (PreferencesService.theme) {
+        PreferredTheme.Dark -> true
+        PreferredTheme.Light -> false
+        else -> isSystemInDarkTheme()
+    }
+
     MaterialTheme(
-        colors = if (isDarkTheme()) darkColors() else lightColors(),
+        colors = if (isDarkTheme) darkColors() else lightColors(),
     ) {
         content()
     }
 }
 
 @Composable
-private fun isDarkTheme(): Boolean {
+private fun isSystemInDarkTheme(): Boolean {
     var result by remember { mutableStateOf(themeDetector.isDark) }
 
     DisposableEffect(Unit) {

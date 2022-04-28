@@ -16,6 +16,7 @@ import ru.pema4.musicbx.model.patch.CableTo
 import ru.pema4.musicbx.model.patch.Module
 import ru.pema4.musicbx.model.patch.Patch
 import ru.pema4.musicbx.service.PlaybackService
+import ru.pema4.musicbx.service.PreferencesService
 import ru.pema4.musicbx.ui.CableFromState
 import ru.pema4.musicbx.ui.CableToState
 import ru.pema4.musicbx.ui.DraftCableState
@@ -36,8 +37,7 @@ class EditorViewModelImpl(
     override val cables: SnapshotStateList<FullCableState> = cables.toMutableStateList()
     override var draftCable: DraftCableState? by mutableStateOf(null)
 
-    var scalingIndex by mutableStateOf(ScalingSteps.indexOf(1.0f))
-    override val scale: Float by derivedStateOf { ScalingSteps[scalingIndex] }
+    override val scale: Float by derivedStateOf { PreferencesService.zoom.scale }
 
     override fun recreateGraphOnBackend() {
         PlaybackService.reset()
@@ -151,26 +151,6 @@ class EditorViewModelImpl(
         cables.removeAll { it.to.end.moduleId == moduleId || it.from.end.moduleId == moduleId }
     }
 }
-
-val ScalingSteps: List<Float> = listOf(
-    0.25f,
-    1f / 3f,
-    0.50f,
-    2f / 3f,
-    0.75f,
-    0.8f,
-    0.9f,
-    1.0f,
-    1.1f,
-    1.25f,
-    1.5f,
-    1.75f,
-    2.0f,
-    2.5f,
-    3f,
-    4f,
-    5f,
-)
 
 private fun EditorViewModelImpl.getSocketOffsetCalculation(cableEnd: CableEnd): () -> DpOffset {
     val module = modules.first { it.id == cableEnd.moduleId }

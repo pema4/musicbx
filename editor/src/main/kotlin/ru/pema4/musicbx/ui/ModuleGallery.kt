@@ -45,7 +45,7 @@ fun ModuleGalleryView(
                     state = module,
                     enabled = false,
                     modifier = Modifier.widthIn(max = 100.dp),
-                    onClick = { appViewModel.editorViewModel.addModule(module.toModule()) }
+                    onClick = { appViewModel.editor.addModule(module.toModule()) }
                 )
             }
         }

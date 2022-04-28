@@ -12,9 +12,11 @@ import androidx.compose.runtime.setValue
 import ru.pema4.musicbx.model.config.InputOutputSettings
 import ru.pema4.musicbx.model.patch.DefaultPatch
 import ru.pema4.musicbx.model.patch.Patch
+import ru.pema4.musicbx.model.preferences.Zoom
 import ru.pema4.musicbx.service.AvailableModulesService
 import ru.pema4.musicbx.service.ConfigurationService
 import ru.pema4.musicbx.service.FileService
+import ru.pema4.musicbx.service.PreferencesService
 import ru.pema4.musicbx.ui.AppState
 import ru.pema4.musicbx.ui.AppViewModel
 import ru.pema4.musicbx.ui.ModuleState
@@ -49,7 +51,8 @@ class AppViewModelImpl(
     override val uiState: AppState by ::_uiState
 
     private var _editorViewModel: EditorViewModelImpl by mutableStateOf(EditorViewModelImpl(initialPatch))
-    override val editorViewModel by ::_editorViewModel
+    override val editor by ::_editorViewModel
+    override val preferences: PreferencesService = PreferencesService
 
     @Composable
     override fun collectIoSettingsAsState(): State<InputOutputSettings?> {
@@ -75,15 +78,13 @@ class AppViewModelImpl(
     override fun save(path: Path?) {
         _uiState.showingSaveDialog = false
         if (path != null) {
-            val patch = editorViewModel.extractPatch()
+            val patch = editor.extractPatch()
             fileService.save(
                 patch = patch,
                 path = path,
             )
 
-            val scaling = _editorViewModel.scalingIndex
             _editorViewModel = EditorViewModelImpl(patch)
-            _editorViewModel.scalingIndex = scaling
         }
     }
 
@@ -92,24 +93,22 @@ class AppViewModelImpl(
         if (path?.exists() == true) {
             val patch = fileService.load(path)
 
-            val scaling = _editorViewModel.scalingIndex
             _editorViewModel = EditorViewModelImpl(patch)
-            _editorViewModel.scalingIndex = scaling
 
-            editorViewModel.recreateGraphOnBackend()
+            editor.recreateGraphOnBackend()
         }
     }
 
     override fun actualSize() {
-        editorViewModel.scalingIndex = ScalingSteps.indexOf(1.0f)
+        PreferencesService.zoom = Zoom.One
     }
 
     override fun zoomIn() {
-        editorViewModel.scalingIndex = (editorViewModel.scalingIndex + 1).coerceIn(ScalingSteps.indices)
+        PreferencesService.zoom = PreferencesService.zoom.inc()
     }
 
     override fun zoomOut() {
-        editorViewModel.scalingIndex = (editorViewModel.scalingIndex - 1).coerceIn(ScalingSteps.indices)
+        PreferencesService.zoom = PreferencesService.zoom.dec()
     }
 }
 

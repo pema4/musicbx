@@ -22,7 +22,7 @@ interface TooltipManager {
 val LocalTooltipManager = compositionLocalOf<TooltipManager?> { null }
 
 class MutableTooltipManager : TooltipManager {
-    private val tooltips = mutableStateListOf<String?>("Test tooltip!")
+    private val tooltips = mutableStateListOf<String?>()
     override val activeTooltip: String? by derivedStateOf { tooltips.lastOrNull() }
 
     fun push(text: String?) {

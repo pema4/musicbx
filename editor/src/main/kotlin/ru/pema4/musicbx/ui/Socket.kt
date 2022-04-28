@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.input.pointer.isMetaPressed
+import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
@@ -66,12 +66,12 @@ fun SocketView(
             .size(24.dp)
             .mouseClickable {
                 when {
-                    keyboardModifiers.isMetaPressed -> state.edit()
+                    buttons.isSecondaryPressed -> state.edit()
                     else -> state.create()
                 }
             }
             .hoverable(state.hoverInteractionSource)
-            .explainedAs(state.description),
+            .explainedAs("${state.description}. Right Click to reassign"),
     ) {
         drawCircle(color = color)
         drawCircle(

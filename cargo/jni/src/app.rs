@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use std::sync::{Arc, mpsc, Mutex};
 use std::sync::mpsc::Sender;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
-use cpal::Stream;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use glicol_synth::{AudioContext, AudioContextBuilder, Message};
+use cpal::Stream;
+use glicol_synth::{AudioContext, AudioContextBuilder};
 use lazy_static::lazy_static;
 
 use crate::modules::{
