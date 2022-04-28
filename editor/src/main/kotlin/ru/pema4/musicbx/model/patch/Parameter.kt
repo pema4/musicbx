@@ -22,7 +22,7 @@ enum class ModuleParameterKind(
     Number(min = 0.0f, max = 1.0f),
     HzSlow(min = log2(0.001f), max = log2(200.0f)),
     HzFast(min = log2(20.0f), max = log2(22000.0f)),
-    Db(min = 0.0f, max = 1.0f);
+    Db(min = -120.0f, max = 12.0f);
 
     fun normalize(displayValue: String): Float {
         val x = when (this) {
@@ -44,8 +44,8 @@ enum class ModuleParameterKind(
 
         return when (this) {
             Number -> "%,.3f".format(x)
-            HzSlow -> "%,.3f".format(2.0.pow(x.toDouble()))
-            HzFast -> "%,.1f".format(2.0.pow(x.toDouble()))
+            HzSlow -> "%,.3f".format(2.0f.pow(x))
+            HzFast -> "%,.1f".format(2.0f.pow(x))
             Db -> "%,.3f".format(x)
         }
     }

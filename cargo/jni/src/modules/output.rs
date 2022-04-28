@@ -43,9 +43,9 @@ impl Module for OutputNode {
         self.id
     }
 
-    fn input(&self, pos: usize) -> Option<NodeIndex> {
+    fn input(&self, pos: usize) -> Option<(usize, NodeIndex)> {
         match pos {
-            0 => self.node_index,
+            0 => self.node_index.map(|x| (0, x)),
             _ => None,
         }
     }

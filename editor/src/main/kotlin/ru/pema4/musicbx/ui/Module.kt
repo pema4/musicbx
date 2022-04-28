@@ -2,8 +2,8 @@ package ru.pema4.musicbx.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.expandIn
-import androidx.compose.animation.shrinkOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -122,12 +122,12 @@ private fun EnabledModuleSettings(
 
     AnimatedVisibility(
         visible = state.expanded,
-        enter = expandIn(expandFrom = Alignment.BottomCenter),
-        exit = shrinkOut(shrinkTowards = Alignment.BottomCenter),
+        enter = expandVertically(),
+        exit = shrinkVertically(),
     ) {
         Column(
             modifier = Modifier
-                .padding(4.dp)
+                .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
                 .fillMaxWidth()
         ) {
             for (parameter in state.parameters) {

@@ -8,7 +8,9 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use glicol_synth::{AudioContext, AudioContextBuilder, Message};
 use lazy_static::lazy_static;
 
-use crate::modules::{Module, ModuleDescription, ModuleInfo, MulModule, OutputModule, SinModule};
+use crate::modules::{
+    AmpModule, Module, ModuleDescription, ModuleInfo, MulModule, OutputModule, SinModule,
+};
 use crate::patch::Cable;
 use crate::util::Observable;
 
@@ -214,11 +216,12 @@ impl AppState {
         let from = self.modules[&cable.from.module]
             .output(cable.from.socket)
             .unwrap();
-        let to = self.modules[&cable.to.module]
+        let (order, to) = self.modules[&cable.to.module]
             .input(cable.to.socket)
             .unwrap();
-        context.connect(from, to);
-        context.send_msg_to_all(Message::ResetOrder);
+
+        println!("order: {order}, to: {}", to.index());
+        context.connect_with_order(from, to, order);
         println!("Connecting {} with {}", from.index(), to.index());
     }
 
@@ -267,6 +270,7 @@ fn available_modules() -> Vec<Box<dyn ModuleDescription>> {
     vec![
         Box::new(SinModule::default()),
         Box::new(OutputModule::default()),
+        Box::new(AmpModule::default()),
         Box::new(MulModule::default()),
     ]
 }
