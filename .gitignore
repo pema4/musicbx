@@ -1,6 +1,7 @@
 .gradle
 **/build/
 !src/**/build/
+**/.DS_Store
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -12,6 +13,7 @@ gradle-app.setting
 !gradle-wrapper.properties
 
 **/.idea/
+*.iml
 
 **/target
 **/*.dylib
