@@ -31,7 +31,7 @@ fun Modifier.diagonallyDraggable(
     onChange: (DpOffset) -> Unit,
 ): Modifier = composed {
     val coroutineScope = rememberCoroutineScope()
-    var rawModuleOffset by remember(key1) { mutableStateOf(offset) }
+    var rawNodeOffset by remember(key1) { mutableStateOf(offset) }
     var initialOffset by remember(key1) { mutableStateOf(offset) }
     val currentOffset by rememberUpdatedState(offset)
     val appliedOffsetFraction = remember(key1) { Animatable(1.0f) }
@@ -60,10 +60,10 @@ fun Modifier.diagonallyDraggable(
                 },
                 onDrag = { change, dragAmount ->
                     change.consumeAllChanges()
-                    rawModuleOffset += DpOffset(dragAmount.x.toDp(), dragAmount.y.toDp())
+                    rawNodeOffset += DpOffset(dragAmount.x.toDp(), dragAmount.y.toDp())
                     val targetOffset = DpOffset(
-                        x = rawModuleOffset.x.coerceAtLeast(0.dp),
-                        y = rawModuleOffset.y.coerceAtLeast(0.dp),
+                        x = rawNodeOffset.x.coerceAtLeast(0.dp),
+                        y = rawNodeOffset.y.coerceAtLeast(0.dp),
                     )
                     onChange(targetOffset)
                 },

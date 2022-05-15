@@ -3,10 +3,10 @@ package ru.pema4.musicbx.service
 import androidx.compose.runtime.mutableStateOf
 import ru.pema4.musicbx.model.preferences.PreferredTheme
 import ru.pema4.musicbx.model.preferences.Zoom
+import java.util.prefs.Preferences
 
-@Suppress("ObjectPropertyName")
 object PreferencesService {
-    private val preferences = java.util.prefs.Preferences.userNodeForPackage(PreferencesService::class.java)
+    private val preferences = Preferences.userNodeForPackage(PreferencesService::class.java)
 
     init {
         preferences.addPreferenceChangeListener { event ->

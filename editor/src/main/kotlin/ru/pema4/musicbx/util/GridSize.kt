@@ -14,7 +14,11 @@ value class GridSize(val number: Int)
 data class GridOffset(
     val x: GridSize,
     val y: GridSize,
-)
+) {
+    companion object Constants {
+        val Zero = GridOffset(x = GridSize(0), y = GridSize(0))
+    }
+}
 
 fun GridSize.toDp(): Dp {
     return (number * 10).dp

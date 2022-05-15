@@ -17,9 +17,8 @@ clap = "3.1.10"
 lazy_static = "1.4.0"
 petgraph = "0.6.0"
 hashbrown = "0.12.0"
+musicbx = { path = "../musicbx" }
+enum_dispatch = "0.3.8"
 
 [lib]
 crate_type = ["cdylib"]
-
-[profile.release]
-lto = true

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use jni::JNIEnv;
 use jni::objects::{JClass, JObject, JValue};
+use jni::JNIEnv;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
@@ -39,8 +39,6 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_ConfigurationService_regist
             let _attach_guard = vm.attach_current_thread().unwrap();
             let env = vm.get_env().unwrap();
             let listener = listener.as_obj();
-
-            // sleep(Duration::from_secs(1));
 
             let configuration: &IOConfiguration = &TEST_CONFIG;
             let config_json = serde_json::to_string(configuration).unwrap();

@@ -22,14 +22,17 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.zIndex
+import ru.pema4.musicbx.model.config.NodeDescription
+import ru.pema4.musicbx.model.config.TestNodeDescription
 import ru.pema4.musicbx.model.patch.CableEnd
-import ru.pema4.musicbx.model.patch.Module
 import ru.pema4.musicbx.model.patch.Patch
-import ru.pema4.musicbx.model.patch.TestPatch
 import ru.pema4.musicbx.util.Scrollable
 import ru.pema4.musicbx.util.diagonallyDraggable
 import ru.pema4.musicbx.util.pointerMoveFilter
@@ -107,17 +110,17 @@ private fun ScaledLayout(
 private fun EditorContentView(
     viewModel: EditorViewModel,
 ) {
-    EditorModulesView(viewModel)
+    EditorNodesView(viewModel)
     EditorCablesView(viewModel)
     EditorDraftCableView(viewModel)
 }
 
 @Composable
-private fun EditorModulesView(viewModel: EditorViewModel) {
-    for (moduleState in viewModel.modules) {
-        key(moduleState.id) {
-            var zIndex = moduleState.id.toFloat()
-            if (!moduleState.expanded) {
+private fun EditorNodesView(viewModel: EditorViewModel) {
+    for ((id, nodeState) in viewModel.nodes) {
+        key(id) {
+            var zIndex = nodeState.id.toFloat()
+            if (!nodeState.expanded) {
                 zIndex -= 1_000_000
             }
 
@@ -126,15 +129,22 @@ private fun EditorModulesView(viewModel: EditorViewModel) {
                     .zIndex(zIndex)
                     .composed {
                         diagonallyDraggable(
-                            key1 = moduleState,
-                            offset = moduleState.offset,
-                            onChange = { moduleState.offset = it }
+                            key1 = nodeState,
+                            offset = nodeState.topStartOffset,
+                            onChange = { nodeState.topStartOffset = it }
                         )
                     }
             ) {
-                ModuleView(
-                    state = moduleState,
-                    modifier = Modifier.widthIn(max = 150.dp),
+                val density = LocalDensity.current
+                NodeView(
+                    state = nodeState,
+                    modifier = Modifier
+                        .widthIn(max = 150.dp)
+                        .onGloballyPositioned {
+                            val size = with(density) { it.size.toSize().toDpSize() }
+                            nodeState.centerStartOffset = size.center.copy(x = 0.dp)
+                            nodeState.centerEndOffset = size.center.copy(x = size.width)
+                        }
                 )
             }
         }
@@ -160,18 +170,18 @@ private fun EditorDraftCableView(viewModel: EditorViewModel) {
 
 interface EditorViewModel {
     val uiState: EditorState
-    val modules: List<ModuleState>
+    val nodes: Map<Int, NodeState>
     val cables: List<FullCableState>
     val draftCable: DraftCableState?
     val scale: Float
 
-    fun recreateGraphOnBackend()
+    suspend fun recreateGraphOnBackend()
     fun extractPatch(): Patch
     fun createCable(end: CableEnd) = Unit
     fun editCable(end: CableEnd) = Unit
     fun resetDraftCable() = Unit
-    fun addModule(module: Module) = Unit
-    fun removeModule(moduleId: Int) = Unit
+    fun addNode(description: NodeDescription) = Unit
+    fun removeNode(nodeId: Int) = Unit
 }
 
 interface EditorState {
@@ -184,7 +194,7 @@ interface EditorState {
 @Composable
 fun EditorViewPreview() {
     val viewModel = EditorViewModelImpl()
-    viewModel.addModule(TestPatch.modules[0])
-    viewModel.addModule(TestPatch.modules[1])
+    viewModel.addNode(TestNodeDescription)
+    viewModel.addNode(TestNodeDescription)
     EditorView(viewModel = viewModel)
 }

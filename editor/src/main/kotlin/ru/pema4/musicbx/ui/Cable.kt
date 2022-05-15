@@ -134,17 +134,17 @@ sealed interface CableEndState {
     val zIndex: Float
 }
 
-data class CableFromState(
+class CableFromState(
     override val end: CableFrom,
-    val offsetCalculation: () -> DpOffset,
+    offsetCalculation: () -> DpOffset,
     override val zIndex: Float,
 ) : CableEndState {
     override val offset: DpOffset by derivedStateOf(offsetCalculation)
 }
 
-data class CableToState(
+class CableToState(
     override val end: CableTo,
-    val offsetCalculation: () -> DpOffset,
+    offsetCalculation: () -> DpOffset,
     override val zIndex: Float,
 ) : CableEndState {
     override val offset: DpOffset by derivedStateOf(offsetCalculation)
@@ -159,10 +159,10 @@ data class FullCableState(
 }
 
 @Stable
-data class DraftCableState(
+class DraftCableState(
     override val from: CableFromState?,
     override val to: CableToState?,
-    val cursorOffsetCalculation: () -> DpOffset,
+    cursorOffsetCalculation: () -> DpOffset,
 ) : CableState {
     val cursorOffset: DpOffset by derivedStateOf(cursorOffsetCalculation)
 }

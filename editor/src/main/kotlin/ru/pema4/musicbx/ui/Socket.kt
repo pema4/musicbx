@@ -28,14 +28,15 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
+import ru.pema4.musicbx.model.config.TestNodeDescription
 import ru.pema4.musicbx.model.patch.CableFrom
 import ru.pema4.musicbx.model.patch.CableTo
 import ru.pema4.musicbx.model.patch.InputSocket
-import ru.pema4.musicbx.model.patch.Module
+import ru.pema4.musicbx.model.patch.Node
 import ru.pema4.musicbx.model.patch.OutputSocket
 import ru.pema4.musicbx.model.patch.Socket
 import ru.pema4.musicbx.util.explainedAs
-import ru.pema4.musicbx.viewmodel.ModuleStateImpl
+import ru.pema4.musicbx.viewmodel.NodeStateImpl
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -85,23 +86,23 @@ fun SocketView(
 data class SocketState(
     val type: SocketType,
     val model: Socket,
-    private val moduleState: ModuleState,
+    private val nodeState: NodeState,
 ) {
-    var offsetInModule by mutableStateOf(DpOffset.Zero)
+    var offsetInNode by mutableStateOf(DpOffset.Zero)
     var hoverInteractionSource = MutableInteractionSource()
     private val end = when (type) {
-        SocketType.Input -> CableTo(moduleId = moduleState.id, socketNumber = number)
-        SocketType.Output -> CableFrom(moduleId = moduleState.id, socketNumber = number)
+        SocketType.Input -> CableTo(nodeId = nodeState.id, socketNumber = number)
+        SocketType.Output -> CableFrom(nodeId = nodeState.id, socketNumber = number)
     }
 
     val number: Int get() = model.number
     val name: String get() = model.name
     val description: String get() = model.description
 
-    fun create() = moduleState.createCable(end)
-    fun edit() = moduleState.editCable(end)
-    fun startPreview() = moduleState.startCablePreview(end)
-    fun endPreview() = moduleState.endCablePreview(end)
+    fun create() = nodeState.createCable(end)
+    fun edit() = nodeState.editCable(end)
+    fun startPreview() = nodeState.startCablePreview(end)
+    fun endPreview() = nodeState.endCablePreview(end)
 }
 
 enum class SocketType {
@@ -109,51 +110,29 @@ enum class SocketType {
     Output,
 }
 
-fun SocketState(model: Socket, moduleState: ModuleState): SocketState {
+fun SocketState(model: Socket, nodeState: NodeState): SocketState {
     return SocketState(
         type = when (model) {
             is InputSocket -> SocketType.Input
             is OutputSocket -> SocketType.Output
         },
         model = model,
-        moduleState = moduleState
-    )
-}
-
-fun SocketState.toInputSocket(): InputSocket {
-    require(type == SocketType.Input)
-    return InputSocket(
-        number = number,
-        name = name,
-        description = description,
-    )
-}
-
-fun SocketState.toOutputSocket(): OutputSocket {
-    require(type == SocketType.Output)
-    return OutputSocket(
-        number = number,
-        name = name,
-        description = description,
+        nodeState = nodeState
     )
 }
 
 @Preview
 @Composable
 private fun SocketViewPreview() {
-    val module = Module(
-        uid = "test",
-        inputs = listOf(
-            InputSocket(number = 0)
-        ),
-        outputs = listOf(
-            OutputSocket(number = 0)
-        )
+    val node = Node(
+        id = 0,
+        uid = TestNodeDescription.uid,
     )
-    val moduleState = ModuleStateImpl(module)
+    val description = TestNodeDescription
+    val nodeState = NodeStateImpl(node, description)
     Row {
-        SocketView(state = SocketState(module.inputs[0], moduleState))
+        SocketView(state = SocketState(description.inputs[0], nodeState))
         Spacer(Modifier.width(10.dp))
-        SocketView(state = SocketState(module.outputs[0], moduleState))
+        SocketView(state = SocketState(description.outputs[0], nodeState))
     }
 }

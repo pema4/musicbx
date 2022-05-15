@@ -1,21 +1,18 @@
 use serde::{Deserialize, Serialize};
-
-use crate::modules::{ModuleInput, ModuleOutput};
+use std::collections::HashMap;
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct PatchInfo {
-    pub modules: Vec<ModuleInfo>,
+    pub nodes: Vec<NodeInfo>,
     pub cables: Vec<Cable>,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
-pub struct ModuleInfo {
+pub struct NodeInfo {
     pub id: usize,
     pub uid: String,
-    pub name: String,
-    pub inputs: Vec<ModuleInput>,
-    pub outputs: Vec<ModuleOutput>,
     pub offset: GridOffset,
+    pub parameters: HashMap<u8, String>,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -32,7 +29,7 @@ pub struct Cable {
 
 #[derive(Eq, PartialEq, Hash, Copy, Clone, Debug, Serialize, Deserialize)]
 pub struct CableEnd {
-    pub module: usize,
+    pub node: usize,
     pub socket: usize,
 }
 
@@ -46,26 +43,25 @@ mod test {
     fn deserialize() {
         let json_string = {
             let json = json!({
-                "modules": [
+                "nodes": [
                     {
                         "id": 0usize,
-                        "name": "First",
-                        "inputs": [],
-                        "outputs": [],
+                        "uid": "std.v1.sin",
                         "offset": {
                             "x": 10usize,
                             "y": 20usize,
-                        }
+                        },
+                        "parameters": {}
                     }
                 ],
                 "cables": [
                     {
                         "from": {
-                            "module": 0usize,
+                            "node": 0usize,
                             "socket": 0usize,
                         },
                         "to": {
-                            "module": 1usize,
+                            "node": 1usize,
                             "socket": 1usize,
                         }
                     }

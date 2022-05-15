@@ -7,32 +7,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import ru.pema4.musicbx.model.config.NodeDescription
 import ru.pema4.musicbx.model.patch.CableEnd
-import ru.pema4.musicbx.model.patch.DefaultPatch
-import ru.pema4.musicbx.model.patch.Module
-import ru.pema4.musicbx.service.PlaybackService
+import ru.pema4.musicbx.model.patch.Node
+import ru.pema4.musicbx.model.patch.Patch
+import ru.pema4.musicbx.service.EditorService
 import ru.pema4.musicbx.ui.EditorViewModel
-import ru.pema4.musicbx.ui.ModuleState
+import ru.pema4.musicbx.ui.NodeState
 import ru.pema4.musicbx.ui.ParameterState
 import ru.pema4.musicbx.ui.ParameterValue
 import ru.pema4.musicbx.ui.SocketState
-import ru.pema4.musicbx.ui.toInputSocket
-import ru.pema4.musicbx.ui.toOutputSocket
-import ru.pema4.musicbx.ui.toParameter
 import ru.pema4.musicbx.util.toDpOffset
 import ru.pema4.musicbx.util.toGridOffset
 
 @Stable
-class ModuleStateImpl(
-    override val model: Module,
+class NodeStateImpl(
+    override val node: Node,
+    override val description: NodeDescription,
     offset: DpOffset = DpOffset(x = 0.dp, y = 0.dp),
     expanded: Boolean = true,
     inputs: List<SocketState> = emptyList(),
     outputs: List<SocketState> = emptyList(),
     parameters: List<ParameterState> = emptyList(),
     private val editorViewModel: EditorViewModel,
-) : ModuleState {
-    override var offset: DpOffset by mutableStateOf(offset)
+) : NodeState {
+    override var topStartOffset: DpOffset by mutableStateOf(offset)
+    override var centerStartOffset: DpOffset by mutableStateOf(DpOffset.Unspecified)
+    override var centerEndOffset: DpOffset by mutableStateOf(DpOffset.Unspecified)
     override var expanded by mutableStateOf(expanded)
 
     override val inputs = inputs.toMutableStateList()
@@ -60,37 +61,40 @@ class ModuleStateImpl(
             .map { it.isHovered = false }
     }
 
-    override fun removeModule(moduleId: Int) {
-        editorViewModel.removeModule(moduleId)
+    override fun removeNode(nodeId: Int) {
+        editorViewModel.removeNode(nodeId)
     }
 }
 
-fun ModuleStateImpl(
-    module: Module,
+fun NodeStateImpl(
+    node: Node,
+    description: NodeDescription,
     expanded: Boolean = true,
-    editorViewModel: EditorViewModel = EditorViewModelImpl(DefaultPatch),
-): ModuleStateImpl {
-    val state = ModuleStateImpl(
-        model = module,
-        offset = module.offset.toDpOffset(),
+    editorViewModel: EditorViewModel = EditorViewModelImpl(Patch.Default),
+): NodeStateImpl {
+    val state = NodeStateImpl(
+        node = node,
+        description = description,
+        offset = node.offset.toDpOffset(),
         expanded = expanded,
         editorViewModel = editorViewModel,
     )
 
-    module.inputs.mapTo(state.inputs) { SocketState(it, state) }
-    module.outputs.mapTo(state.outputs) { SocketState(it, state) }
-    module.parameters.sortedBy { it.number }.mapTo(state.parameters) {
+    description.inputs.mapTo(state.inputs) { SocketState(it, state) }
+    description.outputs.mapTo(state.outputs) { SocketState(it, state) }
+    description.parameters.sortedBy { it.number }.mapTo(state.parameters) {
         val onChange = { normalizedValue: Float ->
-            PlaybackService.setParameter(
-                moduleId = module.id,
+            EditorService.setParameter(
+                nodeId = node.id,
                 parameterNum = it.number,
                 normalizedValue
             )
         }
 
+        val initialValue = node.parameterValues[it.name] ?: it.default
         ParameterState(
             model = it,
-            current = ParameterValue(initial = it.current ?: it.default, kind = it.kind, onChange = onChange),
+            current = ParameterValue(initial = initialValue, kind = it.kind, onChange = onChange),
             default = ParameterValue(initial = it.default, kind = it.kind),
         )
     }
@@ -98,11 +102,12 @@ fun ModuleStateImpl(
     return state
 }
 
-fun ModuleState.toModule(): Module {
-    return model.copy(
-        inputs = inputs.map { it.toInputSocket() },
-        outputs = outputs.map { it.toOutputSocket() },
-        offset = offset.toGridOffset(),
-        parameters = parameters.map { it.toParameter() }
+fun NodeState.toNode(): Node {
+    return node.copy(
+        offset = topStartOffset.toGridOffset(),
+        parameterValues = parameters.associateBy(
+            keySelector = { it.parameter.name },
+            valueTransform = { it.current.text },
+        )
     )
 }

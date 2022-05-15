@@ -5,34 +5,39 @@ import kotlin.math.log2
 import kotlin.math.pow
 
 @Serializable
-data class ModuleParameter(
+data class NodeParameter(
     val number: Int,
     val name: String,
     val description: String,
-    val kind: ModuleParameterKind,
+    val kind: NodeParameterKind,
     val default: String,
-    val current: String? = null,
 )
 
 @Serializable
-enum class ModuleParameterKind(
+enum class NodeParameterKind(
     val min: Float,
     val max: Float,
 ) {
     Number(min = 0.0f, max = 1.0f),
     HzSlow(min = log2(0.001f), max = log2(200.0f)),
     HzFast(min = log2(20.0f), max = log2(22000.0f)),
+    HzWide(min = log2(0.001f), max = log2(22000.0f)),
     Db(min = -120.0f, max = 12.0f);
 
-    fun normalize(displayValue: String): Float {
+    fun tryNormalize(displayValue: String): Float? {
+        val floatValue = displayValue.toFloatOrNull() ?: return null
         val x = when (this) {
-            Number -> displayValue.toFloat()
-            HzSlow -> log2(displayValue.toFloat())
-            HzFast -> log2(displayValue.toFloat())
-            Db -> displayValue.toFloat()
+            Number -> floatValue
+            HzSlow, HzFast, HzWide -> log2(floatValue)
+            Db -> floatValue
         }
 
         return normalizeRaw(x)
+    }
+
+    fun normalize(displayValue: String): Float {
+        return tryNormalize(displayValue)
+            ?: error("Invalid display value $displayValue for parameter kind $this")
     }
 
     private fun normalizeRaw(raw: Float): Float {
@@ -43,10 +48,10 @@ enum class ModuleParameterKind(
         val x = denormalizeRaw(normalized)
 
         return when (this) {
-            Number -> "%,.3f".format(x)
-            HzSlow -> "%,.3f".format(2.0f.pow(x))
-            HzFast -> "%,.1f".format(2.0f.pow(x))
-            Db -> "%,.3f".format(x)
+            Number -> "%.3f".format(x)
+            HzSlow, HzWide -> "%.3f".format(2.0f.pow(x))
+            HzFast -> "%.1f".format(2.0f.pow(x))
+            Db -> "%.3f".format(x)
         }
     }
 

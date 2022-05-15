@@ -12,20 +12,20 @@ data class Cable(
 
 @Immutable
 sealed interface CableEnd {
-    val moduleId: Int
+    val nodeId: Int
     val socketNumber: Int
 }
 
 @Immutable
 @Serializable
 data class CableFrom(
-    override val moduleId: Int,
+    override val nodeId: Int,
     override val socketNumber: Int,
 ) : CableEnd
 
 @Immutable
 @Serializable
 data class CableTo(
-    override val moduleId: Int,
+    override val nodeId: Int,
     override val socketNumber: Int,
 ) : CableEnd

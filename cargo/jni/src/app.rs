@@ -4,12 +4,13 @@ use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::Stream;
+use cpal::{Device, OutputCallbackInfo, Sample, SampleFormat, Stream, StreamConfig};
 use glicol_synth::{AudioContext, AudioContextBuilder};
 use lazy_static::lazy_static;
 
-use crate::modules::{
-    AmpModule, Module, ModuleDescription, ModuleInfo, MulModule, OutputModule, SinModule,
+use crate::nodes::{
+    AmpNodeDescription, MulNodeDescription, Node, NodeDescription, NodeInfo, NoiseNodeDescription,
+    OutputNodeDescription, SimpleSawNodeDescription, SinNodeDescription,
 };
 use crate::patch::Cable;
 use crate::util::Observable;
@@ -67,8 +68,8 @@ struct AppState {
     // контекст используется и модифицируется в разных потоках, поэтому мьютекс
     context: Arc<Mutex<AudioContext<1>>>,
     _audio_stream: Mutex<Stream>,
-    available_modules: Observable<Vec<Box<dyn ModuleDescription>>>,
-    modules: HashMap<usize, Box<dyn Module>>,
+    available_nodes: Observable<Vec<Box<dyn NodeDescription>>>,
+    nodes: HashMap<usize, Box<dyn Node>>,
     cables: Vec<Cable>,
     parameters: HashMap<(usize, u8), f32>,
 }
@@ -79,12 +80,12 @@ unsafe impl Send for AppState {}
 
 pub enum AppMsg {
     Reset,
-    AddModule { uid: String, id: usize },
-    RemoveModule { id: usize },
+    AddNode { uid: String, id: usize },
+    RemoveNode { id: usize },
     AddCable(Cable),
     RemoveCable(Cable),
     ChangeConfiguration { output: String },
-    RegisterAvailableModulesListener(Arc<dyn Fn(&[ModuleInfo])>),
+    RegisterAvailableNodesListener(Arc<dyn Fn(&[NodeInfo])>),
     SetParameter { id: usize, index: u8, value: f32 },
 }
 
@@ -103,13 +104,13 @@ impl AppState {
         let config = device.default_output_config().unwrap();
 
         let stream = match config.sample_format() {
-            cpal::SampleFormat::F32 => {
+            SampleFormat::F32 => {
                 start_audio_stream::<f32, 1>(context.clone(), &device, &config.into())
             }
-            cpal::SampleFormat::I16 => {
+            SampleFormat::I16 => {
                 start_audio_stream::<i16, 1>(context.clone(), &device, &config.into())
             }
-            cpal::SampleFormat::U16 => {
+            SampleFormat::U16 => {
                 start_audio_stream::<u16, 1>(context.clone(), &device, &config.into())
             }
         }?;
@@ -118,8 +119,8 @@ impl AppState {
         let result = AppState {
             _audio_stream: Mutex::new(stream),
             context,
-            available_modules: Observable::new(available_modules()),
-            modules: HashMap::new(),
+            available_nodes: Observable::new(available_nodes()),
+            nodes: HashMap::new(),
             cables: vec![],
             parameters: HashMap::new(),
         };
@@ -130,49 +131,48 @@ impl AppState {
     fn update(&mut self, msg: &AppMsg) {
         match msg {
             AppMsg::Reset => self.reset(),
-            AppMsg::AddModule { uid, id } => self.add_module(uid, *id),
-            AppMsg::RemoveModule { id } => self.remove_module(*id),
+            AppMsg::AddNode { uid, id } => self.add_node(uid, *id),
+            AppMsg::RemoveNode { id } => self.remove_node(*id),
             AppMsg::AddCable(cable) => self.add_cable(cable),
             AppMsg::RemoveCable(cable) => self.remove_cable(cable),
             AppMsg::ChangeConfiguration { .. } => {}
-            AppMsg::RegisterAvailableModulesListener(listener) => {
-                self.add_available_modules_listener(listener.clone())
+            AppMsg::RegisterAvailableNodesListener(listener) => {
+                self.add_available_nodes_listener(listener.clone())
             }
             AppMsg::SetParameter { id, index, value } => self.set_parameter(*id, *index, *value),
         }
     }
 
     fn reset(&mut self) {
-        self.modules.clear();
+        self.nodes.clear();
         self.cables.clear();
         self.parameters.clear();
         self.recreate_context();
     }
 
-    fn add_module(&mut self, uid: &str, id: usize) {
-        let module_desc = self.available_modules.data.iter().find(|x| x.uid() == uid);
+    fn add_node(&mut self, uid: &str, id: usize) {
+        let node_desc = self.available_nodes.data.iter().find(|x| x.uid() == uid);
 
-        if let Some(module_desc) = module_desc {
-            let mut module = module_desc.create_instance(id);
+        if let Some(node_desc) = node_desc {
+            let mut node = node_desc.create_instance(id);
             let context = &mut self.context.lock().unwrap();
-            module.add_to_context(context);
-            self.modules.insert(id, module);
+            node.add_to_context(context);
+            self.nodes.insert(id, node);
         } else {
             eprintln!("Node description with uid {uid} not found");
         }
     }
 
-    fn remove_module(&mut self, id: usize) {
-        self.modules.remove(&id);
-        self.cables
-            .retain(|x| x.from.module != id && x.to.module != id);
+    fn remove_node(&mut self, id: usize) {
+        self.nodes.remove(&id);
+        self.cables.retain(|x| x.from.node != id && x.to.node != id);
         self.recreate_context();
     }
 
     fn add_cable(&mut self, cable: &Cable) {
         self.cables.push(*cable);
         let context = &mut self.context.lock().unwrap();
-        self.do_connect_modules(context, cable);
+        self.do_connect_nodes(context, cable);
     }
 
     fn remove_cable(&mut self, cable: &Cable) {
@@ -181,44 +181,42 @@ impl AppState {
         self.recreate_context();
     }
 
-    pub fn add_available_modules_listener(&mut self, listener: Arc<dyn Fn(&[ModuleInfo])>) {
-        let listener = move |module_descriptions: &Vec<Box<dyn ModuleDescription>>| {
-            let module_infos: Vec<_> = module_descriptions.iter().map(|x| x.info()).collect();
-            listener(&module_infos);
+    pub fn add_available_nodes_listener(&mut self, listener: Arc<dyn Fn(&[NodeInfo])>) {
+        let listener = move |node_descriptions: &Vec<Box<dyn NodeDescription>>| {
+            let node_infos: Vec<_> = node_descriptions.iter().map(|x| x.info()).collect();
+            listener(&node_infos);
         };
         let listener = Arc::new(listener);
 
-        self.available_modules.add_listener(listener);
+        self.available_nodes.add_listener(listener);
     }
 
     fn recreate_context(&mut self) {
         let context = &mut self.context.lock().unwrap();
         context.reset();
 
-        for module in &mut self.modules.values_mut() {
-            module.add_to_context(context)
+        for node in &mut self.nodes.values_mut() {
+            node.add_to_context(context)
         }
 
         for cable in &self.cables {
-            self.do_connect_modules(context, cable);
+            self.do_connect_nodes(context, cable);
         }
 
         for ((id, index), value) in &self.parameters {
             eprintln!("id: {id}, index: {index}, value: {value}");
-            let module = self.modules.get(id);
-            if let Some(module) = module {
-                module.set_parameter(context, *index, *value);
+            let node = self.nodes.get(id);
+            if let Some(node) = node {
+                node.set_parameter(context, *index, *value);
             }
         }
     }
 
-    fn do_connect_modules(&self, context: &mut AudioContext<1>, cable: &Cable) {
-        let from = self.modules[&cable.from.module]
+    fn do_connect_nodes(&self, context: &mut AudioContext<1>, cable: &Cable) {
+        let from = self.nodes[&cable.from.node]
             .output(cable.from.socket)
             .unwrap();
-        let (order, to) = self.modules[&cable.to.module]
-            .input(cable.to.socket)
-            .unwrap();
+        let (order, to) = self.nodes[&cable.to.node].input(cable.to.socket).unwrap();
 
         println!("order: {order}, to: {}", to.index());
         context.connect_with_order(from, to, order);
@@ -226,20 +224,20 @@ impl AppState {
     }
 
     fn set_parameter(&mut self, id: usize, index: u8, value: f32) {
-        let module = self.modules.get(&id).unwrap();
+        let node = self.nodes.get(&id).unwrap();
         let context = &mut self.context.lock().unwrap();
 
         self.parameters.insert((id, index), value);
 
-        module.set_parameter(context, index, value);
+        node.set_parameter(context, index, value);
     }
 }
 
-fn start_audio_stream<T: cpal::Sample, const N: usize>(
+fn start_audio_stream<T: Sample, const N: usize>(
     context: Arc<Mutex<AudioContext<N>>>,
-    device: &cpal::Device,
-    config: &cpal::StreamConfig,
-) -> Result<cpal::Stream, anyhow::Error> {
+    device: &Device,
+    config: &StreamConfig,
+) -> Result<Stream, anyhow::Error> {
     let channels = config.channels as usize;
 
     let err_fn = |err| {
@@ -248,7 +246,7 @@ fn start_audio_stream<T: cpal::Sample, const N: usize>(
 
     let stream = device.build_output_stream(
         config,
-        move |data: &mut [T], _: &cpal::OutputCallbackInfo| {
+        move |data: &mut [T], _: &OutputCallbackInfo| {
             let context = &mut context.lock().unwrap();
 
             for (_sample_idx, frame) in data.chunks_mut(channels).enumerate() {
@@ -256,7 +254,7 @@ fn start_audio_stream<T: cpal::Sample, const N: usize>(
 
                 for (channel_idx, sample) in frame.iter_mut().enumerate() {
                     let s = &block[channel_idx][0];
-                    *sample = cpal::Sample::from::<f32>(s);
+                    *sample = Sample::from::<f32>(s);
                 }
             }
         },
@@ -266,11 +264,13 @@ fn start_audio_stream<T: cpal::Sample, const N: usize>(
     Ok(stream)
 }
 
-fn available_modules() -> Vec<Box<dyn ModuleDescription>> {
+fn available_nodes() -> Vec<Box<dyn NodeDescription>> {
     vec![
-        Box::new(SinModule::default()),
-        Box::new(OutputModule::default()),
-        Box::new(AmpModule::default()),
-        Box::new(MulModule::default()),
+        Box::new(SinNodeDescription),
+        Box::new(SimpleSawNodeDescription),
+        Box::new(OutputNodeDescription),
+        Box::new(AmpNodeDescription),
+        Box::new(MulNodeDescription),
+        Box::new(NoiseNodeDescription),
     ]
 }

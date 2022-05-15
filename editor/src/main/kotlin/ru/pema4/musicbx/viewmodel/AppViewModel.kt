@@ -4,37 +4,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import ru.pema4.musicbx.model.config.InputOutputSettings
-import ru.pema4.musicbx.model.patch.DefaultPatch
+import ru.pema4.musicbx.model.config.NodeDescription
+import ru.pema4.musicbx.model.config.NodeUid
 import ru.pema4.musicbx.model.patch.Patch
-import ru.pema4.musicbx.model.preferences.Zoom
-import ru.pema4.musicbx.service.AvailableModulesService
+import ru.pema4.musicbx.service.AvailableNodesService
 import ru.pema4.musicbx.service.ConfigurationService
-import ru.pema4.musicbx.service.FileService
 import ru.pema4.musicbx.service.PreferencesService
-import ru.pema4.musicbx.ui.AppState
 import ru.pema4.musicbx.ui.AppViewModel
-import ru.pema4.musicbx.ui.ModuleState
 import java.nio.file.Path
 import kotlin.io.path.exists
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 
 @Composable
 fun rememberAppViewModel(
-    initialPatch: Patch = DefaultPatch,
+    initialPatch: Patch = Patch.Default,
 ): AppViewModel {
-    val fileService = FileService()
-    val availableModuleService = AvailableModulesService
-
     return remember {
         AppViewModelImpl(
             initialPatch = initialPatch,
-            fileService = fileService,
-            availableModuleService = availableModuleService,
+            availableNodesService = AvailableNodesService,
             configurationService = ConfigurationService,
         )
     }
@@ -42,17 +40,17 @@ fun rememberAppViewModel(
 
 @Stable
 class AppViewModelImpl(
-    initialPatch: Patch = DefaultPatch,
-    private val fileService: FileService,
-    private val availableModuleService: AvailableModulesService,
+    initialPatch: Patch = Patch.Default,
+    private val availableNodesService: AvailableNodesService,
     private val configurationService: ConfigurationService,
 ) : AppViewModel {
-    private var _uiState: AppStateImpl by mutableStateOf(AppStateImpl())
-    override val uiState: AppState by ::_uiState
-
     private var _editorViewModel: EditorViewModelImpl by mutableStateOf(EditorViewModelImpl(initialPatch))
     override val editor by ::_editorViewModel
     override val preferences: PreferencesService = PreferencesService
+    override var showingOpenDialog: Boolean by mutableStateOf(false)
+        private set
+    override var showingSaveDialog: Boolean by mutableStateOf(false)
+        private set
 
     @Composable
     override fun collectIoSettingsAsState(): State<InputOutputSettings?> {
@@ -60,60 +58,43 @@ class AppViewModelImpl(
     }
 
     @Composable
-    override fun collectAvailableModulesAsState(): State<List<ModuleState>> {
-        val modules by availableModuleService.availableModules.collectAsState()
-        return derivedStateOf {
-            modules.map { ModuleStateImpl(it, expanded = false) }
-        }
+    override fun collectAvailableNodesAsState(): State<Map<NodeUid, NodeDescription>> {
+        return availableNodesService
+            .availableNodes
+            .collectAsState()
     }
 
     override fun showOpenDialog() {
-        _uiState.showingOpenDialog = true
+        showingOpenDialog = true
     }
 
     override fun showSaveDialog() {
-        _uiState.showingSaveDialog = true
+        showingSaveDialog = true
     }
 
     override fun save(path: Path?) {
-        _uiState.showingSaveDialog = false
+        showingSaveDialog = false
         if (path != null) {
             val patch = editor.extractPatch()
-            fileService.save(
-                patch = patch,
-                path = path,
-            )
+            val fileText = Json.encodeToString(value = patch)
+            path.writeText(fileText)
 
             _editorViewModel = EditorViewModelImpl(patch)
         }
     }
 
     override fun open(path: Path?) {
-        _uiState.showingOpenDialog = false
+        showingOpenDialog = false
         if (path?.exists() == true) {
-            val patch = fileService.load(path)
+            val fileText = path.readText()
+            val patch = Json.decodeFromString<Patch>(fileText)
 
             _editorViewModel = EditorViewModelImpl(patch)
 
-            editor.recreateGraphOnBackend()
+            runBlocking {
+                editor.recreateGraphOnBackend()
+            }
         }
     }
-
-    override fun actualSize() {
-        PreferencesService.zoom = Zoom.One
-    }
-
-    override fun zoomIn() {
-        PreferencesService.zoom = PreferencesService.zoom.inc()
-    }
-
-    override fun zoomOut() {
-        PreferencesService.zoom = PreferencesService.zoom.dec()
-    }
 }
 
-@Stable
-private class AppStateImpl : AppState {
-    override var showingOpenDialog by mutableStateOf(false)
-    override var showingSaveDialog by mutableStateOf(false)
-}

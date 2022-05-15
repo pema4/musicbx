@@ -4,18 +4,22 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.unit.DpOffset
+import ru.pema4.musicbx.model.config.NodeDescription
 import ru.pema4.musicbx.model.patch.Cable
 import ru.pema4.musicbx.model.patch.CableEnd
 import ru.pema4.musicbx.model.patch.CableFrom
 import ru.pema4.musicbx.model.patch.CableTo
-import ru.pema4.musicbx.model.patch.Module
+import ru.pema4.musicbx.model.patch.Node
 import ru.pema4.musicbx.model.patch.Patch
-import ru.pema4.musicbx.service.PlaybackService
+import ru.pema4.musicbx.service.AvailableNodesService
+import ru.pema4.musicbx.service.EditorService
 import ru.pema4.musicbx.service.PreferencesService
 import ru.pema4.musicbx.ui.CableFromState
 import ru.pema4.musicbx.ui.CableToState
@@ -23,40 +27,42 @@ import ru.pema4.musicbx.ui.DraftCableState
 import ru.pema4.musicbx.ui.EditorState
 import ru.pema4.musicbx.ui.EditorViewModel
 import ru.pema4.musicbx.ui.FullCableState
-import ru.pema4.musicbx.ui.ModuleState
+import ru.pema4.musicbx.ui.NodeState
+import ru.pema4.musicbx.ui.SocketType
 import ru.pema4.musicbx.ui.toFullCableStateOrNull
 
 @Stable
 class EditorViewModelImpl(
-    modules: Collection<ModuleState> = emptyList(),
+    nodes: Collection<NodeState> = emptyList(),
     cables: Collection<FullCableState> = emptyList(),
 ) : EditorViewModel {
     override val uiState = EditorStateImpl()
 
-    override val modules: SnapshotStateList<ModuleState> = modules.toMutableStateList()
+    override val nodes: SnapshotStateMap<Int, NodeState> = nodes
+        .associateByTo(mutableStateMapOf(), NodeState::id)
     override val cables: SnapshotStateList<FullCableState> = cables.toMutableStateList()
     override var draftCable: DraftCableState? by mutableStateOf(null)
 
     override val scale: Float by derivedStateOf { PreferencesService.zoom.scale }
 
-    override fun recreateGraphOnBackend() {
-        PlaybackService.reset()
+    override suspend fun recreateGraphOnBackend() {
+        EditorService.reset()
 
-        for (module in modules) {
-            PlaybackService.addModule(module.uid, module.id)
-            for (parameter in module.parameters) {
-                PlaybackService.setParameter(module.id, parameter.model.number, parameter.current.normalized)
+        for ((id, node) in nodes.entries.sortedBy { it.key }) {
+            val newId = EditorService.addNode(uid = node.uid, id = id)
+            for (parameter in node.parameters) {
+                EditorService.setParameter(newId, parameter.parameter.number, parameter.current.normalized)
             }
         }
 
         for (cable in cables) {
-            PlaybackService.connectModules(cable.from.end, cable.to.end)
+            EditorService.connectNodes(cable.from.end, cable.to.end)
         }
     }
 
     override fun extractPatch(): Patch {
         return Patch(
-            modules = modules.map { it.toModule() },
+            nodes = nodes.map { (_, n) -> n.toNode() },
             cables = cables.map { (from, to) ->
                 Cable(
                     from = from.end,
@@ -67,7 +73,7 @@ class EditorViewModelImpl(
     }
 
     override fun createCable(end: CableEnd) {
-        val zIndex = modules.first { it.id == end.moduleId }.id.toFloat() + 0.5f
+        val zIndex = nodes.getValue(end.nodeId).id.toFloat() + 0.5f
         draftCable = DraftCableState(
             from = (end as? CableFrom)
                 ?.let { it ->
@@ -91,7 +97,7 @@ class EditorViewModelImpl(
         )
 
         val newCable = draftCable?.toFullCableStateOrNull() ?: return
-        PlaybackService.connectModules(
+        EditorService.connectNodes(
             from = newCable.from.end,
             to = newCable.to.end,
         )
@@ -108,7 +114,7 @@ class EditorViewModelImpl(
             ?.also { cables.remove(it) }
             ?: return
 
-        PlaybackService.disconnectModules(
+        EditorService.disconnectNodes(
             from = editedCable.from.end,
             to = editedCable.to.end,
         )
@@ -124,53 +130,63 @@ class EditorViewModelImpl(
         draftCable = null
     }
 
-    override fun addModule(module: Module) {
-        val id = modules
-            .maxOfOrNull { it.id + 1 }
-            ?.coerceAtLeast(0)
-            ?: 0
+    override fun addNode(description: NodeDescription) {
+        val id = EditorService.addNode(description.uid)
 
-        PlaybackService.addModule(module.uid, id)
-        for (parameter in module.parameters) {
-            PlaybackService.setParameter(
-                moduleId = id,
+        for (parameter in description.parameters) {
+            EditorService.setParameter(
+                nodeId = id,
                 parameterNum = parameter.number,
                 normalizedValue = parameter.kind.normalize(parameter.default),
             )
         }
 
-        modules += ModuleStateImpl(
-            module = module.copy(id = id),
+        nodes[id] = NodeStateImpl(
+            node = EditorService.activePatch.value.nodes.single { it.id == id },
+            description = description,
             editorViewModel = this,
         )
     }
 
-    override fun removeModule(moduleId: Int) {
-        PlaybackService.removeModule(moduleId)
-        modules.removeAll { it.id == moduleId }
-        cables.removeAll { it.to.end.moduleId == moduleId || it.from.end.moduleId == moduleId }
+    override fun removeNode(nodeId: Int) {
+        EditorService.removeNode(nodeId)
+        nodes.remove(nodeId)
+        cables.removeAll { it.to.end.nodeId == nodeId || it.from.end.nodeId == nodeId }
     }
 }
 
 private fun EditorViewModelImpl.getSocketOffsetCalculation(cableEnd: CableEnd): () -> DpOffset {
-    val module = modules.first { it.id == cableEnd.moduleId }
+    val node = nodes.getValue(cableEnd.nodeId)
     val sockets = when (cableEnd) {
-        is CableTo -> module.inputs
-        is CableFrom -> module.outputs
+        is CableTo -> node.inputs
+        is CableFrom -> node.outputs
     }
     val socket = sockets.first { it.number == cableEnd.socketNumber }
 
     return {
-        module.offset + socket.offsetInModule
+        when {
+            node.expanded -> node.topStartOffset + socket.offsetInNode
+            socket.type == SocketType.Input -> node.topStartOffset + node.centerStartOffset
+            socket.type == SocketType.Output -> node.topStartOffset + node.centerEndOffset
+            else -> DpOffset.Unspecified
+        }
     }
 }
 
 fun EditorViewModelImpl(patch: Patch): EditorViewModelImpl {
     val viewModel = EditorViewModelImpl()
 
-    val moduleStatesById = patch.modules
-        .associateBy(Module::id) { ModuleStateImpl(it, expanded = true, viewModel) }
-    viewModel.modules += moduleStatesById.values
+    val nodeStatesById = patch.nodes
+        .associateBy(Node::id) {
+            NodeStateImpl(
+                node = it,
+                description = AvailableNodesService.availableNodes.value.getValue(it.uid),
+                expanded = true,
+                editorViewModel = viewModel,
+            )
+        }
+
+    viewModel.nodes += nodeStatesById
 
     viewModel.cables += patch.cables.map { (from, to) ->
         with(viewModel) {
@@ -178,12 +194,12 @@ fun EditorViewModelImpl(patch: Patch): EditorViewModelImpl {
                 from = CableFromState(
                     end = from,
                     offsetCalculation = getSocketOffsetCalculation(from),
-                    zIndex = modules.first { it.id == from.moduleId }.id.toFloat() + 0.5f
+                    zIndex = nodes.getValue(from.nodeId).id.toFloat() + 0.5f
                 ),
                 to = CableToState(
                     end = to,
                     offsetCalculation = getSocketOffsetCalculation(to),
-                    zIndex = modules.first { it.id == to.moduleId }.id.toFloat() + 0.5f
+                    zIndex = nodes.getValue(to.nodeId).id.toFloat() + 0.5f
                 )
             )
         }

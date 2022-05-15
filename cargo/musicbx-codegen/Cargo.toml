@@ -1,0 +1,12 @@
+[package]
+edition = "2021"
+name = "musicbx-codegen"
+version = "0.1.0"
+[dependencies]
+anyhow = "*"
+quote = "*"
+serde_json = "*"
+thiserror = "*"
+
+[dependencies.musicbx-types]
+path = "../musicbx-types"

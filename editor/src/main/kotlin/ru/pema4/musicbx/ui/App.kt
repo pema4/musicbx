@@ -1,35 +1,41 @@
 package ru.pema4.musicbx.ui
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.MenuBar
+import androidx.compose.ui.window.MenuScope
 import androidx.compose.ui.window.Window
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import ru.pema4.musicbx.model.config.InputOutputSettings
+import ru.pema4.musicbx.model.config.NodeDescription
+import ru.pema4.musicbx.model.config.NodeUid
 import ru.pema4.musicbx.model.patch.TestPatch
 import ru.pema4.musicbx.model.preferences.PreferredTheme
 import ru.pema4.musicbx.model.preferences.Zoom
@@ -53,7 +59,7 @@ fun ApplicationScope.App(
         AppMenuBar(viewModel)
         EditorTheme {
             AppDialogWindows(viewModel)
-            AppWindowContent(
+            AppWindow(
                 viewModel = viewModel,
                 modifier = Modifier.background(MaterialTheme.colors.background),
             )
@@ -61,38 +67,55 @@ fun ApplicationScope.App(
     }
 }
 
+@Composable
+fun AppWindow(
+    viewModel: AppViewModel,
+    modifier: Modifier = Modifier,
+) {
+    AppWindowLayout(
+        nodeGallery = {
+            NodeGalleryView(
+                appViewModel = viewModel,
+                modifier = Modifier
+                    .fillMaxSize(),
+            )
+        },
+        editor = {
+            EditorView(
+                viewModel = viewModel.editor,
+                modifier = Modifier
+                    .weight(1.0f)
+            )
+        },
+        statusBar = {
+            StatusBar(viewModel)
+        },
+        modifier = modifier,
+    )
+}
+
 @OptIn(ExperimentalSplitPaneApi::class)
 @Composable
-fun AppWindowContent(
-    viewModel: AppViewModel,
+fun AppWindowLayout(
+    nodeGallery: @Composable () -> Unit,
+    editor: @Composable ColumnScope.() -> Unit,
+    statusBar: @Composable ColumnScope.() -> Unit,
+    firstPaneMinSize: Dp = 300.dp,
+    secondPanelMinSize: Dp = 100.dp,
     modifier: Modifier = Modifier,
 ) {
     HorizontalSplitPane(
         modifier = modifier,
     ) {
-        first(300.dp) {
-            ModuleGalleryView(
-                appViewModel = viewModel,
-                modifier = Modifier
-                    .fillMaxSize(),
-            )
+        first(firstPaneMinSize) {
+            nodeGallery()
         }
 
-        second(100.dp) {
+        second(secondPanelMinSize) {
             Column {
                 InstallTooltipManager(MutableTooltipManager()) {
-                    EditorView(
-                        viewModel = viewModel.editor,
-                        modifier = Modifier
-                            .weight(1.0f)
-                    )
-                    Spacer(
-                        modifier = Modifier
-                            .background(MaterialTheme.colors.onSurface)
-                            .height(1.dp)
-                            .fillMaxWidth()
-                    )
-                    StatusBar(viewModel)
+                    editor()
+                    statusBar()
                 }
             }
         }
@@ -101,19 +124,26 @@ fun AppWindowContent(
             visiblePart {
                 Spacer(
                     modifier = Modifier
-                        .background(MaterialTheme.colors.onSurface)
+                        .background(MaterialTheme.colors.onBackground)
                         .width(1.dp)
                         .fillMaxHeight()
                 )
             }
 
             handle {
+                val interactionSource = remember { MutableInteractionSource() }
+                val isHovered by interactionSource.collectIsHoveredAsState()
+                val width by animateDpAsState(
+                    targetValue = if (isHovered) 8.dp else 1.dp,
+                )
+
                 Spacer(
                     modifier = Modifier
+                        .hoverable(interactionSource)
                         .markAsHandle()
-                        .cursorForHorizontalResize()
-                        .background(SolidColor(Color.Black), alpha = 0.05f)
-                        .width(5.dp)
+                        .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
+                        .background(MaterialTheme.colors.onBackground.copy(alpha = 0.2f))
+                        .width(width)
                         .fillMaxHeight()
                 )
             }
@@ -121,16 +151,13 @@ fun AppWindowContent(
     }
 }
 
-private fun Modifier.cursorForHorizontalResize(): Modifier =
-    pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
-
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun FrameWindowScope.AppMenuBar(
     viewModel: AppViewModel,
 ) {
-    MenuBar {
-        Menu(text = "File") {
+    AppMenuBarLayout(
+        file = {
             Item(
                 text = "Save",
                 shortcut = KeyShortcut(Key.S, meta = true),
@@ -146,9 +173,8 @@ private fun FrameWindowScope.AppMenuBar(
                 shortcut = KeyShortcut(Key.O, meta = true),
                 onClick = viewModel::showOpenDialog,
             )
-        }
-
-        Menu(text = "View") {
+        },
+        view = {
             Menu(
                 text = "Appearance",
             ) {
@@ -187,11 +213,11 @@ private fun FrameWindowScope.AppMenuBar(
                 shortcut = KeyShortcut(Key.Minus, meta = true),
                 onClick = { viewModel.preferences.zoom-- },
             )
-        }
-
-        Menu(text = "Settings") {
+        },
+        settings = {
             val ioSettings by viewModel.collectIoSettingsAsState()
             val availableOutputs = ioSettings?.output?.available ?: emptyList()
+
             Menu(
                 text = "Select Output...",
                 enabled = availableOutputs.isNotEmpty(),
@@ -203,11 +229,25 @@ private fun FrameWindowScope.AppMenuBar(
                     )
                 }
             }
-        }
-
-        Menu(text = "Help") {
+        },
+        help = {
             Item(text = "About", onClick = {})
-        }
+        },
+    )
+}
+
+@Composable
+private fun FrameWindowScope.AppMenuBarLayout(
+    file: @Composable MenuScope.() -> Unit,
+    view: @Composable MenuScope.() -> Unit,
+    settings: @Composable MenuScope.() -> Unit,
+    help: @Composable MenuScope.() -> Unit,
+) {
+    MenuBar {
+        Menu(text = "File", content = file)
+        Menu(text = "View", content = view)
+        Menu(text = "Settings", content = settings)
+        Menu(text = "Help", content = help)
     }
 }
 
@@ -215,9 +255,7 @@ private fun FrameWindowScope.AppMenuBar(
 private fun AppDialogWindows(
     viewModel: AppViewModel,
 ) {
-    val uiState = viewModel.uiState
-
-    if (uiState.showingOpenDialog) {
+    if (viewModel.showingOpenDialog) {
         FileDialog(
             title = "Choose a file",
             mode = FileDialogMode.Load,
@@ -226,7 +264,7 @@ private fun AppDialogWindows(
         }
     }
 
-    if (uiState.showingSaveDialog) {
+    if (viewModel.showingSaveDialog) {
         FileDialog(
             title = "Saving a file",
             mode = FileDialogMode.Save,
@@ -238,38 +276,30 @@ private fun AppDialogWindows(
 
 @Stable
 interface AppViewModel {
-    val uiState: AppState
     val editor: EditorViewModel
     val preferences: PreferencesService
+    val showingOpenDialog: Boolean
+    val showingSaveDialog: Boolean
 
     @Composable
     fun collectIoSettingsAsState(): State<InputOutputSettings?>
 
     @Composable
-    fun collectAvailableModulesAsState(): State<List<ModuleState>>
+    fun collectAvailableNodesAsState(): State<Map<NodeUid, NodeDescription>>
 
     fun showOpenDialog() = Unit
     fun showSaveDialog() = Unit
 
     fun save(path: Path?) = Unit
     fun open(path: Path?) = Unit
-    fun actualSize() = Unit
-    fun zoomIn() = Unit
-    fun zoomOut() = Unit
     fun changeOutput(newOutput: String) = Unit
-}
-
-@Stable
-interface AppState {
-    val showingOpenDialog: Boolean
-    val showingSaveDialog: Boolean
 }
 
 @Preview
 @Composable
 fun AppPreview() {
     EditorTheme {
-        AppWindowContent(
+        AppWindow(
             viewModel = rememberAppViewModel(TestPatch)
         )
     }

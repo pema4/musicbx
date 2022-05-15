@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "jni",
+    "musicbx",
+    "musicbx-codegen",
+    "musicbx-core",
+    "musicbx-extra",
+    "musicbx-macro",
+    "musicbx-std",
+    "musicbx-types",
+    "tst",
+]
+
+[profile.release]
+lto = true
+

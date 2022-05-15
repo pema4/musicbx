@@ -2,6 +2,7 @@ package ru.pema4.musicbx.model.patch
 
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
+import ru.pema4.musicbx.model.config.TestNodeDescription
 import ru.pema4.musicbx.util.GridOffset
 import ru.pema4.musicbx.util.GridSize
 import kotlin.random.Random
@@ -9,57 +10,38 @@ import kotlin.random.Random
 @Immutable
 @Serializable
 data class Patch(
-    val modules: List<Module>,
+    val nodes: List<Node>,
     val cables: List<Cable>,
-)
-
-val DefaultPatch = Patch(
-    modules = emptyList(),
-    cables = emptyList(),
-)
+) {
+    companion object Constants {
+        val Default = Patch(
+            nodes = emptyList(),
+            cables = emptyList(),
+        )
+    }
+}
 
 val TestPatch = Patch(
-    modules = listOf(
-        Module(
+    nodes = listOf(
+        Node(
             id = 0,
-            uid = "Oscillator",
-            inputs = listOf(
-                InputSocket(0),
-                InputSocket(1),
-            ),
-            outputs = listOf(
-                OutputSocket(0),
-            ),
+            uid = TestNodeDescription.uid,
         ),
-        Module(
+        Node(
             id = 1,
-            uid = "Filter",
-            inputs = listOf(
-                InputSocket(0),
-            ),
-            outputs = listOf(
-                OutputSocket(0),
-                OutputSocket(1),
-            ),
+            uid = TestNodeDescription.uid,
             offset = GridOffset(x = GridSize(10), y = GridSize(10))
         ),
-        Module(
+        Node(
             id = Random.nextInt(10, 10000),
-            uid = "Randomizer",
-            inputs = listOf(
-                InputSocket(0),
-            ),
-            outputs = listOf(
-                OutputSocket(0),
-                OutputSocket(1),
-            ),
+            uid = TestNodeDescription.uid,
             offset = GridOffset(x = GridSize(30), y = GridSize(30))
         )
     ),
     cables = listOf(
         Cable(
-            from = CableFrom(moduleId = 1, socketNumber = 1),
-            to = CableTo(moduleId = 0, socketNumber = 0),
+            from = CableFrom(nodeId = 1, socketNumber = 1),
+            to = CableTo(nodeId = 0, socketNumber = 0),
         )
     ),
 )
