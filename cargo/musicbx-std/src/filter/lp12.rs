@@ -1,4 +1,4 @@
-use musicbx_core::{DataRef, DataMut};
+use musicbx_core::{DataMut, DataRef};
 
 #[derive(Default)]
 pub struct LP12Filter {
@@ -24,13 +24,12 @@ impl Default for LP12FilterParameters<'static> {
 }
 
 impl LP12Filter {
-    pub fn process<'a, const N: usize>(
-        &mut self,
-        n: usize,
-        parameters: LP12FilterParameters,
-    ) {
+    pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: LP12FilterParameters) {
         let LP12FilterParameters {
-            input, cutoff: _, q: _, mut out
+            input,
+            cutoff: _,
+            q: _,
+            mut out,
         } = parameters;
 
         for i in 0..n {

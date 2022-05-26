@@ -1,5 +1,5 @@
-mod sin;
 mod simple_saw;
+mod sin;
 
-pub use sin::{SinOsc, SinOscParameters};
 pub use simple_saw::{SimpleSawOsc, SimpleSawOscParameters};
+pub use sin::{SinOsc, SinOscParameters};

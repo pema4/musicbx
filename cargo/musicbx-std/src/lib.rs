@@ -3,9 +3,9 @@
 use musicbx_types::description::{ModuleDefinition, NodeDefinition};
 extern crate musicbx_core as musicbx;
 
+pub mod filter;
 pub mod osc;
 pub mod util;
-pub mod filter;
 
 #[derive(Clone, Copy)]
 pub struct StdModuleDefinition;

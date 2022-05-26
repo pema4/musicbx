@@ -1,6 +1,9 @@
 use musicbx::FromSampleRate;
 use musicbx_core::{DataMut, DataRef};
-use musicbx_types::{description::{NodeDefinition, NodeInput, NodeOutput, NodeParameter}, parameter::NodeParameterKind};
+use musicbx_types::{
+    description::{NodeDefinition, NodeInput, NodeOutput, NodeParameter},
+    parameter::NodeParameterKind,
+};
 
 #[derive(Debug, Clone)]
 pub struct SinOsc {

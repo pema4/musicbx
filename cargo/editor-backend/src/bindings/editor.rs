@@ -1,6 +1,6 @@
-use jni::JNIEnv;
 use jni::objects::{JClass, JString};
 use jni::sys::{jfloat, jint};
+use jni::JNIEnv;
 
 use musicbx::types::patch::{Cable, CableEnd};
 

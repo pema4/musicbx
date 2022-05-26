@@ -4,8 +4,8 @@ use glicol_synth::{AudioContext, Buffer, Input, Message};
 use hashbrown::HashMap;
 use petgraph::prelude::NodeIndex;
 
-use musicbx::{DataMut, DataRef, FromSampleRate};
 use musicbx::util::Amp;
+use musicbx::{DataMut, DataRef, FromSampleRate};
 use musicbx_types::parameter::NodeParameterKind;
 
 use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo};

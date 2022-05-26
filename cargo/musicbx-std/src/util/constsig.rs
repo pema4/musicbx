@@ -23,11 +23,7 @@ impl Default for ConstSigParameters<'static> {
 }
 
 impl ConstSig {
-    pub fn process<'a, const N: usize>(
-        &mut self,
-        n: usize,
-        parameters: ConstSigParameters,
-    ) {
+    pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: ConstSigParameters) {
         let ConstSigParameters { output } = parameters;
 
         match output {

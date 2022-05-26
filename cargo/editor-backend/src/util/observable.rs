@@ -35,8 +35,8 @@ impl<T> Observable<T> {
 }
 
 impl<T> Default for Observable<T>
-    where
-        T: Default,
+where
+    T: Default,
 {
     fn default() -> Self {
         Observable::new(Default::default())

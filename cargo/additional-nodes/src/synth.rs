@@ -1,4 +1,4 @@
-use musicbx::{FromSampleRate, node, osc, util};
+use musicbx::{node, osc, util, FromSampleRate};
 
 #[node(
 carrier_freq -> carrier.freq,

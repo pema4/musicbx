@@ -21,14 +21,15 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream, DeriveError> {
         _ => Err(DeriveError::NotStruct)?,
     };
 
-    let field_with_values: Vec<TokenStream> = fields.iter()
+    let field_with_values: Vec<TokenStream> = fields
+        .iter()
         .map(|field| {
-            let ident = field.ident.as_ref().ok_or(DeriveError::UnexpectedTupleStruct)?;
+            let ident = field
+                .ident
+                .as_ref()
+                .ok_or(DeriveError::UnexpectedTupleStruct)?;
 
-            let constructor_attr = field
-                .attrs
-                .iter()
-                .find(|attr| attr.path.is_ident("from"));
+            let constructor_attr = field.attrs.iter().find(|attr| attr.path.is_ident("from"));
 
             let constructor = if let Some(attr) = constructor_attr {
                 attr.parse_args()?

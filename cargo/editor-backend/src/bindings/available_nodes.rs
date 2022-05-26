@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
-use jni::JNIEnv;
 use jni::objects::{JClass, JObject, JValue};
+use jni::JNIEnv;
 use serde::Serialize;
 
 use musicbx_types::parameter::NodeParameterKind;
 
-use crate::{App, AppMsg};
 use crate::bindings::throw_illegal_state_exception;
 use crate::nodes::{Description, NodeInfo};
+use crate::{App, AppMsg};
 
 #[no_mangle]
 pub extern "system" fn Java_ru_pema4_musicbx_service_AvailableNodesService_registerListener(
