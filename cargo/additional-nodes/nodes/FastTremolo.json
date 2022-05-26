@@ -1,0 +1,100 @@
+{
+  "nodes": [
+    {
+      "id": 0,
+      "uid": "_synthetic_output",
+      "offset": {
+        "x": 34,
+        "y": 13
+      },
+      "parameters": {
+      }
+    },
+    {
+      "id": 2,
+      "uid": "musicbx::util::Mul",
+      "offset": {
+        "x": 44,
+        "y": 36
+      },
+      "parameters": {
+        "b": "0.126"
+      }
+    },
+    {
+      "id": 3,
+      "uid": "musicbx::osc::SinOsc",
+      "offset": {
+        "x": 17,
+        "y": 7
+      },
+      "parameters": {
+        "freq": "0.088"
+      }
+    },
+    {
+      "id": 4,
+      "uid": "musicbx::util::Mul",
+      "offset": {
+        "x": 18,
+        "y": 38
+      },
+      "parameters": {
+        "b": "0.000"
+      }
+    },
+    {
+      "id": 5,
+      "uid": "musicbx::osc::SinOsc",
+      "offset": {
+        "x": 0,
+        "y": 22
+      },
+      "parameters": {
+        "freq": "0.019"
+      }
+    }
+  ],
+  "cables": [
+    {
+      "from": {
+        "node_id": 2,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 0,
+        "socket_name": "input"
+      }
+    },
+    {
+      "from": {
+        "node_id": 3,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 2,
+        "socket_name": "a"
+      }
+    },
+    {
+      "from": {
+        "node_id": 4,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 3,
+        "socket_name": "phase_mod"
+      }
+    },
+    {
+      "from": {
+        "node_id": 5,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 4,
+        "socket_name": "a"
+      }
+    }
+  ]
+}

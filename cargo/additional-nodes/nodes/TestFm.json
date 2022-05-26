@@ -1,0 +1,141 @@
+{
+  "nodes": [
+    {
+      "id": 3,
+      "uid": "musicbx::osc::SinOsc",
+      "offset": {
+        "x": 5,
+        "y": 16
+      },
+      "parameters": {
+        "freq": "0.76860905"
+      }
+    },
+    {
+      "id": 4,
+      "uid": "_synthetic_output",
+      "offset": {
+        "x": 40,
+        "y": 33
+      },
+      "parameters": {
+      }
+    },
+    {
+      "id": 5,
+      "uid": "musicbx::util::Amp",
+      "offset": {
+        "x": 30,
+        "y": 6
+      },
+      "parameters": {
+        "db": "0.9084302"
+      }
+    },
+    {
+      "id": 7,
+      "uid": "musicbx::osc::SimpleSawOsc",
+      "offset": {
+        "x": 9,
+        "y": 40
+      },
+      "parameters": {
+        "freq": "1.0"
+      }
+    },
+    {
+      "id": 8,
+      "uid": "musicbx::util::Amp",
+      "offset": {
+        "x": 34,
+        "y": 46
+      },
+      "parameters": {
+        "db": "0.6187017"
+      }
+    },
+    {
+      "id": 9,
+      "uid": "musicbx::util::UniformRandom",
+      "offset": {
+        "x": 0,
+        "y": 59
+      },
+      "parameters": {
+      }
+    },
+    {
+      "id": 10,
+      "uid": "musicbx::util::Amp",
+      "offset": {
+        "x": 19,
+        "y": 60
+      },
+      "parameters": {
+        "db": "1.0"
+      }
+    }
+  ],
+  "cables": [
+    {
+      "from": {
+        "node_id": 3,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 5,
+        "socket_name": "input"
+      }
+    },
+    {
+      "from": {
+        "node_id": 5,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 4,
+        "socket_name": "input"
+      }
+    },
+    {
+      "from": {
+        "node_id": 7,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 8,
+        "socket_name": "input"
+      }
+    },
+    {
+      "from": {
+        "node_id": 8,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 3,
+        "socket_name": "phase_mod"
+      }
+    },
+    {
+      "from": {
+        "node_id": 9,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 10,
+        "socket_name": "input"
+      }
+    },
+    {
+      "from": {
+        "node_id": 10,
+        "socket_name": "output"
+      },
+      "to": {
+        "node_id": 7,
+        "socket_name": "tune"
+      }
+    }
+  ]
+}

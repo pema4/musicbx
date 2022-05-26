@@ -47,7 +47,7 @@ fun Parameter(
         Text(
             text = state.parameter.name,
             style = MaterialTheme.typography.body1,
-            modifier = Modifier.clickable { showDropdown = !showDropdown },
+            modifier = Modifier.clickable { showDropdown = true },
         )
 
         ParameterValueDropdown(

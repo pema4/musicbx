@@ -1,20 +1,24 @@
 use musicbx_core::{DataMut, DataRef};
+use musicbx_types::{
+    description::{NodeDefinition, NodeInput, NodeOutput, NodeParameter},
+    parameter::NodeParameterKind,
+};
 
 #[derive(Default, Debug, Clone)]
 pub struct Mul;
 
 pub struct MulParameters<'a> {
-    pub left: DataRef<'a>,
-    pub right: DataRef<'a>,
-    pub out: DataMut<'a>,
+    pub a: DataRef<'a>,
+    pub b: DataRef<'a>,
+    pub output: DataMut<'a>,
 }
 
 impl Default for MulParameters<'static> {
     fn default() -> Self {
         Self {
-            left: DataRef::Float(1.0),
-            right: DataRef::Float(1.0),
-            out: DataMut::Float(0.0),
+            a: DataRef::Float(1.0),
+            b: DataRef::Float(1.0),
+            output: DataMut::Float(0.0),
         }
     }
 }
@@ -22,13 +26,39 @@ impl Default for MulParameters<'static> {
 impl Mul {
     pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: MulParameters) {
         let MulParameters {
-            left,
-            right,
-            mut out,
+            a: left,
+            b: right,
+            output: mut out,
         } = parameters;
 
         for i in 0..n {
             out[i] = left[i] * right[i]
+        }
+    }
+
+    pub const fn definition() -> NodeDefinition {
+        NodeDefinition {
+            uid: "musicbx::util::Mul",
+            inputs: &[
+                NodeInput {
+                    number: 0,
+                    name: "a",
+                },
+                NodeInput {
+                    number: 1,
+                    name: "b",
+                },
+            ],
+            outputs: &[NodeOutput {
+                number: 0,
+                name: "output",
+            }],
+            parameters: &[NodeParameter {
+                number: 0,
+                kind: NodeParameterKind::Number,
+                default: "1.0",
+                name: "b",
+            }],
         }
     }
 }

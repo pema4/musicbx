@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 musicbx-core = { path = "../musicbx-core" }
-musicbx-macro = { path = "../musicbx-macro" }
+musicbx-derive = { path = "../musicbx-derive" }
+musicbx-types = { path = "../musicbx-types" }
 rand = "0.8.5"

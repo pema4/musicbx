@@ -1,8 +1,8 @@
 #[musicbx::node {
     freq -> modulator.freq,
     freq -> carrier.freq,
-    modulator.out -> carrier.phase_mod,
-    carrier.out -> out,
+    modulator.output -> carrier.phase_mod,
+    carrier.output -> out,
 }]
 pub struct MyNode {
     carrier: musicbx::osc::SinOsc,

@@ -1,6 +1,7 @@
 package ru.pema4.musicbx.model.patch
 
 import androidx.compose.runtime.Immutable
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Immutable
@@ -13,19 +14,23 @@ data class Cable(
 @Immutable
 sealed interface CableEnd {
     val nodeId: Int
-    val socketNumber: Int
+    val socketName: String
 }
 
 @Immutable
 @Serializable
 data class CableFrom(
+    @SerialName("node_id")
     override val nodeId: Int,
-    override val socketNumber: Int,
+    @SerialName("socket_name")
+    override val socketName: String,
 ) : CableEnd
 
 @Immutable
 @Serializable
 data class CableTo(
+    @SerialName("node_id")
     override val nodeId: Int,
-    override val socketNumber: Int,
+    @SerialName("socket_name")
+    override val socketName: String,
 ) : CableEnd

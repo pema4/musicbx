@@ -131,15 +131,12 @@ private fun EnabledNodeSettings(
     state: NodeState,
     parentLayoutCoordinates: LayoutCoordinates?,
 ) {
-    if (state.expanded) {
-        Divider()
-    }
-
     AnimatedVisibility(
         visible = state.expanded,
         enter = expandVertically(),
         exit = shrinkVertically(),
     ) {
+        Divider()
         Column(
             modifier = Modifier
                 .padding(
@@ -173,13 +170,12 @@ private fun NodeSocketsView(
     sockets: List<SocketState>,
     parentLayoutCoordinates: LayoutCoordinates?,
 ) {
-    val density = LocalDensity.current
-
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         for (socket in sockets) {
-            key(socket.number) {
+            key(socket.name) {
+                val density = LocalDensity.current
                 SocketView(
                     state = socket,
                     modifier = Modifier

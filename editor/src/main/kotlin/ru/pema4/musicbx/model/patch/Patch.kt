@@ -40,8 +40,8 @@ val TestPatch = Patch(
     ),
     cables = listOf(
         Cable(
-            from = CableFrom(nodeId = 1, socketNumber = 1),
-            to = CableTo(nodeId = 0, socketNumber = 0),
+            from = CableFrom(nodeId = 1, socketName = "out"),
+            to = CableTo(nodeId = 0, socketName = "in"),
         )
     ),
 )

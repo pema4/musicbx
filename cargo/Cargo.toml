@@ -1,14 +1,14 @@
 [workspace]
 members = [
-    "jni",
+    "editor-backend",
     "musicbx",
     "musicbx-codegen",
     "musicbx-core",
     "musicbx-extra",
-    "musicbx-macro",
+    "musicbx-derive",
     "musicbx-std",
     "musicbx-types",
-    "tst",
+    "additional-nodes",
 ]
 
 [profile.release]

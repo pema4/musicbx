@@ -51,6 +51,10 @@ class AppViewModelImpl(
         private set
     override var showingSaveDialog: Boolean by mutableStateOf(false)
         private set
+    private val json = Json {
+        prettyPrint = true
+        encodeDefaults = true
+    }
 
     @Composable
     override fun collectIoSettingsAsState(): State<InputOutputSettings?> {
@@ -76,7 +80,7 @@ class AppViewModelImpl(
         showingSaveDialog = false
         if (path != null) {
             val patch = editor.extractPatch()
-            val fileText = Json.encodeToString(value = patch)
+            val fileText = json.encodeToString(value = patch)
             path.writeText(fileText)
 
             _editorViewModel = EditorViewModelImpl(patch)
@@ -87,7 +91,7 @@ class AppViewModelImpl(
         showingOpenDialog = false
         if (path?.exists() == true) {
             val fileText = path.readText()
-            val patch = Json.decodeFromString<Patch>(fileText)
+            val patch = json.decodeFromString<Patch>(fileText)
 
             _editorViewModel = EditorViewModelImpl(patch)
 

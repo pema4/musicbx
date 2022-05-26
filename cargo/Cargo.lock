@@ -3,6 +3,15 @@
 version = 3
 
 [[package]]
+name = "additional-nodes"
+version = "0.1.0"
+dependencies = [
+ "musicbx",
+ "musicbx-codegen",
+ "musicbx-std",
+]
+
+[[package]]
 name = "ahash"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -363,6 +372,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "editor-backend"
+version = "0.1.0"
+dependencies = [
+ "additional-nodes",
+ "anyhow",
+ "clap",
+ "cpal",
+ "enum_dispatch",
+ "glicol_synth",
+ "hashbrown 0.12.1",
+ "jni",
+ "lazy_static",
+ "musicbx",
+ "musicbx-types",
+ "petgraph",
+ "rand",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -607,8 +637,9 @@ name = "musicbx"
 version = "0.1.0"
 dependencies = [
  "musicbx-core",
- "musicbx-macro",
+ "musicbx-derive",
  "musicbx-std",
+ "musicbx-types",
 ]
 
 [[package]]
@@ -616,9 +647,12 @@ name = "musicbx-codegen"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "itertools",
  "musicbx-types",
+ "proc-macro2",
  "quote",
  "serde_json",
+ "syn",
  "thiserror",
 ]
 
@@ -626,37 +660,11 @@ dependencies = [
 name = "musicbx-core"
 version = "0.1.0"
 dependencies = [
- "musicbx-macro",
+ "musicbx-derive",
 ]
 
 [[package]]
-name = "musicbx-extra"
-version = "0.1.0"
-dependencies = [
- "musicbx",
-]
-
-[[package]]
-name = "musicbx-jni"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "cpal",
- "enum_dispatch",
- "glicol_synth",
- "hashbrown 0.12.1",
- "jni",
- "lazy_static",
- "musicbx",
- "petgraph",
- "rand",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "musicbx-macro"
+name = "musicbx-derive"
 version = "0.1.0"
 dependencies = [
  "itertools",
@@ -668,11 +676,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "musicbx-extra"
+version = "0.1.0"
+dependencies = [
+ "musicbx",
+]
+
+[[package]]
 name = "musicbx-std"
 version = "0.1.0"
 dependencies = [
  "musicbx-core",
- "musicbx-macro",
+ "musicbx-derive",
+ "musicbx-types",
  "rand",
 ]
 
@@ -681,6 +697,7 @@ name = "musicbx-types"
 version = "0.1.0"
 dependencies = [
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1108,14 +1125,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d82e1a7758622a465f8cee077614c73484dac5b836c02ff6a40d5d1010324d7"
 dependencies = [
  "serde",
-]
-
-[[package]]
-name = "tst"
-version = "0.1.0"
-dependencies = [
- "musicbx",
- "musicbx-codegen",
 ]
 
 [[package]]

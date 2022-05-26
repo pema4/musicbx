@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-musicbx-macro = { path = "../musicbx-macro" }
+musicbx-derive = { path = "../musicbx-derive" }
 musicbx-core = { path = "../musicbx-core" }
 musicbx-std = { path = "../musicbx-std" }
+musicbx-types = { path = "../musicbx-types" }

@@ -48,23 +48,23 @@ object EditorService {
 
     external fun removeNode(nodeId: Int)
 
-    private external fun connectNodes(from: Int, fromOutput: Int, to: Int, toInput: Int)
+    private external fun connectNodes(from: Int, fromOutput: String, to: Int, toInput: String)
     fun connectNodes(from: CableFrom, to: CableTo) {
         connectNodes(
             from = from.nodeId,
-            fromOutput = from.socketNumber,
+            fromOutput = from.socketName,
             to = to.nodeId,
-            toInput = to.socketNumber,
+            toInput = to.socketName,
         )
     }
 
-    private external fun disconnectNodes(from: Int, fromOutput: Int, to: Int, toInput: Int)
+    private external fun disconnectNodes(from: Int, fromOutput: String, to: Int, toInput: String)
     fun disconnectNodes(from: CableFrom, to: CableTo) {
         disconnectNodes(
             from = from.nodeId,
-            fromOutput = from.socketNumber,
+            fromOutput = from.socketName,
             to = to.nodeId,
-            toInput = to.socketNumber,
+            toInput = to.socketName,
         )
     }
 

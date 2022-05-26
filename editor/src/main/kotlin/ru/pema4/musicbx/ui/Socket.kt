@@ -91,8 +91,8 @@ data class SocketState(
     var offsetInNode by mutableStateOf(DpOffset.Zero)
     var hoverInteractionSource = MutableInteractionSource()
     private val end = when (type) {
-        SocketType.Input -> CableTo(nodeId = nodeState.id, socketNumber = number)
-        SocketType.Output -> CableFrom(nodeId = nodeState.id, socketNumber = number)
+        SocketType.Input -> CableTo(nodeId = nodeState.id, socketName = name)
+        SocketType.Output -> CableFrom(nodeId = nodeState.id, socketName = name)
     }
 
     val number: Int get() = model.number

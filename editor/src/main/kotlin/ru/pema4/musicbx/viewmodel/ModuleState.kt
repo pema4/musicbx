@@ -107,7 +107,7 @@ fun NodeState.toNode(): Node {
         offset = topStartOffset.toGridOffset(),
         parameterValues = parameters.associateBy(
             keySelector = { it.parameter.name },
-            valueTransform = { it.current.text },
+            valueTransform = { it.current.normalized.toString() },
         )
     )
 }

@@ -1,9 +1,11 @@
 package ru.pema4.musicbx.model.patch
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 import kotlin.math.log2
 import kotlin.math.pow
 
+@Immutable
 @Serializable
 data class NodeParameter(
     val number: Int,

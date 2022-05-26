@@ -4,14 +4,20 @@ pub struct ConstSig {
     value: f32,
 }
 
+impl ConstSig {
+    pub fn new(value: f32) -> Self {
+        Self { value }
+    }
+}
+
 pub struct ConstSigParameters<'a> {
-    pub out: DataMut<'a>,
+    pub output: DataMut<'a>,
 }
 
 impl Default for ConstSigParameters<'static> {
     fn default() -> Self {
         Self {
-            out: DataMut::Float(0.0),
+            output: DataMut::Float(0.0),
         }
     }
 }
@@ -22,9 +28,9 @@ impl ConstSig {
         n: usize,
         parameters: ConstSigParameters,
     ) {
-        let ConstSigParameters { out } = parameters;
+        let ConstSigParameters { output } = parameters;
 
-        match out {
+        match output {
             DataMut::Audio(audio) => audio[..n].fill(self.value),
             DataMut::Float(_) => (),
         };

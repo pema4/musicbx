@@ -161,7 +161,7 @@ private fun EditorViewModelImpl.getSocketOffsetCalculation(cableEnd: CableEnd): 
         is CableTo -> node.inputs
         is CableFrom -> node.outputs
     }
-    val socket = sockets.first { it.number == cableEnd.socketNumber }
+    val socket = sockets.first { it.name == cableEnd.socketName }
 
     return {
         when {

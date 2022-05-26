@@ -17,7 +17,7 @@ fun main() {
 private fun loadNativeBackend() {
     val resource = ClassLoader
         .getSystemClassLoader()
-        .getResourceAsStream("libmusicbx-jni.dylib")
+        .getResourceAsStream("libeditor_backend.dylib")
     with(kotlin.io.path.createTempFile()) {
         resource?.copyTo(outputStream())
         System.load(pathString)
