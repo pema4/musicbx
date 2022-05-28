@@ -1,6 +1,7 @@
-use crate::app::{App, AppMsg};
+pub use app::{App, AppMsg};
 
-pub mod app;
+mod app;
 mod bindings;
+pub mod model;
 pub mod nodes;
-mod util;
+pub mod util;

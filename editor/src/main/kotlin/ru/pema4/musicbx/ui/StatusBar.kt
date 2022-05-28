@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,12 +22,11 @@ fun StatusBar(
 ) {
     val tooltipManager = LocalTooltipManager.current
     val text = tooltipManager?.activeTooltip
-
-    val ioSettings by appViewModel.collectIoSettingsAsState()
+    val outputSettings by appViewModel.configuration.output.collectAsState()
 
     StatusBar(
         text = text,
-        sampleRate = ioSettings?.output?.sampleRate?.current.toString(),
+        sampleRate = outputSettings.sampleRate?.current.toString(),
         modifier = modifier
     )
 }

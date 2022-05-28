@@ -12,7 +12,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import ru.pema4.musicbx.model.config.InputOutputSettings
 import ru.pema4.musicbx.model.config.NodeDescription
 import ru.pema4.musicbx.model.config.NodeUid
 import ru.pema4.musicbx.model.patch.Patch
@@ -33,7 +32,6 @@ fun rememberAppViewModel(
         AppViewModelImpl(
             initialPatch = initialPatch,
             availableNodesService = AvailableNodesService,
-            configurationService = ConfigurationService,
         )
     }
 }
@@ -42,11 +40,9 @@ fun rememberAppViewModel(
 class AppViewModelImpl(
     initialPatch: Patch = Patch.Default,
     private val availableNodesService: AvailableNodesService,
-    private val configurationService: ConfigurationService,
 ) : AppViewModel {
     private var _editorViewModel: EditorViewModelImpl by mutableStateOf(EditorViewModelImpl(initialPatch))
     override val editor by ::_editorViewModel
-    override val preferences: PreferencesService = PreferencesService
     override var showingOpenDialog: Boolean by mutableStateOf(false)
         private set
     override var showingSaveDialog: Boolean by mutableStateOf(false)
@@ -55,11 +51,8 @@ class AppViewModelImpl(
         prettyPrint = true
         encodeDefaults = true
     }
-
-    @Composable
-    override fun collectIoSettingsAsState(): State<InputOutputSettings?> {
-        return configurationService.ioSettings.collectAsState()
-    }
+    override val preferences = PreferencesService
+    override val configuration = ConfigurationService
 
     @Composable
     override fun collectAvailableNodesAsState(): State<Map<NodeUid, NodeDescription>> {

@@ -5,15 +5,23 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class InputOutputSettings(
-    val output: OutputSettings,
+    val output: DeviceSettings,
 )
 
 @Serializable
-data class OutputSettings(
-    val current: String,
+data class DeviceSettings(
+    val current: String?,
     val available: List<String>,
-    @SerialName("sample_rate") val sampleRate: SampleRateSettings,
-)
+    @SerialName("sample_rate") val sampleRate: SampleRateSettings?,
+) {
+    companion object {
+        val Unspecified = DeviceSettings(
+            current = null,
+            available = emptyList(),
+            sampleRate = null,
+        )
+    }
+}
 
 @Serializable
 data class SampleRateSettings(

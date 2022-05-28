@@ -26,7 +26,6 @@ impl<T> Observable<T> {
         listeners.retain(|x| !Arc::ptr_eq(x, listener));
     }
 
-    #[allow(dead_code)]
     pub fn notify_all(&mut self) {
         for listener in self.listeners.lock().unwrap().iter() {
             listener(&self.data)

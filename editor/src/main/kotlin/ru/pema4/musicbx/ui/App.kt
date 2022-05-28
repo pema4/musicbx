@@ -18,27 +18,19 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
-import androidx.compose.ui.window.FrameWindowScope
-import androidx.compose.ui.window.MenuBar
-import androidx.compose.ui.window.MenuScope
 import androidx.compose.ui.window.Window
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
-import ru.pema4.musicbx.model.config.InputOutputSettings
 import ru.pema4.musicbx.model.config.NodeDescription
 import ru.pema4.musicbx.model.config.NodeUid
 import ru.pema4.musicbx.model.patch.TestPatch
-import ru.pema4.musicbx.model.preferences.PreferredTheme
-import ru.pema4.musicbx.model.preferences.Zoom
+import ru.pema4.musicbx.service.ConfigurationService
 import ru.pema4.musicbx.service.PreferencesService
 import ru.pema4.musicbx.util.FileDialog
 import ru.pema4.musicbx.util.FileDialogMode
@@ -47,17 +39,16 @@ import ru.pema4.musicbx.util.MutableTooltipManager
 import ru.pema4.musicbx.viewmodel.rememberAppViewModel
 import java.awt.Cursor
 import java.nio.file.Path
-import kotlin.math.abs
 
 @Composable
 fun ApplicationScope.App(
     viewModel: AppViewModel = rememberAppViewModel(),
 ) {
-    Window(
-        onCloseRequest = ::exitApplication,
-    ) {
-        AppMenuBar(viewModel)
-        EditorTheme {
+    EditorTheme {
+        Window(
+            onCloseRequest = ::exitApplication,
+        ) {
+            AppMenuBar(viewModel)
             AppDialogWindows(viewModel)
             AppWindow(
                 viewModel = viewModel,
@@ -151,106 +142,6 @@ fun AppWindowLayout(
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
-@Composable
-private fun FrameWindowScope.AppMenuBar(
-    viewModel: AppViewModel,
-) {
-    AppMenuBarLayout(
-        file = {
-            Item(
-                text = "Save",
-                shortcut = KeyShortcut(Key.S, meta = true),
-                onClick = viewModel::showSaveDialog,
-            )
-            Item(
-                text = "Save As...",
-                shortcut = KeyShortcut(Key.S, meta = true, shift = true),
-                onClick = viewModel::showSaveDialog,
-            )
-            Item(
-                text = "Open...",
-                shortcut = KeyShortcut(Key.O, meta = true),
-                onClick = viewModel::showOpenDialog,
-            )
-        },
-        view = {
-            Menu(
-                text = "Appearance",
-            ) {
-                RadioButtonItem(
-                    text = "System Theme",
-                    selected = PreferencesService.theme == PreferredTheme.Auto,
-                    onClick = { PreferencesService.theme = PreferredTheme.Auto },
-                )
-                RadioButtonItem(
-                    text = "Light Theme",
-                    selected = PreferencesService.theme == PreferredTheme.Light,
-                    onClick = { PreferencesService.theme = PreferredTheme.Light },
-                )
-                RadioButtonItem(
-                    text = "Dark Theme",
-                    selected = PreferencesService.theme == PreferredTheme.Dark,
-                    onClick = { PreferencesService.theme = PreferredTheme.Dark },
-                )
-            }
-
-            Separator()
-
-            Item(
-                text = "Actual Size",
-                enabled = abs(viewModel.editor.scale - 1.0f) > 1e-5,
-                shortcut = KeyShortcut(Key.Zero, meta = true),
-                onClick = { viewModel.preferences.zoom = Zoom.One },
-            )
-            Item(
-                text = "Zoom In",
-                shortcut = KeyShortcut(Key.Equals, meta = true),
-                onClick = { viewModel.preferences.zoom++ },
-            )
-            Item(
-                text = "Zoom Out",
-                shortcut = KeyShortcut(Key.Minus, meta = true),
-                onClick = { viewModel.preferences.zoom-- },
-            )
-        },
-        settings = {
-            val ioSettings by viewModel.collectIoSettingsAsState()
-            val availableOutputs = ioSettings?.output?.available ?: emptyList()
-
-            Menu(
-                text = "Select Output...",
-                enabled = availableOutputs.isNotEmpty(),
-            ) {
-                for (output in availableOutputs) {
-                    Item(
-                        text = output,
-                        onClick = { viewModel.changeOutput(output) },
-                    )
-                }
-            }
-        },
-        help = {
-            Item(text = "About", onClick = {})
-        },
-    )
-}
-
-@Composable
-private fun FrameWindowScope.AppMenuBarLayout(
-    file: @Composable MenuScope.() -> Unit,
-    view: @Composable MenuScope.() -> Unit,
-    settings: @Composable MenuScope.() -> Unit,
-    help: @Composable MenuScope.() -> Unit,
-) {
-    MenuBar {
-        Menu(text = "File", content = file)
-        Menu(text = "View", content = view)
-        Menu(text = "Settings", content = settings)
-        Menu(text = "Help", content = help)
-    }
-}
-
 @Composable
 private fun AppDialogWindows(
     viewModel: AppViewModel,
@@ -277,12 +168,10 @@ private fun AppDialogWindows(
 @Stable
 interface AppViewModel {
     val editor: EditorViewModel
-    val preferences: PreferencesService
     val showingOpenDialog: Boolean
     val showingSaveDialog: Boolean
-
-    @Composable
-    fun collectIoSettingsAsState(): State<InputOutputSettings?>
+    val preferences: PreferencesService
+    val configuration: ConfigurationService
 
     @Composable
     fun collectAvailableNodesAsState(): State<Map<NodeUid, NodeDescription>>
@@ -292,7 +181,6 @@ interface AppViewModel {
 
     fun save(path: Path?) = Unit
     fun open(path: Path?) = Unit
-    fun changeOutput(newOutput: String) = Unit
 }
 
 @Preview

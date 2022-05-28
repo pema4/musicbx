@@ -1,19 +1,19 @@
 package ru.pema4.musicbx.model.preferences
 
 @JvmInline
-value class Zoom(val index: Int) {
-    val scale: Float get() = zoomScales[index]
+value class Zoom(val step: Int) {
+    val scale: Float get() = zoomSteps[step]
 
-    operator fun inc(): Zoom {
-        return Zoom(index.inc().coerceIn(zoomScales.indices))
+    fun increase(): Zoom {
+        return Zoom(step.inc().coerceIn(zoomSteps.indices))
     }
 
-    operator fun dec(): Zoom {
-        return Zoom(index.dec().coerceIn(zoomScales.indices))
+    fun decrease(): Zoom {
+        return Zoom(step.dec().coerceIn(zoomSteps.indices))
     }
 
     companion object {
-        private val zoomScales: List<Float> = listOf(
+        private val zoomSteps: List<Float> = listOf(
             0.25f,
             1f / 3f,
             0.50f,
@@ -33,6 +33,6 @@ value class Zoom(val index: Int) {
             5f,
         )
 
-        val One: Zoom = Zoom(index = zoomScales.indexOf(1.0f))
+        val One: Zoom = Zoom(step = zoomSteps.indexOf(1.0f))
     }
 }

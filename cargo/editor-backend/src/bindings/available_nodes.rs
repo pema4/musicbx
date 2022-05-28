@@ -6,8 +6,8 @@ use serde::Serialize;
 
 use musicbx::types::NodeParameterKind;
 
-use crate::bindings::throw_illegal_state_exception;
 use crate::nodes::{Description, NodeInfo};
+use crate::unwrap_or_throw;
 use crate::{App, AppMsg};
 
 #[no_mangle]
@@ -24,10 +24,7 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_AvailableNodesService_regis
         let listener = callback.as_obj();
 
         let nodes: Vec<_> = nodes.iter().map(|&x| x.into()).collect();
-        let result = invoke_listener(env, listener, &nodes[..]);
-        if let Err(error) = result {
-            throw_illegal_state_exception(&env, &error);
-        }
+        unwrap_or_throw!(env, invoke_listener(env, listener, &nodes[..]));
     };
     let callback = Arc::new(callback);
     App::current().accept_message(AppMsg::RegisterAvailableNodesListener(callback));

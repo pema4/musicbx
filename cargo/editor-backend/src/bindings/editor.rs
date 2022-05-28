@@ -5,7 +5,7 @@ use jni::JNIEnv;
 use musicbx::types::patch::{Cable, CableEnd};
 
 use crate::app::{App, AppMsg};
-use crate::bindings::throw_illegal_state_exception;
+use crate::unwrap_or_throw;
 
 #[no_mangle]
 pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_reset(
@@ -22,11 +22,7 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_addNodeOnBack
     uid: JString,
     id: jint,
 ) {
-    let result = add_node(env, uid, id);
-
-    if let Err(error) = result {
-        throw_illegal_state_exception(&env, &error);
-    }
+    unwrap_or_throw!(env, add_node(env, uid, id))
 }
 
 fn add_node(env: JNIEnv, uid: JString, id: jint) -> anyhow::Result<()> {
@@ -45,19 +41,8 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_removeNode(
     _: JClass,
     id: jint,
 ) {
-    let result = remove_node(id);
-
-    if let Err(error) = result {
-        throw_illegal_state_exception(&env, &error);
-    }
-}
-
-fn remove_node(id: jint) -> anyhow::Result<()> {
-    let id: usize = id.try_into()?;
-
+    let id: usize = unwrap_or_throw!(env, id.try_into());
     App::current().accept_message(AppMsg::RemoveNode { id });
-
-    Ok(())
 }
 
 #[no_mangle]
@@ -77,9 +62,7 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_connectNodes(
         to_socket_name,
     );
 
-    if let Err(error) = result {
-        throw_illegal_state_exception(&env, &error);
-    }
+    unwrap_or_throw!(env, result);
 }
 
 fn connect_nodes(
@@ -120,9 +103,7 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_disconnectNod
         to_socket_name,
     );
 
-    if let Err(error) = result {
-        throw_illegal_state_exception(&env, &error);
-    }
+    unwrap_or_throw!(env, result);
 }
 
 fn disconnect_nodes(
@@ -154,19 +135,10 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_setParameter(
     parameter_index: jint,
     value: jfloat,
 ) {
-    let result = set_parameter(node_id, parameter_index, value);
-
-    if let Err(error) = result {
-        throw_illegal_state_exception(&env, &error);
-    }
-}
-
-fn set_parameter(node_id: jint, parameter_index: jint, value: jfloat) -> anyhow::Result<()> {
     let msg = AppMsg::SetParameter {
-        id: node_id.try_into()?,
-        index: parameter_index.try_into()?,
+        id: unwrap_or_throw!(env, node_id.try_into()),
+        index: unwrap_or_throw!(env, parameter_index.try_into()),
         value,
     };
     App::current().accept_message(msg);
-    Ok(())
 }

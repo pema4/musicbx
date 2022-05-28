@@ -19,19 +19,19 @@ object PreferencesService {
     }
 
     private val initialTheme = preferences.get(::theme.name, PreferredTheme.Auto.name).toPreferredTheme()
-    private var themeState = mutableStateOf(initialTheme)
+    private val themeState = mutableStateOf(initialTheme)
     var theme: PreferredTheme
         get() = themeState.value
         set(value) {
             preferences.put(::theme.name, value.name)
         }
 
-    private val initialZoomIndex = preferences.getInt(::zoom.name, Zoom.One.index)
-    private var zoomState = mutableStateOf(Zoom(initialZoomIndex))
+    private val initialZoomIndex = preferences.getInt(::zoom.name, Zoom.One.step)
+    private val zoomState = mutableStateOf(Zoom(initialZoomIndex))
     var zoom: Zoom
         get() = zoomState.value
         set(value) {
-            preferences.putInt(::zoom.name, value.index)
+            preferences.putInt(::zoom.name, value.step)
         }
 }
 
