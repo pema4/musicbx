@@ -14,7 +14,7 @@ data class Patch(
     val cables: List<Cable>,
 ) {
     companion object Constants {
-        val Default = Patch(
+        val Initial = Patch(
             nodes = emptyList(),
             cables = emptyList(),
         )

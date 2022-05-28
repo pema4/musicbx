@@ -53,7 +53,7 @@ impl SinOsc {
                 },
                 NodeInput {
                     number: 1,
-                    name: "freq",
+                    name: "tune",
                 },
             ],
             outputs: &[NodeOutput {

@@ -14,4 +14,5 @@ data class Node(
     val offset: GridOffset = GridOffset.Zero,
     @SerialName("parameters")
     val parameterValues: Map<String, String> = emptyMap(),
+    val collapsed: Boolean = false,
 )

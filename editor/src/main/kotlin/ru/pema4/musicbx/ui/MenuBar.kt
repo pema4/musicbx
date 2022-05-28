@@ -23,6 +23,7 @@ fun FrameWindowScope.AppMenuBar(
 ) {
     MenuBar {
         Menu(text = "File") {
+            New(vm)
             Open(vm)
             Save(vm)
             SaveAs(vm)
@@ -42,6 +43,14 @@ fun FrameWindowScope.AppMenuBar(
             Item(text = "About", onClick = {})
         }
     }
+}
+
+@Composable
+private fun MenuScope.New(viewModel: AppViewModel) {
+    Item(
+        text = "New patch",
+        onClick = viewModel::reset,
+    )
 }
 
 @Composable

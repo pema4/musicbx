@@ -1,36 +1,32 @@
 use musicbx_core::{DataMut, DataRef};
 use musicbx_types::{NodeDefinition, NodeInput, NodeOutput, NodeParameter, NodeParameterKind};
 
-#[derive(Default)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct Add;
 
 pub struct AddParameters<'a> {
-    pub left: DataRef<'a>,
-    pub right: DataRef<'a>,
-    pub out: DataMut<'a>,
+    pub a: DataRef<'a>,
+    pub b: DataRef<'a>,
+    pub output: DataMut<'a>,
 }
 
 impl Default for AddParameters<'static> {
     #[inline]
     fn default() -> Self {
         Self {
-            left: DataRef::Float(1.0),
-            right: DataRef::Float(1.0),
-            out: DataMut::Float(0.0),
+            a: DataRef::Float(0.0),
+            b: DataRef::Float(0.0),
+            output: DataMut::Float(0.0),
         }
     }
 }
 
 impl Add {
     pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: AddParameters) {
-        let AddParameters {
-            left,
-            right,
-            mut out,
-        } = parameters;
+        let AddParameters { a, b, mut output } = parameters;
 
         for i in 0..n {
-            out[i] = left[i] + right[i]
+            output[i] = a[i] + b[i]
         }
     }
 
@@ -54,7 +50,7 @@ impl Add {
             parameters: &[NodeParameter {
                 number: 0,
                 kind: NodeParameterKind::Number,
-                default: "1.0",
+                default: "0.0",
                 name: "b",
             }],
         }

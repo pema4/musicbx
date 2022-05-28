@@ -179,6 +179,7 @@ interface AppViewModel {
     fun showOpenDialog() = Unit
     fun showSaveDialog() = Unit
 
+    fun reset()
     fun save(path: Path?) = Unit
     fun open(path: Path?) = Unit
 }

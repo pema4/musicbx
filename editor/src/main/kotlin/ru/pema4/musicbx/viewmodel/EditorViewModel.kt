@@ -181,7 +181,6 @@ fun EditorViewModelImpl(patch: Patch): EditorViewModelImpl {
             NodeStateImpl(
                 node = it,
                 description = AvailableNodesService.availableNodes.value.getValue(it.uid),
-                expanded = true,
                 editorViewModel = viewModel,
             )
         }

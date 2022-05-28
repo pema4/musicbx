@@ -43,3 +43,51 @@ compose.desktop {
         }
     }
 }
+
+task<DefaultTask>("buildBackend") {
+    description = "cargo build --release"
+    group = "native backend"
+
+    doLast {
+        exec {
+            workingDir = File("../cargo")
+            commandLine(
+                "cargo",
+                "build",
+                "--release",
+            )
+        }
+    }
+
+    shouldRunAfter("build")
+}
+
+tasks.jar {
+    dependsOn("buildBackend")
+
+    doLast {
+        copy {
+            from("../cargo/target/release/libeditor_backend.dylib")
+            into("build/resources/main")
+        }
+    }
+}
+
+task<DefaultTask>("cleanBackend") {
+    description = "cargo clean"
+    group = "native backend"
+
+    doFirst {
+        exec {
+            workingDir = File("../cargo")
+            commandLine(
+                "cargo",
+                "clean",
+            )
+        }
+    }
+}
+
+tasks.clean {
+    dependsOn("cleanBackend")
+}

@@ -23,14 +23,10 @@ impl Default for MulParameters<'static> {
 
 impl Mul {
     pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: MulParameters) {
-        let MulParameters {
-            a: left,
-            b: right,
-            output: mut out,
-        } = parameters;
+        let MulParameters { a, b, mut output } = parameters;
 
         for i in 0..n {
-            out[i] = left[i] * right[i]
+            output[i] = a[i] * b[i]
         }
     }
 

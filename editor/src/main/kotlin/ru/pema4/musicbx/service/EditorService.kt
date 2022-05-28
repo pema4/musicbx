@@ -10,7 +10,7 @@ import ru.pema4.musicbx.model.patch.Node
 import ru.pema4.musicbx.model.patch.Patch
 
 object EditorService {
-    private val _activePatch = MutableStateFlow(Patch.Default)
+    private val _activePatch = MutableStateFlow(Patch.Initial)
     val activePatch: StateFlow<Patch>
         get() = _activePatch.asStateFlow()
 

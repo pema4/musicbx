@@ -26,7 +26,7 @@ import kotlin.io.path.writeText
 
 @Composable
 fun rememberAppViewModel(
-    initialPatch: Patch = Patch.Default,
+    initialPatch: Patch = Patch.Initial,
 ): AppViewModel {
     return remember {
         AppViewModelImpl(
@@ -38,7 +38,7 @@ fun rememberAppViewModel(
 
 @Stable
 class AppViewModelImpl(
-    initialPatch: Patch = Patch.Default,
+    initialPatch: Patch = Patch.Initial,
     private val availableNodesService: AvailableNodesService,
 ) : AppViewModel {
     private var _editorViewModel: EditorViewModelImpl by mutableStateOf(EditorViewModelImpl(initialPatch))
@@ -67,6 +67,13 @@ class AppViewModelImpl(
 
     override fun showSaveDialog() {
         showingSaveDialog = true
+    }
+
+    override fun reset() {
+        _editorViewModel = EditorViewModelImpl(Patch.Initial)
+        runBlocking {
+            editor.recreateGraphOnBackend()
+        }
     }
 
     override fun save(path: Path?) {

@@ -69,14 +69,13 @@ class NodeStateImpl(
 fun NodeStateImpl(
     node: Node,
     description: NodeDescription,
-    expanded: Boolean = true,
-    editorViewModel: EditorViewModel = EditorViewModelImpl(Patch.Default),
+    editorViewModel: EditorViewModel = EditorViewModelImpl(Patch.Initial),
 ): NodeStateImpl {
     val state = NodeStateImpl(
         node = node,
         description = description,
         offset = node.offset.toDpOffset(),
-        expanded = expanded,
+        expanded = !node.collapsed,
         editorViewModel = editorViewModel,
     )
 
@@ -111,6 +110,7 @@ fun NodeState.toNode(): Node {
         parameterValues = parameters.associateBy(
             keySelector = { it.parameter.name },
             valueTransform = { it.current.normalized.toString() },
-        )
+        ),
+        collapsed = !expanded,
     )
 }

@@ -2,17 +2,17 @@ use std::ops::{Deref, DerefMut};
 
 use glicol_synth::{AudioContext, Buffer, Input, Message};
 use hashbrown::HashMap;
-use petgraph::graph::NodeIndex;
+use petgraph::prelude::NodeIndex;
 
-use musicbx::std::osc::{SinOsc, SinOscParameters};
-use musicbx::{DataMut, DataRef, FromSampleRate};
+use musicbx::std::util::{Add, AddParameters};
+use musicbx::{DataMut, DataRef};
 
 use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind};
 
-pub struct SinNodeDescription;
+pub struct AddNodeDescription;
 
-impl NodeFactory for SinNodeDescription {
-    fn uid(&self) -> &'static str {
+impl NodeFactory for AddNodeDescription {
+    fn uid(&self) -> &str {
         INFO.definition.uid
     }
 
@@ -21,99 +21,92 @@ impl NodeFactory for SinNodeDescription {
     }
 
     fn create_instance(&self, id: usize) -> Box<dyn Node> {
-        Box::new(SinOscNode {
+        Box::new(AddNode {
             id,
-            ..SinOscNode::default()
+            ..AddNode::default()
         })
     }
 }
 
 static INFO: NodeInfo = NodeInfo {
-    definition: SinOsc::definition(),
+    definition: Add::definition(),
     description: NodeDescription {
-        node: Description::new("Sin Osc", "The sine oscillator with customizable frequency"),
+        node: Description::new("Add", "Sums two signals"),
         inputs: &[
-            Description::new("phase_mod", "Phase modulation of the oscillator"),
-            Description::new("tune", "Tuning of the oscillator"),
+            Description::new("a", "The first signal to be added"),
+            Description::new("b", "The second signal to be added"),
         ],
-        outputs: &[Description::new("output", "The output of the oscillator")],
-        parameters: &[Description::new("freq", "Frequency")],
+        outputs: &[Description::new("output", "The sum signal")],
+        parameters: &[Description::new("b", "Another signal")],
     },
 };
 
 #[derive(Default)]
-pub struct SinOscNode {
+pub struct AddNode {
     id: usize,
-    sin_index: Option<NodeIndex>,
+    node_index: Option<NodeIndex>,
 }
 
-impl Node for SinOscNode {
+impl Node for AddNode {
     fn id(&self) -> usize {
         self.id
     }
 
     fn input(&self, name: &str) -> Option<(usize, NodeIndex)> {
-        match name {
-            "phase_mod" => self.sin_index.map(|x| (0, x)),
-            "tune" => self.sin_index.map(|x| (1, x)),
+        self.node_index.and_then(|x| match name {
+            "a" => Some((0, x)),
+            "b" => Some((1, x)),
             _ => None,
-        }
+        })
     }
 
     fn output(&self, name: &str) -> Option<NodeIndex> {
-        match name {
-            "output" => self.sin_index,
-            _ => None,
+        if name == "output" {
+            self.node_index
+        } else {
+            None
         }
     }
 
     fn add_to_context(&mut self, context: &mut AudioContext<1>) {
-        let sin = SinOscNodeImpl {
-            inner: SinOsc::from_sample_rate(context.sample_rate() as f32),
-            freq: 2000.0,
-            input_order: HashMap::default(),
-        };
-        let sin: NodeIndex = context.add_mono_node(sin);
-
-        self.sin_index = Some(sin);
+        let node = AddNodeImpl::default();
+        self.node_index = Some(context.add_mono_node(node));
     }
 
     fn set_parameter(&self, context: &mut AudioContext<1>, index: u8, value: f32) {
         if index == 0 {
-            let freq = NodeParameterKind::HzWide.denormalize(value);
-            context.send_msg(self.sin_index.unwrap(), Message::SetToNumber(index, freq));
+            let freq = NodeParameterKind::Number.denormalize(value);
+            context.send_msg(self.node_index.unwrap(), Message::SetToNumber(index, freq));
         }
     }
 }
 
-#[derive(Debug, Clone)]
-struct SinOscNodeImpl {
-    inner: SinOsc,
-    freq: f32,
+#[derive(Default, Debug, Clone)]
+struct AddNodeImpl {
+    inner: Add,
+    default_b: f32,
     input_order: HashMap<usize, usize>,
 }
 
-impl<const N: usize> glicol_synth::Node<N> for SinOscNodeImpl {
+impl<const N: usize> glicol_synth::Node<N> for AddNodeImpl {
     fn process(&mut self, inputs: &mut HashMap<usize, Input<N>>, output: &mut [Buffer<N>]) {
-        // println!("inputs.size: {}", inputs.len());
         self.inner.process::<N>(
             N,
-            SinOscParameters {
-                freq: self.freq.into(),
-                phase_mod: self
+            AddParameters {
+                a: self
                     .input_order
                     .get(&0)
                     .and_then(|idx| inputs.get(idx))
                     .and_then(|x| x.buffers().get(0))
                     .map(|x| DataRef::from(x.deref()))
                     .unwrap_or_else(|| 0.0.into()),
-                tune: self
+                b: self
                     .input_order
                     .get(&1)
                     .and_then(|idx| inputs.get(idx))
                     .and_then(|x| x.buffers().get(0))
                     .map(|x| DataRef::from(x.deref()))
-                    .unwrap_or_else(|| 1.0.into()),
+                    .unwrap_or_else(|| self.default_b.into()),
                 output: DataMut::from(output[0].deref_mut()),
             },
         )
@@ -123,7 +116,7 @@ impl<const N: usize> glicol_synth::Node<N> for SinOscNodeImpl {
         match info {
             Message::SetToNumber(pos, value) => {
                 if pos == 0 {
-                    self.freq = value
+                    self.default_b = value;
                 }
             }
             Message::IndexOrder(pos, index) => {

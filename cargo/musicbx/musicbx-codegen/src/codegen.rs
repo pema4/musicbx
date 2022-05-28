@@ -3,12 +3,12 @@ use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 use itertools::Itertools;
-use musicbx_types::ModuleDefinition;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use thiserror::Error;
 
 use musicbx_types::patch::{Cable, Node, Patch};
+use musicbx_types::ModuleDefinition;
 
 #[derive(Default)]
 pub struct MusicbxCodegen {
@@ -100,7 +100,10 @@ impl MusicbxCodegen {
                 let input_file = extract_name_from_input_file(&input)?;
                 format!("{input_file}.rs")
             });
-            println!("cargo:rerun-if-changed={:?}", input.as_os_str());
+            println!(
+                "cargo:rerun-if-changed={}",
+                input.as_os_str().to_str().unwrap()
+            );
             self.generate(input, &out_file)?;
         }
 

@@ -8,8 +8,9 @@ use musicbx::types::patch::Cable;
 use crate::app::delegate::{AppDelegate, CpalAppDelegate};
 use crate::model::configuration::IOConfiguration;
 use crate::nodes::{
-    AmpNodeDescription, MulNodeDescription, Node, NodeFactory, NodeInfo, NoiseNodeDescription,
-    OutputNodeDescription, SimpleSawNodeDescription, SinNodeDescription, TestFmNodeDescription,
+    AddNodeDescription, AmpNodeDescription, HardClipNodeDescription, MulNodeDescription, Node,
+    NodeFactory, NodeInfo, NoiseNodeDescription, OutputNodeDescription, SimpleSawNodeDescription,
+    SinNodeDescription, TestFmNodeDescription,
 };
 use crate::util::Observable;
 use crate::{App, AppMsg};
@@ -184,12 +185,14 @@ impl AppState {
 
 fn available_nodes() -> Vec<Box<dyn NodeFactory>> {
     vec![
-        Box::new(SinNodeDescription),
-        Box::new(SimpleSawNodeDescription),
-        Box::new(OutputNodeDescription),
+        Box::new(AddNodeDescription),
         Box::new(AmpNodeDescription),
         Box::new(MulNodeDescription),
         Box::new(NoiseNodeDescription),
+        Box::new(OutputNodeDescription),
+        Box::new(SimpleSawNodeDescription),
+        Box::new(SinNodeDescription),
         Box::new(TestFmNodeDescription),
+        Box::new(HardClipNodeDescription),
     ]
 }

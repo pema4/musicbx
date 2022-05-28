@@ -2,7 +2,9 @@ use glicol_synth::AudioContext;
 use petgraph::graph::NodeIndex;
 use serde::Serialize;
 
+pub use add::AddNodeDescription;
 pub use amp::AmpNodeDescription;
+pub use hard_clip::HardClipNodeDescription;
 pub use mul::MulNodeDescription;
 use musicbx::types::{NodeDefinition, NodeParameterKind};
 pub use noise::NoiseNodeDescription;
@@ -11,7 +13,9 @@ pub use simple_saw::SimpleSawNodeDescription;
 pub use sin::SinNodeDescription;
 pub use test_fm::TestFmNodeDescription;
 
+mod add;
 mod amp;
+mod hard_clip;
 mod mul;
 mod noise;
 mod output;

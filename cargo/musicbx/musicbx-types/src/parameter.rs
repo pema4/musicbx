@@ -24,7 +24,7 @@ impl NodeParameterKind {
     fn max(&self) -> f32 {
         use NodeParameterKind::*;
         match self {
-            Number => to_amp(12.0),
+            Number => 1.0,
             HzSlow => 200f32.log2(),
             HzFast => 22000f32.log2(),
             HzWide => 22000f32.log2(),

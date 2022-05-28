@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 pub struct Patch {
@@ -13,6 +14,8 @@ pub struct Node {
     pub uid: String,
     pub offset: GridOffset,
     pub parameters: HashMap<String, String>,
+    #[serde(default)]
+    pub collapsed: bool,
 }
 
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -35,8 +38,9 @@ pub struct CableEnd {
 
 #[cfg(test)]
 mod test {
-    use super::*;
     use serde_json::json;
+
+    use super::*;
 
     #[test]
     fn deserialize() {
