@@ -4,7 +4,7 @@ use jni::objects::{JClass, JObject, JValue};
 use jni::JNIEnv;
 use serde::Serialize;
 
-use musicbx_types::parameter::NodeParameterKind;
+use musicbx::types::NodeParameterKind;
 
 use crate::bindings::throw_illegal_state_exception;
 use crate::nodes::{Description, NodeInfo};

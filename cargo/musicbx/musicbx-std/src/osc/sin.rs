@@ -1,20 +1,12 @@
-use musicbx::FromSampleRate;
 use musicbx_core::{DataMut, DataRef};
-use musicbx_types::{
-    description::{NodeDefinition, NodeInput, NodeOutput, NodeParameter},
-    parameter::NodeParameterKind,
-};
+use musicbx_derive::FromSampleRate;
+use musicbx_types::{NodeDefinition, NodeInput, NodeOutput, NodeParameter, NodeParameterKind};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, FromSampleRate)]
 pub struct SinOsc {
     phase: f32,
+    #[from(sr)]
     sr: f32,
-}
-
-impl FromSampleRate for SinOsc {
-    fn from_sample_rate(sr: f32) -> Self {
-        Self { phase: 0.0, sr }
-    }
 }
 
 pub struct SinOscParameters<'a> {
@@ -53,7 +45,7 @@ impl SinOsc {
 
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
-            uid: "musicbx::osc::SinOsc",
+            uid: "musicbx::std::osc::SinOsc",
             inputs: &[
                 NodeInput {
                     number: 0,

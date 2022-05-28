@@ -4,7 +4,7 @@ use glicol_synth::{AudioContext, Buffer, Input, Message};
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 
-use musicbx::osc::{SimpleSawOsc, SimpleSawOscParameters};
+use musicbx::std::osc::{SimpleSawOsc, SimpleSawOscParameters};
 use musicbx::{DataMut, DataRef, FromSampleRate};
 
 use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind};

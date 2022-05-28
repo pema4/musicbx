@@ -1,14 +1,13 @@
 [workspace]
 members = [
+    "additional-nodes",
     "editor-backend",
     "musicbx",
-    "musicbx-codegen",
-    "musicbx-core",
-    "musicbx-extra",
-    "musicbx-derive",
-    "musicbx-std",
-    "musicbx-types",
-    "additional-nodes",
+    "musicbx/musicbx-codegen",
+    "musicbx/musicbx-core",
+    "musicbx/musicbx-derive",
+    "musicbx/musicbx-std",
+    "musicbx/musicbx-types",
 ]
 
 [profile.release]

@@ -4,7 +4,7 @@ use glicol_synth::{AudioContext, Buffer, Input, Message};
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 
-use musicbx::osc::SinOsc;
+use musicbx::std::osc::{SinOsc, SinOscParameters};
 use musicbx::{DataMut, DataRef, FromSampleRate};
 
 use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind};
@@ -98,7 +98,7 @@ impl<const N: usize> glicol_synth::Node<N> for SinOscNodeImpl {
         // println!("inputs.size: {}", inputs.len());
         self.inner.process::<N>(
             N,
-            musicbx::osc::SinOscParameters {
+            SinOscParameters {
                 freq: self.freq.into(),
                 phase_mod: self
                     .input_order

@@ -12,7 +12,7 @@
     },
     {
       "id": 2,
-      "uid": "musicbx::util::Mul",
+      "uid": "musicbx::std::util::Mul",
       "offset": {
         "x": 44,
         "y": 36
@@ -23,7 +23,7 @@
     },
     {
       "id": 3,
-      "uid": "musicbx::osc::SinOsc",
+      "uid": "musicbx::std::osc::SinOsc",
       "offset": {
         "x": 17,
         "y": 7
@@ -34,7 +34,7 @@
     },
     {
       "id": 4,
-      "uid": "musicbx::util::Mul",
+      "uid": "musicbx::std::util::Mul",
       "offset": {
         "x": 18,
         "y": 38
@@ -45,7 +45,7 @@
     },
     {
       "id": 5,
-      "uid": "musicbx::osc::SinOsc",
+      "uid": "musicbx::std::osc::SinOsc",
       "offset": {
         "x": 0,
         "y": 22

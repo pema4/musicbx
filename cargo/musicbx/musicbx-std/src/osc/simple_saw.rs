@@ -1,20 +1,12 @@
-use musicbx::FromSampleRate;
 use musicbx_core::{DataMut, DataRef};
-use musicbx_types::{
-    description::{NodeDefinition, NodeInput, NodeOutput, NodeParameter},
-    parameter::NodeParameterKind,
-};
+use musicbx_derive::FromSampleRate;
+use musicbx_types::{NodeDefinition, NodeInput, NodeOutput, NodeParameter, NodeParameterKind};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, FromSampleRate)]
 pub struct SimpleSawOsc {
     phase: f32,
+    #[from(sr)]
     sr: f32,
-}
-
-impl FromSampleRate for SimpleSawOsc {
-    fn from_sample_rate(sr: f32) -> Self {
-        Self { phase: 0.0, sr }
-    }
 }
 
 pub struct SimpleSawOscParameters<'a> {
@@ -50,7 +42,7 @@ impl SimpleSawOsc {
 
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
-            uid: "musicbx::osc::SimpleSawOsc",
+            uid: "musicbx::std::osc::SimpleSawOsc",
             inputs: &[NodeInput {
                 number: 0,
                 name: "tune",

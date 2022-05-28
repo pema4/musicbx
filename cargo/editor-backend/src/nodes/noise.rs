@@ -4,7 +4,7 @@ use glicol_synth::{AudioContext, Buffer, Input, Message};
 use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 
-use musicbx::util::{UniformRandom, UniformRandomParameters};
+use musicbx::std::util::{UniformRandom, UniformRandomParameters};
 use musicbx::DataMut;
 
 use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo};

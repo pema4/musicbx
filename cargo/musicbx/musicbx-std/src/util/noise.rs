@@ -1,6 +1,6 @@
 use musicbx::DataRef;
 use musicbx_core::DataMut;
-use musicbx_types::description::{NodeDefinition, NodeOutput};
+use musicbx_types::{NodeDefinition, NodeOutput};
 use rand::prelude::*;
 
 #[derive(Debug, Clone)]
@@ -48,7 +48,7 @@ impl UniformRandom {
 
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
-            uid: "musicbx::util::UniformRandom",
+            uid: "musicbx::std::util::UniformRandom",
             inputs: &[],
             outputs: &[NodeOutput {
                 number: 0,

@@ -2,6 +2,7 @@
 edition = "2021"
 name = "musicbx-types"
 version = "0.1.0"
+
 [dependencies]
 serde_json = "*"
 

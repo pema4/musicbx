@@ -91,7 +91,10 @@ fun NodeStateImpl(
             )
         }
 
-        val initialValue = node.parameterValues[it.name] ?: it.default
+        val initialValue = node.parameterValues[it.name]
+            ?.toFloat()
+            ?.let(it.kind::display) // normalized
+            ?: it.default // not normalized
         ParameterState(
             model = it,
             current = ParameterValue(initial = initialValue, kind = it.kind, onChange = onChange),

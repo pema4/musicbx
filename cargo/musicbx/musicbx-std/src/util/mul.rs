@@ -1,8 +1,5 @@
 use musicbx_core::{DataMut, DataRef};
-use musicbx_types::{
-    description::{NodeDefinition, NodeInput, NodeOutput, NodeParameter},
-    parameter::NodeParameterKind,
-};
+use musicbx_types::{NodeDefinition, NodeInput, NodeOutput, NodeParameter, NodeParameterKind};
 
 #[derive(Default, Debug, Clone)]
 pub struct Mul;
@@ -14,6 +11,7 @@ pub struct MulParameters<'a> {
 }
 
 impl Default for MulParameters<'static> {
+    #[inline]
     fn default() -> Self {
         Self {
             a: DataRef::Float(1.0),
@@ -38,7 +36,7 @@ impl Mul {
 
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
-            uid: "musicbx::util::Mul",
+            uid: "musicbx::std::util::Mul",
             inputs: &[
                 NodeInput {
                     number: 0,

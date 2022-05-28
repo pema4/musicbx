@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 use itertools::Itertools;
-use musicbx_types::description::ModuleDefinition;
+use musicbx_types::ModuleDefinition;
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote};
 use thiserror::Error;
@@ -127,8 +127,8 @@ impl MusicbxCodegen {
                 let param_ident = format_ident!("{}_{param_name}", node_ident(*node_id));
                 let param_value: f32 = param_value.parse().unwrap();
                 quote! {
-                    #[from(musicbx::util::ConstSig::new(#param_value))]
-                    #param_ident: musicbx::util::ConstSig
+                    #[from(musicbx::std::util::ConstSig::new(#param_value))]
+                    #param_ident: musicbx::std::util::ConstSig
                 }
             })
             .collect();

@@ -1,7 +1,6 @@
 use musicbx_core::{DataMut, DataRef};
 use musicbx_types::{
-    description::{NodeDefinition, NodeInput, NodeOutput, NodeParameter},
-    parameter::{to_amp, NodeParameterKind},
+    to_amp, NodeDefinition, NodeInput, NodeOutput, NodeParameter, NodeParameterKind,
 };
 
 #[derive(Default, Debug, Clone)]
@@ -14,6 +13,7 @@ pub struct AmpParameters<'a> {
 }
 
 impl Default for AmpParameters<'static> {
+    #[inline]
     fn default() -> Self {
         Self {
             input: DataRef::Float(0.0),
@@ -38,7 +38,7 @@ impl Amp {
 
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
-            uid: "musicbx::util::Amp",
+            uid: "musicbx::std::util::Amp",
             inputs: &[NodeInput {
                 number: 0,
                 name: "input",

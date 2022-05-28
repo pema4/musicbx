@@ -5,6 +5,7 @@ pub struct ConstSig {
 }
 
 impl ConstSig {
+    #[inline]
     pub fn new(value: f32) -> Self {
         Self { value }
     }

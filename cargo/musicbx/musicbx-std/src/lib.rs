@@ -1,8 +1,6 @@
 // для использования макроса node
-
-use musicbx_types::description::{ModuleDefinition, NodeDefinition};
 extern crate musicbx_core as musicbx;
-
+use musicbx_types::{ModuleDefinition, NodeDefinition};
 pub mod filter;
 pub mod osc;
 pub mod util;

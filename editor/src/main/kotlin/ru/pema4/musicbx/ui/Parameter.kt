@@ -147,13 +147,13 @@ interface ParameterValue {
 }
 
 fun ParameterValue(
-    initial: String,
+    initialNormalized: Float,
     toDisplay: (Float) -> String = Any::toString,
     toNormalized: (String) -> Float = String::toFloat,
     onChange: (Float) -> Unit = {},
 ): ParameterValue {
     return object : ParameterValue {
-        var _normalized: Float by mutableStateOf(toNormalized(initial))
+        var _normalized: Float by mutableStateOf(initialNormalized)
         val _text by derivedStateOf { toDisplay(normalized) }
         override var normalized: Float
             get() = _normalized
@@ -177,7 +177,7 @@ fun ParameterValue(
     onChange: (Float) -> Unit = {},
 ): ParameterValue {
     return ParameterValue(
-        initial = initial,
+        initialNormalized = kind.normalize(initial),
         toDisplay = kind::display,
         toNormalized = kind::normalize,
         onChange = onChange,

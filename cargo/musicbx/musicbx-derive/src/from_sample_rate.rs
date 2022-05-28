@@ -44,6 +44,7 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream, DeriveError> {
     let name = input.ident;
     Ok(quote! {
         impl musicbx::FromSampleRate for #name {
+            #[inline]
             fn from_sample_rate(sr: f32) -> Self {
                 Self {
                     #( #field_with_values, )*

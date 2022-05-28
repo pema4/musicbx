@@ -9,5 +9,4 @@ edition = "2021"
 musicbx = { path = "../musicbx" }
 
 [build-dependencies]
-musicbx-codegen = { path = "../musicbx-codegen" }
-musicbx-std = { path = "../musicbx-std" }
+musicbx = { path = "../musicbx", features = ["std", "codegen"] }

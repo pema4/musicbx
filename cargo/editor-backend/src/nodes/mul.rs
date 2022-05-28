@@ -4,7 +4,7 @@ use glicol_synth::{AudioContext, Buffer, Input, Message};
 use hashbrown::HashMap;
 use petgraph::prelude::NodeIndex;
 
-use musicbx::util::Mul;
+use musicbx::std::util::{Mul, MulParameters};
 use musicbx::{DataMut, DataRef};
 
 use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind};
@@ -92,7 +92,7 @@ impl<const N: usize> glicol_synth::Node<N> for MulNodeImpl {
     fn process(&mut self, inputs: &mut HashMap<usize, Input<N>>, output: &mut [Buffer<N>]) {
         self.inner.process::<N>(
             N,
-            musicbx::util::MulParameters {
+            MulParameters {
                 a: self
                     .input_order
                     .get(&0)

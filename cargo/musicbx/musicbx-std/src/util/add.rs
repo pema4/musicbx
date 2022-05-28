@@ -1,8 +1,5 @@
 use musicbx_core::{DataMut, DataRef};
-use musicbx_types::{
-    description::{NodeDefinition, NodeInput, NodeOutput, NodeParameter},
-    parameter::NodeParameterKind,
-};
+use musicbx_types::{NodeDefinition, NodeInput, NodeOutput, NodeParameter, NodeParameterKind};
 
 #[derive(Default)]
 pub struct Add;
@@ -14,6 +11,7 @@ pub struct AddParameters<'a> {
 }
 
 impl Default for AddParameters<'static> {
+    #[inline]
     fn default() -> Self {
         Self {
             left: DataRef::Float(1.0),
@@ -38,7 +36,7 @@ impl Add {
 
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
-            uid: "musicbx::util::Add",
+            uid: "musicbx::std::util::Add",
             inputs: &[
                 NodeInput {
                     number: 0,

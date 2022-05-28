@@ -4,9 +4,9 @@ use glicol_synth::{AudioContext, Buffer, Input, Message};
 use hashbrown::HashMap;
 use petgraph::prelude::NodeIndex;
 
-use musicbx::util::Amp;
+use musicbx::std::util::{Amp, AmpParameters};
+use musicbx::types::NodeParameterKind;
 use musicbx::{DataMut, DataRef, FromSampleRate};
-use musicbx_types::parameter::NodeParameterKind;
 
 use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo};
 
@@ -90,10 +90,9 @@ struct AmpNodeImpl {
 
 impl<const N: usize> glicol_synth::Node<N> for AmpNodeImpl {
     fn process(&mut self, inputs: &mut HashMap<usize, Input<N>>, output: &mut [Buffer<N>]) {
-        println!("db: {:?}", self.db);
         self.inner.process::<N>(
             N,
-            musicbx::util::AmpParameters {
+            AmpParameters {
                 input: self
                     .input_index
                     .as_ref()
