@@ -60,7 +60,6 @@ fun NodeView(
     state: NodeState,
     enabled: Boolean = true,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null,
 ) {
     var layoutCoordinates: LayoutCoordinates? by mutableStateOf(null)
 
@@ -77,10 +76,7 @@ fun NodeView(
         shape = RoundedCornerShape(8.dp),
         elevation = elevation.value.dp,
     ) {
-        Column(
-            modifier = Modifier
-                .clickable(enabled = onClick != null) { onClick?.invoke() }
-        ) {
+        Column {
             Row(
                 modifier = Modifier.fillMaxWidth()
             ) {

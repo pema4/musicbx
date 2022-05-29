@@ -44,18 +44,20 @@ compose.desktop {
     }
 }
 
-task<DefaultTask>("buildBackend") {
+val buildBackendInRelease = true
+val buildBackend = task<DefaultTask>("buildBackend") {
     description = "cargo build --release"
     group = "native backend"
 
     doLast {
         exec {
             workingDir = File("../cargo")
-            commandLine(
+            val args = listOfNotNull(
                 "cargo",
                 "build",
-                "--release",
+                if (buildBackendInRelease) "--release" else null,
             )
+            commandLine(args)
         }
     }
 
@@ -67,7 +69,8 @@ tasks.jar {
 
     doLast {
         copy {
-            from("../cargo/target/release/libeditor_backend.dylib")
+            val targetFolder = if (buildBackendInRelease) "release" else "debug"
+            from("../cargo/target/$targetFolder/libeditor_backend.dylib")
             into("build/resources/main")
         }
     }

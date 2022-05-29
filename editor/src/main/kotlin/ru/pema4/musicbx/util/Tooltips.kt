@@ -46,7 +46,6 @@ fun InstallTooltipManager(
     }
 }
 
-@Composable
 fun Modifier.explainedAs(
     text: String?,
 ): Modifier = composed {
