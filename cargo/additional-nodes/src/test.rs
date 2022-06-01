@@ -16,7 +16,3 @@ pub struct MyNode {
     modulator: osc::SinOsc,
 }
 
-#[derive(FromSampleRate)]
-pub struct X {
-    carrier: osc::SinOsc,
-}

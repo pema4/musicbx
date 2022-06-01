@@ -22,17 +22,10 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_addNodeOnBack
     uid: JString,
     id: jint,
 ) {
-    unwrap_or_throw!(env, add_node(env, uid, id))
-}
-
-fn add_node(env: JNIEnv, uid: JString, id: jint) -> anyhow::Result<()> {
-    let uid = env.get_string(uid)?;
+    let uid = unwrap_or_throw!(env, env.get_string(uid));
     let uid = String::from(uid);
-    let id = usize::try_from(id)?;
-
+    let id = unwrap_or_throw!(env, usize::try_from(id));
     App::current().accept_message(AppMsg::AddNode { uid, id });
-
-    Ok(())
 }
 
 #[no_mangle]

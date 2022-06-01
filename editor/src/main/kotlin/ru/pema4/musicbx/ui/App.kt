@@ -34,7 +34,7 @@ import ru.pema4.musicbx.service.ConfigurationService
 import ru.pema4.musicbx.service.PreferencesService
 import ru.pema4.musicbx.util.FileDialog
 import ru.pema4.musicbx.util.FileDialogMode
-import ru.pema4.musicbx.util.InstallTooltipManager
+import ru.pema4.musicbx.util.TooltipManagerProvider
 import ru.pema4.musicbx.util.MutableTooltipManager
 import ru.pema4.musicbx.viewmodel.rememberAppViewModel
 import java.awt.Cursor
@@ -104,7 +104,7 @@ fun AppWindowLayout(
 
         second(secondPanelMinSize) {
             Column {
-                InstallTooltipManager(MutableTooltipManager()) {
+                TooltipManagerProvider(MutableTooltipManager()) {
                     editor()
                     statusBar()
                 }

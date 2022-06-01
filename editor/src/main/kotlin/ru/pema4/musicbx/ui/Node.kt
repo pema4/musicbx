@@ -58,7 +58,6 @@ import ru.pema4.musicbx.viewmodel.NodeStateImpl
 @Composable
 fun NodeView(
     state: NodeState,
-    enabled: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     var layoutCoordinates: LayoutCoordinates? by mutableStateOf(null)
@@ -86,44 +85,40 @@ fun NodeView(
                     style = MaterialTheme.typography.h6,
                 )
 
-                if (enabled) {
-                    Column(
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = "Close",
                         modifier = Modifier
-                            .fillMaxHeight()
-                            .padding(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Close",
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .clickable { state.removeNode(state.id) }
-                                .size(20.dp)
-                        )
-                        Icon(
-                            imageVector = if (state.expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                            contentDescription = if (state.expanded) "Expand" else "Collapse",
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .clickable { state.expanded = !state.expanded }
-                                .size(20.dp)
-                        )
-                    }
+                            .clip(CircleShape)
+                            .clickable { state.removeNode(state.id) }
+                            .size(20.dp)
+                    )
+                    Icon(
+                        imageVector = if (state.expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                        contentDescription = if (state.expanded) "Expand" else "Collapse",
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .clickable { state.expanded = !state.expanded }
+                            .size(20.dp)
+                    )
                 }
             }
 
-            if (enabled) {
-                EnabledNodeSettings(
-                    state = state,
-                    parentLayoutCoordinates = layoutCoordinates,
-                )
-            }
+            NodeSettingsView(
+                state = state,
+                parentLayoutCoordinates = layoutCoordinates,
+            )
         }
     }
 }
 
 @Composable
-private fun EnabledNodeSettings(
+private fun NodeSettingsView(
     state: NodeState,
     parentLayoutCoordinates: LayoutCoordinates?,
 ) {
@@ -145,7 +140,7 @@ private fun EnabledNodeSettings(
         ) {
             for (parameter in state.parameters) {
                 key(parameter.parameter.name) {
-                    Parameter(parameter)
+                    ParameterView(parameter)
                 }
             }
 

@@ -11,7 +11,6 @@ use musicbx::{node, FromSampleRate};
 )]
 #[derive(FromSampleRate)]
 pub struct Synth {
-    #[from(osc::SinOsc::from_sample_rate(sr))]
     modulator: osc::SinOsc,
     modulator_amp: util::Mul,
     carrier: osc::SinOsc,

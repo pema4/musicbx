@@ -6,12 +6,12 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+itertools = "0.10.3"
+petgraph = "0.6.0"
 proc-macro2 = "1.0.38"
 quote = "1.0.18"
 syn = "1.0.92"
-petgraph = "0.6.0"
 thiserror = "1.0.31"
-itertools = "0.10.3"
 
 [lib]
 proc-macro = true

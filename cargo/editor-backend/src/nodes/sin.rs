@@ -31,7 +31,7 @@ impl NodeFactory for SinNodeDescription {
 static INFO: NodeInfo = NodeInfo {
     definition: SinOsc::definition(),
     description: NodeDescription {
-        node: Description::new("Sin Osc", "The sine oscillator with customizable frequency"),
+        node: Description::new("Sin", "The sine oscillator with customizable frequency"),
         inputs: &[
             Description::new("phase_mod", "Phase modulation of the oscillator"),
             Description::new("tune", "Tuning of the oscillator"),

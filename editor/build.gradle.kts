@@ -18,11 +18,11 @@ repositories {
     maven("https://jitpack.io")
 }
 
+@OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
 dependencies {
     implementation(compose.desktop.currentOs)
+    implementation(compose.desktop.components.splitPane)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-    implementation("org.jetbrains.compose.components:components-splitpane-desktop:1.1.1")
-
     implementation("com.github.Dansoftowner:jSystemThemeDetector:3.6")
 }
 
@@ -67,7 +67,7 @@ val buildBackend = task<DefaultTask>("buildBackend") {
 tasks.jar {
     dependsOn("buildBackend")
 
-    doLast {
+    doFirst {
         copy {
             val targetFolder = if (buildBackendInRelease) "release" else "debug"
             from("../cargo/target/$targetFolder/libeditor_backend.dylib")

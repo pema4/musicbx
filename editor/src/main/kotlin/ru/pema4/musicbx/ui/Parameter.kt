@@ -33,7 +33,7 @@ import ru.pema4.musicbx.model.patch.NodeParameterKind
 import ru.pema4.musicbx.util.explainedAs
 
 @Composable
-fun Parameter(
+fun ParameterView(
     state: ParameterState,
     modifier: Modifier = Modifier,
 ) {

@@ -35,7 +35,7 @@ class MutableTooltipManager : TooltipManager {
 }
 
 @Composable
-fun InstallTooltipManager(
+fun TooltipManagerProvider(
     tooltipManager: TooltipManager? = LocalTooltipManager.current,
     content: @Composable () -> Unit,
 ) {

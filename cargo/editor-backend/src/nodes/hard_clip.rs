@@ -14,7 +14,7 @@ pub struct HardClipNodeDescription;
 static INFO: NodeInfo = NodeInfo {
     definition: HardClip::definition(),
     description: NodeDescription {
-        node: Description::new("HardClip", "Clips all signal below -1 or above 1"),
+        node: Description::new("Hard Clip", "Clips all signal below -1 or above 1"),
         inputs: &[Description::new("input", "The input of the clipper")],
         outputs: &[Description::new("output", "The amplified signal")],
         parameters: &[],

@@ -58,26 +58,5 @@ impl SimpleSawOsc {
                 name: "freq",
             }],
         }
-
-        /*
-        inputs: vec![NodeInput {
-                number: 0,
-                name: "tune".to_string(),
-                description: "Pitch modulation".to_string(),
-            }],
-            outputs: vec![NodeOutput {
-                number: 0,
-                name: "output".to_string(),
-                description: "Mono output of the oscillator".to_string(),
-            }],
-            parameters: vec![NodeParameter {
-                number: 0,
-                kind: NodeParameterKind::HzSlow,
-                default: "0.5".to_string(),
-                name: "freq".to_string(),
-                description: "Frequency".to_string(),
-            }],
-        }
-        */
     }
 }

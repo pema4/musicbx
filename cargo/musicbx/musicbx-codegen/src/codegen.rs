@@ -22,13 +22,12 @@ pub struct MusicbxCodegen {
 pub enum MusicbxCodegenError {
     #[error("No output dir")]
     NoOutDir,
-
-    GenerationError(#[from] MusicbxGenerationError),
+    ExecutionError(#[from] MusicbxExecutionError),
 }
 
 #[derive(Debug, Error)]
 #[error(transparent)]
-pub enum MusicbxGenerationError {
+pub enum MusicbxExecutionError {
     IoError(#[from] io::Error),
 
     InvalidJsonFormat(#[from] serde_json::Error),
@@ -57,18 +56,12 @@ impl MusicbxCodegen {
         }
     }
 
-    pub fn module<M>(self, module: &M) -> Self
+    pub fn module<M>(mut self, module: &M) -> Self
     where
         M: ModuleDefinition + Clone + 'static,
     {
-        MusicbxCodegen {
-            modules: {
-                let mut modules = self.modules;
-                modules.push(Box::new(module.clone()));
-                modules
-            },
-            ..self
-        }
+        self.modules.push(Box::new(module.clone()));
+        self
     }
 
     pub fn output_dir(self, path: &Path) -> Self {
@@ -110,7 +103,7 @@ impl MusicbxCodegen {
         Ok(())
     }
 
-    fn generate(&self, input: &Path, output: &Path) -> Result<(), MusicbxGenerationError> {
+    fn generate(&self, input: &Path, output: &Path) -> Result<(), MusicbxExecutionError> {
         let node_description = fs::read(input)?;
         let Patch { nodes, cables } = serde_json::from_slice(&node_description[..])?;
 
@@ -166,9 +159,9 @@ impl MusicbxCodegen {
         &self,
         nodes: &'a HashMap<usize, Node>,
         routes: &'a [Cable],
-    ) -> Result<HashSet<(usize, &'a str, String)>, MusicbxGenerationError> {
+    ) -> Result<HashSet<(usize, &'a str, String)>, MusicbxExecutionError> {
         let overridden_parameters: HashSet<(usize, &str)> = routes
-            .into_iter()
+            .iter()
             .map(|cable| &cable.to)
             .map(|cable_end| (cable_end.node_id, cable_end.socket_name.as_str()))
             .collect();
@@ -194,16 +187,16 @@ impl MusicbxCodegen {
                 let param_kind = node_info
                     .parameters
                     .iter()
-                    .find(|x| &x.name == &param_name)
+                    .find(|x| x.name == param_name)
                     .map(|x| &x.kind)
                     .ok_or_else(|| {
-                        MusicbxGenerationError::UnknownParameterName(
+                        MusicbxExecutionError::UnknownParameterName(
                             param_name.to_string(),
                             node.uid.to_string(),
                         )
                     })?;
                 let param_value: f32 = param_value.parse().map_err(|_| {
-                    MusicbxGenerationError::InvalidParameterValue(param_value.to_string())
+                    MusicbxExecutionError::InvalidParameterValue(param_value.to_string())
                 })?;
                 println!("name: {param_name}, value: {param_value}, kind: {param_kind:?}");
                 let param_value = param_kind.denormalize(param_value);
@@ -215,20 +208,20 @@ impl MusicbxCodegen {
     }
 }
 
-fn extract_name_from_input_file(input: &Path) -> Result<&str, MusicbxGenerationError> {
+fn extract_name_from_input_file(input: &Path) -> Result<&str, MusicbxExecutionError> {
     input
         .file_name()
         .and_then(|x| x.to_str())
         .and_then(|x| x.split('.').next())
         .ok_or_else(|| {
             let input_name = format!("{input:?}");
-            MusicbxGenerationError::InvalidInputFileName(input_name)
+            MusicbxExecutionError::InvalidInputFileName(input_name)
         })
 }
 
 fn declare_node_fields<'a>(
     nodes: impl IntoIterator<Item = &'a Node>,
-) -> Result<Vec<TokenStream>, MusicbxGenerationError> {
+) -> Result<Vec<TokenStream>, MusicbxExecutionError> {
     nodes
         .into_iter()
         .map(|x| {
@@ -250,10 +243,10 @@ fn declare_route(
     from_output: &str,
     to: &Node,
     to_input: &str,
-) -> Result<TokenStream, MusicbxGenerationError> {
+) -> Result<TokenStream, MusicbxExecutionError> {
     let from_output_ident = format_ident!("{from_output}");
     let from_part: TokenStream = match get_node_type(&from.uid)? {
-        NodeType::Output => Err(MusicbxGenerationError::InvalidState)?,
+        NodeType::Output => Err(MusicbxExecutionError::InvalidState)?,
         NodeType::Input => quote! { #from_output_ident },
         NodeType::Node(_) => {
             let from_ident = node_ident(from.id);
@@ -264,7 +257,7 @@ fn declare_route(
     let to_input_ident = format_ident!("{to_input}");
     let to_part: TokenStream = match get_node_type(&to.uid)? {
         NodeType::Output => quote! { output },
-        NodeType::Input => Err(MusicbxGenerationError::InvalidState)?,
+        NodeType::Input => Err(MusicbxExecutionError::InvalidState)?,
         NodeType::Node(_) => {
             let to_ident = node_ident(to.id);
             quote! { #to_ident . #to_input_ident }
@@ -277,7 +270,7 @@ fn declare_route(
 fn declare_routing<'a>(
     nodes: &HashMap<usize, Node>,
     cables: impl IntoIterator<Item = &'a Cable>,
-) -> Result<Vec<TokenStream>, MusicbxGenerationError> {
+) -> Result<Vec<TokenStream>, MusicbxExecutionError> {
     cables
         .into_iter()
         .map(|Cable { from, to }| {

@@ -30,7 +30,7 @@ impl<'a> Index<usize> for DataRef<'a> {
     fn index(&self, index: usize) -> &Self::Output {
         match self {
             DataRef::Audio(floats) => &floats[index],
-            DataRef::Float(float) => &float,
+            DataRef::Float(float) => float,
         }
     }
 }
