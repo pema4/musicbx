@@ -75,14 +75,13 @@ pub fn node_attribute_macro(input: DeriveInput, routing: Routing) -> proc_macro2
     };
 
     let parameter_struct_definition = define_parameters_struct(&input, &routing);
-    let impls = define_impls(&input, &input_struct, &routing);
+    let impls = define_impls(&input, input_struct, &routing);
 
-    (quote! {
+    quote! {
         #input
         #parameter_struct_definition
         #impls
-    })
-    .into()
+    }
 }
 
 fn define_parameters_struct(input: &DeriveInput, routing: &Routing) -> proc_macro2::TokenStream {
@@ -125,7 +124,7 @@ fn define_impls(
     routing: &Routing,
 ) -> proc_macro2::TokenStream {
     let ident = &input.ident;
-    let sorted_fields = fields_topo_sort(&input_struct, &routing).unwrap();
+    let sorted_fields = fields_topo_sort(input_struct, routing).unwrap();
 
     let mut parts = Vec::new();
 
@@ -220,10 +219,11 @@ fn define_impls(
     let parameters_ident = format_ident!("{}Parameters", input.ident);
 
     quote! {
+        #[automatically_derived]
+        #[allow(needless_update)]
         impl<'a> musicbx::Node<'a> for #ident {
             type Parameters = #parameters_ident<'a>;
 
-            #[allow(clippy::needless_update)]
             fn process<const N: usize>(
                 &mut self,
                 n: usize,
@@ -256,19 +256,19 @@ fn fields_topo_sort<'a>(
         .map(Deref::deref)
         .chain([&input_ident, &output_ident].into_iter())
     {
-        node_indices.insert(&node, graph.add_node(node));
+        node_indices.insert(node, graph.add_node(node));
     }
 
     for route in &routing.routes {
         let from = match &route.from {
             RouteEnd::Param(_) => &input_ident,
-            RouteEnd::Inner(field, _) => &field,
+            RouteEnd::Inner(field, _) => field,
         };
         let from = node_indices[from];
 
         let to = match &route.to {
             RouteEnd::Param(_) => &output_ident,
-            RouteEnd::Inner(field, _) => &field,
+            RouteEnd::Inner(field, _) => field,
         };
         let to = node_indices[to];
 

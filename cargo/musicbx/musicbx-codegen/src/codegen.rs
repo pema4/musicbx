@@ -84,7 +84,7 @@ impl MusicbxCodegen {
         for input in inputs {
             let mut out_file = output_dir.clone();
             out_file.push({
-                let input_file = extract_name_from_input_file(&input)?;
+                let input_file = extract_name_from_input_file(input)?;
                 format!("{input_file}.rs")
             });
             println!(

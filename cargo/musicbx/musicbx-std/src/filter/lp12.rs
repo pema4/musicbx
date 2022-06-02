@@ -1,3 +1,4 @@
+use musicbx::Node;
 use musicbx_core::{DataMut, DataRef};
 
 #[derive(Default)]
@@ -12,7 +13,7 @@ pub struct LP12FilterParameters<'a> {
     pub out: DataMut<'a>,
 }
 
-impl Default for LP12FilterParameters<'static> {
+impl<'a> Default for LP12FilterParameters<'a> {
     fn default() -> Self {
         Self {
             input: 0.0.into(),
@@ -23,9 +24,11 @@ impl Default for LP12FilterParameters<'static> {
     }
 }
 
-impl LP12Filter {
-    pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: LP12FilterParameters) {
-        let LP12FilterParameters {
+impl<'a> Node<'a> for LP12Filter {
+    type Parameters = LP12FilterParameters<'a>;
+
+    fn process<const N: usize>(&mut self, n: usize, parameters: Self::Parameters) {
+        let Self::Parameters {
             input,
             cutoff: _,
             q: _,
