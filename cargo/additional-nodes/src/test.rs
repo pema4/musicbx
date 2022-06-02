@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use musicbx::node;
-use musicbx::std::osc;
+use musicbx::std::osc::SinOsc;
 use musicbx::FromSampleRate;
 
 #[node {
@@ -12,7 +12,6 @@ use musicbx::FromSampleRate;
 }]
 #[derive(FromSampleRate)]
 pub struct MyNode {
-    carrier: osc::SinOsc,
-    modulator: osc::SinOsc,
+    carrier: SinOsc,
+    modulator: SinOsc,
 }
-

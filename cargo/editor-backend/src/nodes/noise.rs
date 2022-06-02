@@ -5,9 +5,9 @@ use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 
 use musicbx::std::util::{UniformRandom, UniformRandomParameters};
-use musicbx::DataMut;
+use musicbx::{DataMut, Node};
 
-use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo};
+use crate::nodes::{Description, NodeDescription, NodeFactory, NodeInfo, NodeWrapper};
 
 pub struct NoiseNodeDescription;
 
@@ -20,7 +20,7 @@ impl NodeFactory for NoiseNodeDescription {
         &INFO
     }
 
-    fn create_instance(&self, id: usize) -> Box<dyn Node> {
+    fn create_instance(&self, id: usize) -> Box<dyn NodeWrapper> {
         Box::new(NoiseNode {
             id,
             ..NoiseNode::default()
@@ -44,7 +44,7 @@ pub struct NoiseNode {
     output_index: Option<NodeIndex>,
 }
 
-impl Node for NoiseNode {
+impl NodeWrapper for NoiseNode {
     fn id(&self) -> usize {
         self.id
     }

@@ -14,7 +14,7 @@ use musicbx_types::ModuleDefinition;
 pub struct MusicbxCodegen {
     modules: Vec<Box<dyn ModuleDefinition>>,
     inputs: Vec<PathBuf>,
-    output_dir: Option<PathBuf>,
+    output_dir: PathBuf,
 }
 
 #[derive(Debug, Error)]
@@ -48,11 +48,11 @@ pub enum MusicbxExecutionError {
 }
 
 impl MusicbxCodegen {
-    pub fn new() -> Self {
+    pub fn with_output_dir(output_dir: &impl AsRef<Path>) -> Self {
         MusicbxCodegen {
             modules: vec![],
             inputs: vec![],
-            output_dir: None,
+            output_dir: PathBuf::from(output_dir.as_ref()),
         }
     }
 
@@ -64,13 +64,6 @@ impl MusicbxCodegen {
         self
     }
 
-    pub fn output_dir(self, path: &Path) -> Self {
-        MusicbxCodegen {
-            output_dir: Some(path.to_owned()),
-            ..self
-        }
-    }
-
     pub fn inputs(self, paths: &[&str]) -> Self {
         MusicbxCodegen {
             inputs: paths.iter().map(PathBuf::from).collect(),
@@ -78,17 +71,18 @@ impl MusicbxCodegen {
         }
     }
 
+    pub fn input(&mut self, path: &impl AsRef<str>) -> &mut Self {
+        self.inputs.push(path.as_ref().into());
+        self
+    }
+
     pub fn run(self) -> Result<(), MusicbxCodegenError> {
         let MusicbxCodegen {
-            output_dir: out_dir,
-            inputs,
-            ..
+            output_dir, inputs, ..
         } = &self;
 
-        let out_dir = out_dir.as_ref().ok_or(MusicbxCodegenError::NoOutDir)?;
-
         for input in inputs {
-            let mut out_file = out_dir.clone();
+            let mut out_file = output_dir.clone();
             out_file.push({
                 let input_file = extract_name_from_input_file(&input)?;
                 format!("{input_file}.rs")
@@ -175,7 +169,7 @@ impl MusicbxCodegen {
                     .iter()
                     .map(|(name, value)| (node.id, name.as_str(), value.as_str()))
             })
-            .filter(|(node_id, name, _)| !overridden_parameters.contains(&(*node_id, name)))
+            .filter(|(node_id, name, _)| !overridden_parameters.contains(&(*node_id, *name)))
             .map(|(node_id, param_name, param_value)| {
                 let node = &nodes[&node_id];
                 let node_info = self

@@ -1,7 +1,8 @@
-use musicbx::DataRef;
+use rand::prelude::*;
+
+use musicbx::{DataRef, Node};
 use musicbx_core::DataMut;
 use musicbx_types::{NodeDefinition, NodeOutput};
-use rand::prelude::*;
 
 #[derive(Debug, Clone)]
 pub struct UniformRandom {
@@ -22,7 +23,7 @@ pub struct UniformRandomParameters<'a> {
     pub output: DataMut<'a>,
 }
 
-impl Default for UniformRandomParameters<'static> {
+impl<'a> Default for UniformRandomParameters<'a> {
     fn default() -> Self {
         Self {
             low: DataRef::Float(-1.0),
@@ -32,8 +33,9 @@ impl Default for UniformRandomParameters<'static> {
     }
 }
 
-impl UniformRandom {
-    pub fn process<const N: usize>(&mut self, n: usize, parameters: UniformRandomParameters) {
+impl<'a> Node<'a> for UniformRandom {
+    type Parameters = UniformRandomParameters<'a>;
+    fn process<const N: usize>(&mut self, n: usize, parameters: Self::Parameters) {
         let UniformRandomParameters {
             low,
             high,
@@ -45,7 +47,9 @@ impl UniformRandom {
             output[i] = next * (high[i] - low[i]) + low[i];
         }
     }
+}
 
+impl UniformRandom {
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
             uid: "musicbx::std::util::UniformRandom",

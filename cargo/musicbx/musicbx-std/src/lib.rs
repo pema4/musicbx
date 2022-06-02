@@ -1,6 +1,10 @@
+// #![feature(generic_associated_types)]
+
 // для использования макроса node
 extern crate musicbx_core as musicbx;
+
 use musicbx_types::{ModuleDefinition, NodeDefinition};
+
 pub mod filter;
 pub mod osc;
 pub mod util;

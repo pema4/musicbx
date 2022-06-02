@@ -35,6 +35,12 @@ impl<'a> Index<usize> for DataRef<'a> {
     }
 }
 
+impl<'a> Default for DataRef<'a> {
+    fn default() -> Self {
+        Self::Float(0.0)
+    }
+}
+
 #[derive(Debug)]
 pub enum DataMut<'a> {
     Audio(&'a mut [f32]),
@@ -76,5 +82,11 @@ impl<'a> IndexMut<usize> for DataMut<'a> {
             DataMut::Audio(floats) => &mut floats[index],
             DataMut::Float(float) => float,
         }
+    }
+}
+
+impl<'a> Default for DataMut<'a> {
+    fn default() -> Self {
+        Self::Float(0.0)
     }
 }

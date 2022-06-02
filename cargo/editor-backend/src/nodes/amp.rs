@@ -6,9 +6,9 @@ use petgraph::prelude::NodeIndex;
 
 use musicbx::std::util::{Amp, AmpParameters};
 use musicbx::types::NodeParameterKind;
-use musicbx::{DataMut, DataRef, FromSampleRate};
+use musicbx::{DataMut, DataRef, FromSampleRate, Node};
 
-use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo};
+use crate::nodes::{Description, NodeDescription, NodeFactory, NodeInfo, NodeWrapper};
 
 pub struct AmpNodeDescription;
 
@@ -31,7 +31,7 @@ impl NodeFactory for AmpNodeDescription {
         &INFO
     }
 
-    fn create_instance(&self, id: usize) -> Box<dyn Node> {
+    fn create_instance(&self, id: usize) -> Box<dyn NodeWrapper> {
         Box::new(AmpNode {
             id,
             ..AmpNode::default()
@@ -45,7 +45,7 @@ pub struct AmpNode {
     node_index: Option<NodeIndex>,
 }
 
-impl Node for AmpNode {
+impl NodeWrapper for AmpNode {
     fn id(&self) -> usize {
         self.id
     }

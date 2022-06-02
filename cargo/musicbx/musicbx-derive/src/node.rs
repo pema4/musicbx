@@ -10,7 +10,7 @@ use quote::format_ident;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
-use syn::{Data, DataStruct, DeriveInput, Ident, Path, Token};
+use syn::{Data, DataStruct, DeriveInput, Ident, Token};
 use thiserror::Error;
 
 #[derive(Clone)]
@@ -111,18 +111,10 @@ fn define_parameters_struct(input: &DeriveInput, routing: &Routing) -> proc_macr
         .collect();
 
     quote! {
+        #[derive(Default)]
         #vis struct #parameters_ident<'a> {
             #(#vis #inputs: musicbx::DataRef<'a>, )*
             #(#vis #outputs: musicbx::DataMut<'a>, )*
-        }
-
-        impl Default for #parameters_ident<'static> {
-            fn default() -> Self {
-                Self {
-                    #( #inputs: 0.0f32.into(), )*
-                    #( #outputs: 0.0f32.into(), )*
-                }
-            }
         }
     }
 }
@@ -152,28 +144,19 @@ fn define_impls(
         }
     }
 
-    for subnode in sorted_fields {
-        let subnode_parameters_type = input_struct
+    for field in sorted_fields {
+        let field_type = input_struct
             .fields
             .iter()
-            .find(|x| x.ident.as_ref() == Some(subnode))
-            .map(|x| {
-                let field_type = &x.ty;
-                let mut path: Path = syn::parse_quote! { #field_type };
-
-                if let Some(ident) = path.segments.last_mut() {
-                    ident.ident =
-                        Ident::new(&format!("{}Parameters", ident.ident), Span::call_site())
-                }
-                path
-            })
+            .find(|x| x.ident.as_ref() == Some(field))
+            .map(|x| &x.ty)
             .expect("expected struct field");
 
         let inputs: Vec<_> = routing
             .routes
             .iter()
             .filter_map(|route| match &route.to {
-                RouteEnd::Inner(x, y) if x == subnode => {
+                RouteEnd::Inner(x, y) if x == field => {
                     let input = match &route.from {
                         RouteEnd::Param(param) => quote! { #param },
                         inner @ RouteEnd::Inner(..) => {
@@ -191,7 +174,7 @@ fn define_impls(
             .routes
             .iter()
             .filter_map(|route| match &route.from {
-                RouteEnd::Inner(x, y) if x == subnode => {
+                RouteEnd::Inner(x, y) if x == field => {
                     let output = match &route.to {
                         RouteEnd::Param(param) => quote! { #param },
                         RouteEnd::Inner(..) => {
@@ -206,13 +189,17 @@ fn define_impls(
             .collect();
 
         parts.push(quote! {
-            self.#subnode.process::<N>(
-                n,
-                #subnode_parameters_type {
-                    #( #inputs, )*
-                    #( #outputs, )*
-                    ..#subnode_parameters_type::default()
-                });
+            {
+                type _Parameters<'a> = <#field_type as musicbx::Node<'a>>::Parameters;
+                <#field_type as musicbx::Node>::process::<N>(
+                    &mut self.#field,
+                    n,
+                    _Parameters {
+                        #( #inputs, )*
+                        #( #outputs, )*
+                        .._Parameters::default()
+                    });
+            }
         });
     }
 
@@ -233,12 +220,14 @@ fn define_impls(
     let parameters_ident = format_ident!("{}Parameters", input.ident);
 
     quote! {
-        impl #ident {
+        impl<'a> musicbx::Node<'a> for #ident {
+            type Parameters = #parameters_ident<'a>;
+
             #[allow(clippy::needless_update)]
-            pub fn process<const N: usize>(
+            fn process<const N: usize>(
                 &mut self,
                 n: usize,
-                parameters: #parameters_ident,
+                parameters: Self::Parameters,
             ) {
                 let #parameters_ident { #( #inputs, )* #( mut #outputs, )* .. } = parameters;
                 #( #parts )*

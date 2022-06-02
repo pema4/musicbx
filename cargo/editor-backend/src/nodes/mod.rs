@@ -26,10 +26,10 @@ mod test_fm;
 pub trait NodeFactory {
     fn uid(&self) -> &str;
     fn info(&self) -> &NodeInfo;
-    fn create_instance(&self, id: usize) -> Box<dyn Node>;
+    fn create_instance(&self, id: usize) -> Box<dyn NodeWrapper>;
 }
 
-pub trait Node {
+pub trait NodeWrapper {
     fn id(&self) -> usize;
     fn input(&self, name: &str) -> Option<(usize, NodeIndex)>;
     fn output(&self, name: &str) -> Option<NodeIndex>;

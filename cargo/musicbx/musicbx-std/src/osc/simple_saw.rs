@@ -1,3 +1,4 @@
+use musicbx::Node;
 use musicbx_core::{DataMut, DataRef};
 use musicbx_derive::FromSampleRate;
 use musicbx_types::{NodeDefinition, NodeInput, NodeOutput, NodeParameter, NodeParameterKind};
@@ -15,7 +16,7 @@ pub struct SimpleSawOscParameters<'a> {
     pub output: DataMut<'a>,
 }
 
-impl Default for SimpleSawOscParameters<'static> {
+impl<'a> Default for SimpleSawOscParameters<'a> {
     fn default() -> Self {
         Self {
             freq: 440.0.into(),
@@ -25,9 +26,11 @@ impl Default for SimpleSawOscParameters<'static> {
     }
 }
 
-impl SimpleSawOsc {
-    pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: SimpleSawOscParameters) {
-        let SimpleSawOscParameters {
+impl<'a> Node<'a> for SimpleSawOsc {
+    type Parameters = SimpleSawOscParameters<'a>;
+
+    fn process<const N: usize>(&mut self, n: usize, parameters: Self::Parameters) {
+        let Self::Parameters {
             freq,
             tune,
             output: mut out,
@@ -39,7 +42,9 @@ impl SimpleSawOsc {
             out[i] = self.phase * 2.0 - 1.0;
         }
     }
+}
 
+impl SimpleSawOsc {
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
             uid: "musicbx::std::osc::SimpleSawOsc",

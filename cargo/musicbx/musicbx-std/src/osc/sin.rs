@@ -1,3 +1,4 @@
+use musicbx::Node;
 use musicbx_core::{DataMut, DataRef};
 use musicbx_derive::FromSampleRate;
 use musicbx_types::{NodeDefinition, NodeInput, NodeOutput, NodeParameter, NodeParameterKind};
@@ -16,7 +17,7 @@ pub struct SinOscParameters<'a> {
     pub output: DataMut<'a>,
 }
 
-impl Default for SinOscParameters<'static> {
+impl<'a> Default for SinOscParameters<'a> {
     fn default() -> Self {
         Self {
             freq: 440.0.into(),
@@ -27,8 +28,10 @@ impl Default for SinOscParameters<'static> {
     }
 }
 
-impl SinOsc {
-    pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: SinOscParameters) {
+impl<'a> Node<'a> for SinOsc {
+    type Parameters = SinOscParameters<'a>;
+
+    fn process<const N: usize>(&mut self, n: usize, parameters: SinOscParameters) {
         let SinOscParameters {
             freq,
             tune,
@@ -42,7 +45,9 @@ impl SinOsc {
             out[i] = (self.phase * 2.0 * std::f32::consts::PI).sin();
         }
     }
+}
 
+impl SinOsc {
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
             uid: "musicbx::std::osc::SinOsc",

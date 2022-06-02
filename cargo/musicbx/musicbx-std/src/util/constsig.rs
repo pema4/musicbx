@@ -1,5 +1,7 @@
+use musicbx::Node;
 use musicbx_core::DataMut;
 
+#[derive(Default)]
 pub struct ConstSig {
     value: f32,
 }
@@ -11,20 +13,15 @@ impl ConstSig {
     }
 }
 
+#[derive(Default)]
 pub struct ConstSigParameters<'a> {
     pub output: DataMut<'a>,
 }
 
-impl Default for ConstSigParameters<'static> {
-    fn default() -> Self {
-        Self {
-            output: DataMut::Float(0.0),
-        }
-    }
-}
+impl<'a> Node<'a> for ConstSig {
+    type Parameters = ConstSigParameters<'a>;
 
-impl ConstSig {
-    pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: ConstSigParameters) {
+    fn process<const N: usize>(&mut self, n: usize, parameters: ConstSigParameters) {
         let ConstSigParameters { output } = parameters;
 
         match output {
