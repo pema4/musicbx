@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "1.6.10"
     kotlin("plugin.serialization") version "1.6.10"
     id("org.jetbrains.compose") version "1.1.1"
+    id("idea")
 }
 
 group = "ru.pema4"
@@ -28,6 +29,14 @@ dependencies {
 
     runtimeOnly("org.slf4j:slf4j-simple:1.7.29")
 }
+
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
+}
+
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
@@ -72,19 +81,21 @@ val syncBackend = task<Sync>("syncBackend") {
     into(project.layout.projectDirectory.dir("resources/macos"))
 }
 
-val cleanBackend = task<DefaultTask>("cleanBackend") {
+val cleanBackend = task<Task>("cleanBackend") {
     description = "cargo clean"
     group = "native backend"
 
-    exec {
-        workingDir = File("../cargo")
-        commandLine(
-            "cargo",
-            "clean",
-        )
-    }
+    doFirst {
+        exec {
+            workingDir = File("../cargo")
+            commandLine(
+                "cargo",
+                "clean",
+            )
+        }
 
-    delete(project.layout.projectDirectory.dir("resources"))
+        delete(project.layout.projectDirectory.dir("resources"))
+    }
 }
 
 val patchUiDesktopLib = task<Exec>("patchUiDesktopLib") {
@@ -121,10 +132,6 @@ tasks.processResources {
             into(resourcesDir)
         }
     }
-}
-
-tasks.jar {
-    // dependsOn(patchUiDesktopLib)
 }
 
 project.afterEvaluate {

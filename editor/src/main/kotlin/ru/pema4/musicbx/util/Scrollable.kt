@@ -53,7 +53,7 @@ fun Scrollable(
                     .padding(all = 3.dp)
                     .padding(end = 10.dp),
             ) {
-                HorizontalScrollbar(rememberScrollbarAdapter(scrollState = horizontalScrollState))
+                HorizontalScrollbar(rememberScrollbarAdapter(horizontalScrollState))
             }
         }
 
@@ -68,7 +68,7 @@ fun Scrollable(
                     .zIndex(1.0f)
                     .padding(all = 3.dp),
             ) {
-                VerticalScrollbar(rememberScrollbarAdapter(scrollState = verticalScrollState))
+                VerticalScrollbar(rememberScrollbarAdapter(verticalScrollState))
             }
         }
 

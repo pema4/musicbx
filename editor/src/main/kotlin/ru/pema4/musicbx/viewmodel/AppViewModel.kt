@@ -53,6 +53,8 @@ class AppViewModelImpl(
     }
     override val preferences = PreferencesService
     override val configuration = ConfigurationService
+    override var openedFile: Path? by mutableStateOf(null)
+        private set
 
     @Composable
     override fun collectAvailableNodesAsState(): State<Map<NodeUid, NodeDescription>> {
@@ -74,26 +76,29 @@ class AppViewModelImpl(
         runBlocking {
             editor.recreateGraphOnBackend()
         }
+        openedFile = null
     }
 
-    override fun save(path: Path?) {
+    override fun save(file: Path?) {
         showingSaveDialog = false
-        if (path != null) {
+        if (file != null) {
             val patch = editor.extractPatch()
             val fileText = json.encodeToString(value = patch)
-            path.writeText(fileText)
+            file.writeText(fileText)
 
             _editorViewModel = EditorViewModelImpl(patch)
+            openedFile = file
         }
     }
 
-    override fun open(path: Path?) {
+    override fun open(file: Path?) {
         showingOpenDialog = false
-        if (path?.exists() == true) {
-            val fileText = path.readText()
+        if (file?.exists() == true) {
+            val fileText = file.readText()
             val patch = json.decodeFromString<Patch>(fileText)
 
             _editorViewModel = EditorViewModelImpl(patch)
+            openedFile = file
 
             runBlocking {
                 editor.recreateGraphOnBackend()

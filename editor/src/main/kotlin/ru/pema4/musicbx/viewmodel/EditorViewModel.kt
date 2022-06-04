@@ -37,13 +37,13 @@ class EditorViewModelImpl(
     cables: Collection<FullCableState> = emptyList(),
 ) : EditorViewModel {
     override val uiState = EditorStateImpl()
-
     override val nodes: SnapshotStateMap<Int, NodeState> = nodes
         .associateByTo(mutableStateMapOf(), NodeState::id)
     override val cables: SnapshotStateList<FullCableState> = cables.toMutableStateList()
     override var draftCable: DraftCableState? by mutableStateOf(null)
-
     override val scale: Float by derivedStateOf { PreferencesService.zoom.scale }
+    override var changed: Boolean by mutableStateOf(false)
+        private set
 
     override suspend fun recreateGraphOnBackend() {
         EditorService.reset()
@@ -73,6 +73,8 @@ class EditorViewModelImpl(
     }
 
     override fun createCable(end: CableEnd) {
+        changed = true
+
         val zIndex = nodes.getValue(end.nodeId).id.toFloat() + 0.5f
         draftCable = DraftCableState(
             from = (end as? CableFrom)
@@ -107,6 +109,8 @@ class EditorViewModelImpl(
     }
 
     override fun editCable(end: CableEnd) {
+        changed = true
+
         val editedCable = cables
             .filter { it.from.end == end || it.to.end == end }
             .asReversed()
@@ -131,6 +135,8 @@ class EditorViewModelImpl(
     }
 
     override fun addNode(description: NodeDescription) {
+        changed = true
+
         val id = EditorService.addNode(description.uid)
 
         for (parameter in description.parameters) {
@@ -149,6 +155,8 @@ class EditorViewModelImpl(
     }
 
     override fun removeNode(nodeId: Int) {
+        changed = true
+
         EditorService.removeNode(nodeId)
         nodes.remove(nodeId)
         cables.removeAll { it.to.end.nodeId == nodeId || it.from.end.nodeId == nodeId }

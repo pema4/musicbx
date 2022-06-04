@@ -46,13 +46,6 @@ impl NodeParameterKind {
     pub fn denormalize(&self, normalized: f32) -> f32 {
         let x = normalized * (self.max() - self.min()) + self.min();
 
-        println!(
-            "{normalized} * ({} - {}) + {}",
-            self.max(),
-            self.min(),
-            self.min()
-        );
-        println!("{}", x.exp2());
         use NodeParameterKind::*;
         match self {
             Number => x,

@@ -48,8 +48,8 @@ fun EditorView(
     val uiState = viewModel.uiState
 
     // Used for determining cursor location inside the scrollable area
-    var parent: LayoutCoordinates? by mutableStateOf(null)
-    var child: LayoutCoordinates? by mutableStateOf(null)
+    var parent: LayoutCoordinates? by remember { mutableStateOf(null) }
+    var child: LayoutCoordinates? by remember { mutableStateOf(null) }
 
     Scrollable(
         horizontalScrollState = uiState.horizontalScroll,
@@ -174,6 +174,7 @@ interface EditorViewModel {
     val cables: List<FullCableState>
     val draftCable: DraftCableState?
     val scale: Float
+    val changed: Boolean
 
     suspend fun recreateGraphOnBackend()
     fun extractPatch(): Patch

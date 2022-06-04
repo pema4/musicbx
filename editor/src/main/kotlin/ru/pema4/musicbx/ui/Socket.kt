@@ -35,7 +35,7 @@ import ru.pema4.musicbx.model.patch.InputSocket
 import ru.pema4.musicbx.model.patch.Node
 import ru.pema4.musicbx.model.patch.OutputSocket
 import ru.pema4.musicbx.model.patch.Socket
-import ru.pema4.musicbx.util.explainedAs
+import ru.pema4.musicbx.util.tipOnHover
 import ru.pema4.musicbx.viewmodel.NodeStateImpl
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -72,7 +72,7 @@ fun SocketView(
                 }
             }
             .hoverable(state.hoverInteractionSource)
-            .explainedAs("${state.description}. Right Click to reassign"),
+            .tipOnHover("${state.description}. Left Click to connect. Right Click to disconnect"),
     ) {
         drawCircle(color = color)
         drawCircle(

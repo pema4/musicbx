@@ -52,7 +52,7 @@ import ru.pema4.musicbx.model.config.NodeUid
 import ru.pema4.musicbx.model.config.TestNodeDescription
 import ru.pema4.musicbx.model.patch.CableEnd
 import ru.pema4.musicbx.model.patch.Node
-import ru.pema4.musicbx.util.explainedAs
+import ru.pema4.musicbx.util.tipOnHover
 import ru.pema4.musicbx.viewmodel.NodeStateImpl
 
 @Composable
@@ -60,7 +60,7 @@ fun NodeView(
     state: NodeState,
     modifier: Modifier = Modifier,
 ) {
-    var layoutCoordinates: LayoutCoordinates? by mutableStateOf(null)
+    var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
 
     val elevation = remember { Animatable(1.0f) }
     LaunchedEffect(state, state.expanded) {
@@ -71,7 +71,7 @@ fun NodeView(
     Card(
         modifier = modifier
             .onGloballyPositioned { layoutCoordinates = it }
-            .explainedAs(state.description.summary),
+            .tipOnHover(state.description.summary),
         shape = RoundedCornerShape(8.dp),
         elevation = elevation.value.dp,
     ) {
