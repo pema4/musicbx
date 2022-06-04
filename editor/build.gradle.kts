@@ -89,19 +89,6 @@ val cleanBackend = task<DefaultTask>("cleanBackend") {
     }
 }
 
-tasks.processResources {
-    dependsOn(syncBackend)
-
-    val resourcesDir = destinationDir
-    doLast {
-        copy {
-            println(syncBackend.destinationDir)
-            from(syncBackend.destinationDir)
-            into(resourcesDir)
-        }
-    }
-}
-
 project.afterEvaluate {
     tasks.named("prepareAppResources") {
         dependsOn(syncBackend)
@@ -109,5 +96,18 @@ project.afterEvaluate {
 
     tasks.clean {
         dependsOn(cleanBackend)
+    }
+
+    tasks.processResources {
+        dependsOn(syncBackend)
+
+        val resourcesDir = destinationDir
+        doLast {
+            copy {
+                println(syncBackend.destinationDir)
+                from(syncBackend.destinationDir)
+                into(resourcesDir)
+            }
+        }
     }
 }
