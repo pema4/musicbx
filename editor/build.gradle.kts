@@ -76,38 +76,59 @@ val cleanBackend = task<DefaultTask>("cleanBackend") {
     description = "cargo clean"
     group = "native backend"
 
-    doFirst {
-        exec {
-            workingDir = File("../cargo")
-            commandLine(
-                "cargo",
-                "clean",
-            )
-        }
-
-        delete(project.layout.projectDirectory.dir("resources"))
+    exec {
+        workingDir = File("../cargo")
+        commandLine(
+            "cargo",
+            "clean",
+        )
     }
+
+    delete(project.layout.projectDirectory.dir("resources"))
+}
+
+val patchUiDesktopLib = task<Exec>("patchUiDesktopLib") {
+    description = "Applies the fix from https://github.com/JetBrains/compose-jb/issues/1969#issuecomment-1100604793"
+    group = "native backend"
+    dependsOn(tasks.compileKotlin)
+
+    val uiDesktopJarFile = configurations.runtimeClasspath.get().resolve()
+        .first { "ui-desktop-1.1.1.jar" in it.absolutePath }
+    val classesRootDir = project.layout.buildDirectory.file("classes/kotlin/main").get().asFile
+
+    commandLine(
+        "echo",
+        "jar",
+        "-uf",
+        "\"${uiDesktopJarFile.absolutePath}\"",
+        "-C",
+        "\"$classesRootDir\"",
+        "androidx/compose/ui/util/UpdateEffect_desktopKt.class"
+    )
+}
+
+tasks.clean {
+    dependsOn(cleanBackend)
+}
+
+tasks.processResources {
+    dependsOn(syncBackend)
+
+    val resourcesDir = destinationDir
+    doLast {
+        copy {
+            from(syncBackend.destinationDir)
+            into(resourcesDir)
+        }
+    }
+}
+
+tasks.jar {
+    // dependsOn(patchUiDesktopLib)
 }
 
 project.afterEvaluate {
     tasks.named("prepareAppResources") {
         dependsOn(syncBackend)
-    }
-
-    tasks.clean {
-        dependsOn(cleanBackend)
-    }
-
-    tasks.processResources {
-        dependsOn(syncBackend)
-
-        val resourcesDir = destinationDir
-        doLast {
-            copy {
-                println(syncBackend.destinationDir)
-                from(syncBackend.destinationDir)
-                into(resourcesDir)
-            }
-        }
     }
 }
