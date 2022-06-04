@@ -24,6 +24,9 @@ dependencies {
     implementation(compose.desktop.components.splitPane)
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     implementation("com.github.Dansoftowner:jSystemThemeDetector:3.6")
+    implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
+
+    runtimeOnly("org.slf4j:slf4j-simple:1.7.29")
 }
 
 tasks.withType<KotlinCompile> {
@@ -40,43 +43,36 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "editor"
             packageVersion = "1.0.0"
+
+            appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
         }
     }
 }
 
 val buildBackendInRelease = true
-val buildBackend = task<DefaultTask>("buildBackend") {
+val buildBackend = task<Exec>("buildBackend") {
     description = "cargo build --release"
     group = "native backend"
 
-    doLast {
-        exec {
-            workingDir = File("../cargo")
-            val args = listOfNotNull(
-                "cargo",
-                "build",
-                if (buildBackendInRelease) "--release" else null,
-            )
-            commandLine(args)
-        }
-    }
-
-    shouldRunAfter("build")
+    workingDir = File("../cargo")
+    val args = listOfNotNull(
+        "cargo",
+        "build",
+        if (buildBackendInRelease) "--release" else null,
+    )
+    commandLine(args)
 }
 
-tasks.jar {
-    dependsOn("buildBackend")
+val syncBackend = task<Sync>("syncBackend") {
+    group = "native backend"
+    dependsOn(buildBackend)
 
-    doFirst {
-        copy {
-            val targetFolder = if (buildBackendInRelease) "release" else "debug"
-            from("../cargo/target/$targetFolder/libeditor_backend.dylib")
-            into("build/resources/main")
-        }
-    }
+    val targetFolder = if (buildBackendInRelease) "release" else "debug"
+    from("../cargo/target/$targetFolder/libeditor_backend.dylib")
+    into(project.layout.projectDirectory.dir("resources/macos"))
 }
 
-task<DefaultTask>("cleanBackend") {
+val cleanBackend = task<DefaultTask>("cleanBackend") {
     description = "cargo clean"
     group = "native backend"
 
@@ -88,9 +84,30 @@ task<DefaultTask>("cleanBackend") {
                 "clean",
             )
         }
+
+        delete(project.layout.projectDirectory.dir("resources"))
     }
 }
 
-tasks.clean {
-    dependsOn("cleanBackend")
+tasks.processResources {
+    dependsOn(syncBackend)
+
+    val resourcesDir = destinationDir
+    doLast {
+        copy {
+            println(syncBackend.destinationDir)
+            from(syncBackend.destinationDir)
+            into(resourcesDir)
+        }
+    }
+}
+
+project.afterEvaluate {
+    tasks.named("prepareAppResources") {
+        dependsOn(syncBackend)
+    }
+
+    tasks.clean {
+        dependsOn(cleanBackend)
+    }
 }
