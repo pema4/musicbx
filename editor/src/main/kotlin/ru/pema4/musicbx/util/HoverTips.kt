@@ -46,7 +46,7 @@ fun HoverTipManagerProvider(
     }
 }
 
-fun Modifier.tipOnHover(
+fun Modifier.pointerHoverTip(
     text: String? = null,
 ): Modifier = composed {
     val tooltipManager = LocalHoverTipManager.current

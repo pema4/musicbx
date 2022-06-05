@@ -33,6 +33,6 @@ value class Zoom(val step: Int) {
             5f,
         )
 
-        val One: Zoom = Zoom(step = zoomSteps.indexOf(1.0f))
+        val Default: Zoom = Zoom(step = zoomSteps.indexOf(1.0f))
     }
 }

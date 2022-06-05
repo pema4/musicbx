@@ -11,7 +11,7 @@ use crate::unwrap_or_throw;
 use crate::{App, AppMsg};
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_AvailableNodesService_registerListener(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeAvailableNodesService_registerListener(
     env: JNIEnv,
     _: JClass,
     callback: JObject,

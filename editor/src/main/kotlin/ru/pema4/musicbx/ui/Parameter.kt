@@ -30,7 +30,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import ru.pema4.musicbx.model.patch.NodeParameter
 import ru.pema4.musicbx.model.patch.NodeParameterKind
-import ru.pema4.musicbx.util.tipOnHover
+import ru.pema4.musicbx.util.pointerHoverTip
 
 @Composable
 fun ParameterView(
@@ -67,7 +67,7 @@ fun ParameterView(
             value = current.normalized,
             onValueChange = { current.normalized = it },
             modifier = modifier
-                .tipOnHover("${state.parameter.description}: ${current.text}. Click on the name to set precise value")
+                .pointerHoverTip("${state.parameter.description}: ${current.text}. Click on the name to set precise value")
         )
     }
 }

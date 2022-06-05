@@ -5,8 +5,18 @@ import ru.pema4.musicbx.model.preferences.PreferredTheme
 import ru.pema4.musicbx.model.preferences.Zoom
 import java.util.prefs.Preferences
 
-object PreferencesService {
-    private val preferences = Preferences.userNodeForPackage(PreferencesService::class.java)
+interface PreferencesService {
+    var theme: PreferredTheme
+    var zoom: Zoom
+
+    companion object {
+        val Default: PreferencesService = DefaultPreferencesService()
+        val Unspecified: PreferencesService = NoOpPreferencesService()
+    }
+}
+
+private class DefaultPreferencesService : PreferencesService {
+    private val preferences = Preferences.userNodeForPackage(DefaultPreferencesService::class.java)
 
     init {
         preferences.addPreferenceChangeListener { event ->
@@ -20,15 +30,15 @@ object PreferencesService {
 
     private val initialTheme = preferences.get(::theme.name, PreferredTheme.Auto.name).toPreferredTheme()
     private val themeState = mutableStateOf(initialTheme)
-    var theme: PreferredTheme
+    override var theme: PreferredTheme
         get() = themeState.value
         set(value) {
             preferences.put(::theme.name, value.name)
         }
 
-    private val initialZoomIndex = preferences.getInt(::zoom.name, Zoom.One.step)
+    private val initialZoomIndex = preferences.getInt(::zoom.name, Zoom.Default.step)
     private val zoomState = mutableStateOf(Zoom(initialZoomIndex))
-    var zoom: Zoom
+    override var zoom: Zoom
         get() = zoomState.value
         set(value) {
             preferences.putInt(::zoom.name, value.step)
@@ -38,3 +48,8 @@ object PreferencesService {
 private fun String.toPreferredTheme(): PreferredTheme {
     return enumValueOf(this)
 }
+
+private class NoOpPreferencesService(
+    override var theme: PreferredTheme = PreferredTheme.Auto,
+    override var zoom: Zoom = Zoom.Default,
+) : PreferencesService

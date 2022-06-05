@@ -18,6 +18,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -28,14 +29,14 @@ import androidx.compose.ui.unit.dp
 import ru.pema4.musicbx.model.config.NodeDescription
 import ru.pema4.musicbx.util.HoverTipManagerProvider
 import ru.pema4.musicbx.util.MutableHoverTipManager
-import ru.pema4.musicbx.util.tipOnHover
+import ru.pema4.musicbx.util.pointerHoverTip
 
 @Composable
 fun NodeGalleryView(
-    appViewModel: AppViewModel,
+    appViewModel: AppViewModel = AppContext.appViewModel,
     modifier: Modifier = Modifier,
 ) {
-    val descriptionsMap by appViewModel.collectAvailableNodesAsState()
+    val descriptionsMap by appViewModel.availableNodesService.availableNodes.collectAsState()
     val descriptions by remember {
         derivedStateOf {
             descriptionsMap
@@ -61,17 +62,21 @@ fun NodeGalleryView(
                 key = { descriptions[it].uid },
             ) {
                 val description = descriptions[it]
+                val editor = AppContext.editorViewModel
                 NodeCard(
                     description = description,
-                    onClick = { appViewModel.editor.addNode(description) },
+                    onClick = {
+                        editor.addNode(description)
+                        appViewModel.markFileAsChanged()
+                    },
                     modifier = Modifier
-                        .tipOnHover(description.summary)
+                        .pointerHoverTip(description.summary)
                         .widthIn(max = 100.dp),
                 )
             }
         },
         bottomBar = {
-            TipArea(modifier = Modifier.tipOnHover())
+            TipArea(modifier = Modifier.pointerHoverTip())
         }
     )
 }

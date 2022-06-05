@@ -2,8 +2,6 @@ package ru.pema4.musicbx.viewmodel
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -12,11 +10,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import ru.pema4.musicbx.model.config.NodeDescription
-import ru.pema4.musicbx.model.config.NodeUid
 import ru.pema4.musicbx.model.patch.Patch
 import ru.pema4.musicbx.service.AvailableNodesService
 import ru.pema4.musicbx.service.ConfigurationService
+import ru.pema4.musicbx.service.EditorService
 import ru.pema4.musicbx.service.PreferencesService
 import ru.pema4.musicbx.ui.AppViewModel
 import java.nio.file.Path
@@ -31,48 +28,38 @@ fun rememberAppViewModel(
     return remember {
         AppViewModelImpl(
             initialPatch = initialPatch,
-            availableNodesService = AvailableNodesService,
+            preferences = PreferencesService.Default,
+            configuration = ConfigurationService.Native,
+            availableNodesService = AvailableNodesService.Native,
+            editorService = EditorService.Native,
         )
     }
 }
 
 @Stable
-class AppViewModelImpl(
+private class AppViewModelImpl(
     initialPatch: Patch = Patch.Initial,
-    private val availableNodesService: AvailableNodesService,
+    override val preferences: PreferencesService = PreferencesService.Unspecified,
+    override val configuration: ConfigurationService = ConfigurationService.Unspecified,
+    override val availableNodesService: AvailableNodesService = AvailableNodesService.Unspecified,
+    private val editorService: EditorService = EditorService.Unspecified,
 ) : AppViewModel {
-    private var _editorViewModel: EditorViewModelImpl by mutableStateOf(EditorViewModelImpl(initialPatch))
-    override val editor by ::_editorViewModel
-    override var showingOpenDialog: Boolean by mutableStateOf(false)
-        private set
-    override var showingSaveDialog: Boolean by mutableStateOf(false)
-        private set
-    private val json = Json {
-        prettyPrint = true
-        encodeDefaults = true
+    override var editor: EditorViewModelImpl by run {
+        val editorViewModel = EditorViewModelImpl(
+            patch = initialPatch,
+            editorService = editorService,
+        )
+        mutableStateOf(editorViewModel)
     }
-    override val preferences = PreferencesService
-    override val configuration = ConfigurationService
+    override val menuBar: MenuBarViewModelImpl = MenuBarViewModelImpl()
+
+    override var fileChanged: Boolean by mutableStateOf(false)
+        private set
     override var openedFile: Path? by mutableStateOf(null)
         private set
 
-    @Composable
-    override fun collectAvailableNodesAsState(): State<Map<NodeUid, NodeDescription>> {
-        return availableNodesService
-            .availableNodes
-            .collectAsState()
-    }
-
-    override fun showOpenDialog() {
-        showingOpenDialog = true
-    }
-
-    override fun showSaveDialog() {
-        showingSaveDialog = true
-    }
-
     override fun reset() {
-        _editorViewModel = EditorViewModelImpl(Patch.Initial)
+        editor = EditorViewModelImpl(Patch.Initial, editorService)
         runBlocking {
             editor.recreateGraphOnBackend()
         }
@@ -80,30 +67,37 @@ class AppViewModelImpl(
     }
 
     override fun save(file: Path?) {
-        showingSaveDialog = false
         if (file != null) {
             val patch = editor.extractPatch()
             val fileText = json.encodeToString(value = patch)
             file.writeText(fileText)
 
-            _editorViewModel = EditorViewModelImpl(patch)
+            editor = EditorViewModelImpl(patch, editorService)
             openedFile = file
         }
+
+        menuBar.uiState.showingSaveDialog = false
     }
 
     override fun open(file: Path?) {
-        showingOpenDialog = false
         if (file?.exists() == true) {
             val fileText = file.readText()
             val patch = json.decodeFromString<Patch>(fileText)
 
-            _editorViewModel = EditorViewModelImpl(patch)
+            editor = EditorViewModelImpl(patch, editorService)
+            editor.recreateGraphOnBackend()
             openedFile = file
-
-            runBlocking {
-                editor.recreateGraphOnBackend()
-            }
         }
+
+        menuBar.uiState.showingSaveDialog = false
+    }
+
+    override fun markFileAsChanged() {
+        fileChanged = true
     }
 }
 
+private val json = Json {
+    prettyPrint = true
+    encodeDefaults = true
+}

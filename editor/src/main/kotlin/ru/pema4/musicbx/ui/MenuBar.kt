@@ -17,26 +17,38 @@ import ru.pema4.musicbx.service.ConfigurationService
 import ru.pema4.musicbx.service.PreferencesService
 import kotlin.math.abs
 
+interface MenuBarViewModel {
+    val uiState: MenuBarState
+
+    fun showOpenDialog()
+    fun showSaveDialog()
+    fun showSaveAsDialog()
+}
+
+interface MenuBarState {
+    val showingOpenDialog: Boolean
+    val showingSaveDialog: Boolean
+    val showingSaveAsDialog: Boolean
+}
+
 @Composable
-fun FrameWindowScope.AppMenuBar(
-    vm: AppViewModel,
-) {
+fun FrameWindowScope.AppMenuBar() {
     MenuBar {
         Menu(text = "File") {
-            New(vm)
-            Open(vm)
-            Save(vm)
-            SaveAs(vm)
+            New()
+            Open()
+            Save()
+            SaveAs()
         }
         Menu(text = "View") {
-            AppearanceSelection(vm.preferences)
+            AppearanceSelection()
             Separator()
-            ActualSize(vm.preferences)
-            ZoomIn(vm.preferences)
-            ZoomOut(vm.preferences)
+            ActualSize()
+            ZoomIn()
+            ZoomOut()
         }
         Menu(text = "Settings") {
-            OutputSelection(vm.configuration)
+            OutputSelection()
         }
         // Обязательное меню для работы Spotlight на macOS
         Menu(text = "Help") {
@@ -46,7 +58,9 @@ fun FrameWindowScope.AppMenuBar(
 }
 
 @Composable
-private fun MenuScope.New(viewModel: AppViewModel) {
+private fun MenuScope.New(
+    viewModel: AppViewModel = AppContext.appViewModel,
+) {
     Item(
         text = "New patch",
         onClick = viewModel::reset,
@@ -54,7 +68,9 @@ private fun MenuScope.New(viewModel: AppViewModel) {
 }
 
 @Composable
-private fun MenuScope.Open(viewModel: AppViewModel) {
+private fun MenuScope.Open(
+    viewModel: MenuBarViewModel = AppContext.menuBarViewModel,
+) {
     Item(
         text = "Open...",
         shortcut = KeyShortcut(Key.O, meta = true),
@@ -63,7 +79,9 @@ private fun MenuScope.Open(viewModel: AppViewModel) {
 }
 
 @Composable
-private fun MenuScope.Save(viewModel: AppViewModel) {
+private fun MenuScope.Save(
+    viewModel: MenuBarViewModel = AppContext.menuBarViewModel,
+) {
     Item(
         text = "Save",
         shortcut = KeyShortcut(Key.S, meta = true),
@@ -72,16 +90,20 @@ private fun MenuScope.Save(viewModel: AppViewModel) {
 }
 
 @Composable
-private fun MenuScope.SaveAs(viewModel: AppViewModel) {
+private fun MenuScope.SaveAs(
+    viewModel: MenuBarViewModel = AppContext.menuBarViewModel,
+) {
     Item(
         text = "Save As...",
         shortcut = KeyShortcut(Key.S, meta = true, shift = true),
-        onClick = viewModel::showSaveDialog,
+        onClick = viewModel::showSaveAsDialog,
     )
 }
 
 @Composable
-private fun MenuScope.AppearanceSelection(preferences: PreferencesService) {
+private fun MenuScope.AppearanceSelection(
+    preferences: PreferencesService = AppContext.preferences,
+) {
     var theme by preferences::theme
 
     Menu(text = "Appearance") {
@@ -104,7 +126,9 @@ private fun MenuScope.AppearanceSelection(preferences: PreferencesService) {
 }
 
 @Composable
-private fun MenuScope.ZoomIn(preferences: PreferencesService) {
+private fun MenuScope.ZoomIn(
+    preferences: PreferencesService = AppContext.preferences,
+) {
     var zoom by preferences::zoom
 
     Item(
@@ -115,7 +139,9 @@ private fun MenuScope.ZoomIn(preferences: PreferencesService) {
 }
 
 @Composable
-private fun MenuScope.ZoomOut(preferences: PreferencesService) {
+private fun MenuScope.ZoomOut(
+    preferences: PreferencesService = AppContext.preferences,
+) {
     var zoom by preferences::zoom
 
     Item(
@@ -126,19 +152,23 @@ private fun MenuScope.ZoomOut(preferences: PreferencesService) {
 }
 
 @Composable
-private fun MenuScope.ActualSize(preferences: PreferencesService) {
+private fun MenuScope.ActualSize(
+    preferences: PreferencesService = AppContext.preferences,
+) {
     var zoom by preferences::zoom
 
     Item(
         text = "Actual Size",
         enabled = abs(zoom.scale - 1.0f) > 1e-5,
         shortcut = KeyShortcut(Key.Zero, meta = true),
-        onClick = { zoom = Zoom.One },
+        onClick = { zoom = Zoom.Default },
     )
 }
 
 @Composable
-private fun MenuScope.OutputSelection(configuration: ConfigurationService) {
+private fun MenuScope.OutputSelection(
+    configuration: ConfigurationService = AppContext.configuration,
+) {
     val outputs by configuration.output.collectAsState()
 
     Menu(

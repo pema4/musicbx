@@ -48,82 +48,112 @@ import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toOffset
 import ru.pema4.musicbx.model.config.NodeDescription
-import ru.pema4.musicbx.model.config.NodeUid
 import ru.pema4.musicbx.model.config.TestNodeDescription
-import ru.pema4.musicbx.model.patch.CableEnd
 import ru.pema4.musicbx.model.patch.Node
-import ru.pema4.musicbx.util.tipOnHover
-import ru.pema4.musicbx.viewmodel.NodeStateImpl
+import ru.pema4.musicbx.util.pointerHoverTip
+import ru.pema4.musicbx.viewmodel.NodeViewModelImpl
+
+@Stable
+interface NodeViewModel {
+    val model: Node
+    val id: Int get() = model.id
+    val description: NodeDescription
+
+    var topStartOffset: DpOffset
+    var centerStartOffset: DpOffset
+    var centerEndOffset: DpOffset
+    var isExpanded: Boolean
+
+    @Stable
+    val inputs: List<SocketState>
+
+    @Stable
+    val outputs: SnapshotStateList<SocketState>
+
+    @Stable
+    val parameters: SnapshotStateList<ParameterState>
+}
 
 @Composable
 fun NodeView(
-    state: NodeState,
+    viewModel: NodeViewModel,
     modifier: Modifier = Modifier,
 ) {
     var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
 
     val elevation = remember { Animatable(1.0f) }
-    LaunchedEffect(state, state.expanded) {
-        elevation.animateTo(if (state.expanded) 8.0f else 1.0f)
-        state.id
+    LaunchedEffect(viewModel, viewModel.isExpanded) {
+        elevation.animateTo(if (viewModel.isExpanded) 8.0f else 1.0f)
+        viewModel.id
     }
 
-    Card(
-        modifier = modifier
-            .onGloballyPositioned { layoutCoordinates = it }
-            .tipOnHover(state.description.summary),
-        shape = RoundedCornerShape(8.dp),
-        elevation = elevation.value.dp,
-    ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = state.description.name,
-                    modifier = Modifier.weight(1.0f).padding(8.dp),
-                    style = MaterialTheme.typography.h6,
-                )
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .padding(4.dp)
+    AppContext(nodeViewModel = viewModel) {
+        Card(
+            modifier = modifier
+                .onGloballyPositioned { layoutCoordinates = it }
+                .pointerHoverTip(viewModel.description.summary),
+            shape = RoundedCornerShape(8.dp),
+            elevation = elevation.value.dp,
+        ) {
+            Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "Close",
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .clickable { state.removeNode(state.id) }
-                            .size(20.dp)
+                    Text(
+                        text = viewModel.description.name,
+                        modifier = Modifier.weight(1.0f).padding(8.dp),
+                        style = MaterialTheme.typography.h6,
                     )
-                    Icon(
-                        imageVector = if (state.expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                        contentDescription = if (state.expanded) "Expand" else "Collapse",
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .clickable { state.expanded = !state.expanded }
-                            .size(20.dp)
-                    )
-                }
-            }
 
-            NodeSettingsView(
-                state = state,
-                parentLayoutCoordinates = layoutCoordinates,
-            )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(4.dp)
+                    ) {
+                        val app = AppContext.appViewModel
+                        val editor = AppContext.editorViewModel
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close",
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .clickable {
+                                    editor.removeNode(viewModel.id)
+                                    app.markFileAsChanged()
+                                }
+                                .size(20.dp)
+                        )
+                        Icon(
+                            imageVector = if (viewModel.isExpanded) {
+                                Icons.Filled.KeyboardArrowUp
+                            } else {
+                                Icons.Filled.KeyboardArrowDown
+                            },
+                            contentDescription = if (viewModel.isExpanded) "Expand" else "Collapse",
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .clickable { viewModel.isExpanded = !viewModel.isExpanded }
+                                .size(20.dp)
+                        )
+                    }
+                }
+
+                NodeSettingsView(
+                    viewModel = viewModel,
+                    parentLayoutCoordinates = layoutCoordinates,
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun NodeSettingsView(
-    state: NodeState,
+    viewModel: NodeViewModel = AppContext.nodeViewModel,
     parentLayoutCoordinates: LayoutCoordinates?,
 ) {
     AnimatedVisibility(
-        visible = state.expanded,
+        visible = viewModel.isExpanded,
         enter = expandVertically(),
         exit = shrinkVertically(),
     ) {
@@ -131,14 +161,14 @@ private fun NodeSettingsView(
         Column(
             modifier = Modifier
                 .padding(
-                    top = if (state.parameters.isEmpty()) 8.dp else 0.dp,
+                    top = if (viewModel.parameters.isEmpty()) 8.dp else 0.dp,
                     start = 8.dp,
                     end = 8.dp,
                     bottom = 8.dp
                 )
                 .fillMaxWidth()
         ) {
-            for (parameter in state.parameters) {
+            for (parameter in viewModel.parameters) {
                 key(parameter.parameter.name) {
                     ParameterView(parameter)
                 }
@@ -149,8 +179,8 @@ private fun NodeSettingsView(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Bottom,
             ) {
-                NodeSocketsView(state.inputs, parentLayoutCoordinates)
-                NodeSocketsView(state.outputs, parentLayoutCoordinates)
+                NodeSocketsView(viewModel.inputs, parentLayoutCoordinates)
+                NodeSocketsView(viewModel.outputs, parentLayoutCoordinates)
             }
         }
     }
@@ -165,7 +195,7 @@ private fun NodeSocketsView(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         for (socket in sockets) {
-            key(socket.name) {
+            key(socket.model.name) {
                 val density = LocalDensity.current
                 SocketView(
                     state = socket,
@@ -186,34 +216,6 @@ private fun NodeSocketsView(
     }
 }
 
-@Stable
-interface NodeState {
-    val node: Node
-    val description: NodeDescription
-    var topStartOffset: DpOffset
-    var centerStartOffset: DpOffset
-    var centerEndOffset: DpOffset
-    var expanded: Boolean
-
-    val uid: NodeUid get() = node.uid
-    val id: Int get() = node.id
-
-    @Stable
-    val inputs: List<SocketState>
-
-    @Stable
-    val outputs: SnapshotStateList<SocketState>
-
-    @Stable
-    val parameters: SnapshotStateList<ParameterState>
-
-    fun createCable(end: CableEnd)
-    fun editCable(end: CableEnd)
-    fun startCablePreview(end: CableEnd)
-    fun endCablePreview(end: CableEnd)
-    fun removeNode(nodeId: Int)
-}
-
 @Preview
 @Composable
 private fun NodeViewPreview() {
@@ -223,7 +225,7 @@ private fun NodeViewPreview() {
                 .height(IntrinsicSize.Min)
                 .width(IntrinsicSize.Min)
         ) {
-            val viewModel = NodeStateImpl(
+            val viewModel = NodeViewModelImpl(
                 node = Node(
                     id = 0,
                     uid = TestNodeDescription.uid,
