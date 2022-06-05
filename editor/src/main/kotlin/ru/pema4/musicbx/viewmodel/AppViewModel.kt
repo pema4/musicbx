@@ -60,10 +60,9 @@ private class AppViewModelImpl(
 
     override fun reset() {
         editor = EditorViewModelImpl(Patch.Initial, editorService)
-        runBlocking {
-            editor.recreateGraphOnBackend()
-        }
+        editor.recreateGraphOnBackend()
         openedFile = null
+        fileChanged = false
     }
 
     override fun save(file: Path?) {
@@ -74,6 +73,7 @@ private class AppViewModelImpl(
 
             editor = EditorViewModelImpl(patch, editorService)
             openedFile = file
+            fileChanged = false
         }
 
         menuBar.uiState.showingSaveDialog = false
@@ -87,6 +87,7 @@ private class AppViewModelImpl(
             editor = EditorViewModelImpl(patch, editorService)
             editor.recreateGraphOnBackend()
             openedFile = file
+            fileChanged = false
         }
 
         menuBar.uiState.showingOpenDialog = false
