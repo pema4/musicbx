@@ -3,7 +3,6 @@ package ru.pema4.musicbx
 import androidx.compose.ui.window.application
 import mu.KotlinLogging
 import ru.pema4.musicbx.ui.App
-import ru.pema4.musicbx.viewmodel.rememberAppViewModel
 import java.nio.file.Path
 import kotlin.io.path.Path
 import kotlin.io.path.div
@@ -13,8 +12,7 @@ import kotlin.io.path.pathString
 fun main() {
     loadNativeBackend()
     application {
-        val appViewModel = rememberAppViewModel()
-        App(appViewModel)
+        App()
     }
 }
 

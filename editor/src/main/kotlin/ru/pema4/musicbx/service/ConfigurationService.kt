@@ -10,11 +10,23 @@ import ru.pema4.musicbx.model.config.InputOutputSettings
 import java.util.function.Consumer
 import java.util.prefs.Preferences
 
-object ConfigurationService {
+interface ConfigurationService {
+    val output: StateFlow<DeviceSettings>
+    fun refresh()
+    fun changeCurrentOutput(newOutput: String)
+
+    companion object {
+        val Native: ConfigurationService = NativeConfigurationService
+        val Unspecified: ConfigurationService = NoOpConfigurationService
+    }
+}
+
+private object NativeConfigurationService : ConfigurationService {
     private val preferences = Preferences.userNodeForPackage(ConfigurationService::class.java)
     private val initialOutput = preferences.get(::output.name, null).toDeviceSettings()
     private val _output = MutableStateFlow(initialOutput)
-    var output: StateFlow<DeviceSettings> = _output.asStateFlow()
+
+    override val output: StateFlow<DeviceSettings> = _output.asStateFlow()
 
     init {
         registerListener {
@@ -30,8 +42,8 @@ object ConfigurationService {
     }
 
     private external fun registerListener(listener: ConfigurationListener)
-    external fun changeCurrentOutput(newOutput: String)
-    external fun refresh()
+    external override fun changeCurrentOutput(newOutput: String)
+    external override fun refresh()
 }
 
 private fun interface ConfigurationListener : Consumer<String> {
@@ -43,4 +55,12 @@ private fun interface ConfigurationListener : Consumer<String> {
 
 private fun String?.toDeviceSettings(): DeviceSettings {
     return Json.decodeFromString(this ?: return DeviceSettings.Unspecified)
+}
+
+private object NoOpConfigurationService : ConfigurationService {
+    override val output: StateFlow<DeviceSettings> =
+        MutableStateFlow(DeviceSettings.Unspecified)
+
+    override fun refresh() = Unit
+    override fun changeCurrentOutput(newOutput: String) = Unit
 }

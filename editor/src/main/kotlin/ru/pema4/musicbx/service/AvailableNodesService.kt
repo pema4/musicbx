@@ -9,11 +9,20 @@ import ru.pema4.musicbx.model.config.NodeDescription
 import ru.pema4.musicbx.model.config.NodeUid
 import java.util.function.Consumer
 
-object AvailableNodesService {
+interface AvailableNodesService {
+    val availableNodes: StateFlow<Map<NodeUid, NodeDescription>>
+
+    companion object {
+        val Native: AvailableNodesService = NativeAvailableNodesService
+        val Unspecified: AvailableNodesService = TestAvailableNodesService
+    }
+}
+
+private object NativeAvailableNodesService : AvailableNodesService {
     private external fun registerListener(listener: AvailableNodesListener)
 
     private val _availableNodes = MutableStateFlow(emptyMap<NodeUid, NodeDescription>())
-    val availableNodes: StateFlow<Map<NodeUid, NodeDescription>>
+    override val availableNodes: StateFlow<Map<NodeUid, NodeDescription>>
         get() = _availableNodes.asStateFlow()
 
     init {
@@ -31,4 +40,9 @@ private fun interface AvailableNodesListener : Consumer<String> {
         val descriptions: List<NodeDescription> = Json.decodeFromString(t)
         acceptNodeDescriptions(descriptions.associateBy(NodeDescription::uid))
     }
+}
+
+private object TestAvailableNodesService : AvailableNodesService {
+    override val availableNodes: StateFlow<Map<NodeUid, NodeDescription>> =
+        MutableStateFlow(emptyMap())
 }

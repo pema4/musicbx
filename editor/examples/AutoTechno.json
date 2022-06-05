@@ -1,0 +1,1039 @@
+{
+    "nodes": [
+        {
+            "id": 65,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 4,
+                "y": 66
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 101,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 102,
+                "y": 67
+            },
+            "parameters": {
+                "b": "0.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 41,
+            "uid": "musicbx::std::osc::SimpleSawOsc",
+            "offset": {
+                "x": 2,
+                "y": 2
+            },
+            "parameters": {
+                "freq": "0.6473013"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 106,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 169,
+                "y": 19
+            },
+            "parameters": {
+                "b": "0.3"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 46,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 3,
+                "y": 58
+            },
+            "parameters": {
+                "b": "1.666"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 81,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 27,
+                "y": 45
+            },
+            "parameters": {
+                "b": "0.543"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 84,
+            "uid": "musicbx::std::util::UniformRandom",
+            "offset": {
+                "x": 81,
+                "y": 77
+            },
+            "parameters": {
+            },
+            "collapsed": true
+        },
+        {
+            "id": 85,
+            "uid": "musicbx::std::osc::SimpleSawOsc",
+            "offset": {
+                "x": 127,
+                "y": 2
+            },
+            "parameters": {
+                "freq": "0.59051424"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 86,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 127,
+                "y": 28
+            },
+            "parameters": {
+                "b": "-8.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 87,
+            "uid": "musicbx::std::util::HardClip",
+            "offset": {
+                "x": 128,
+                "y": 35
+            },
+            "parameters": {
+            },
+            "collapsed": true
+        },
+        {
+            "id": 56,
+            "uid": "musicbx::std::util::Amp",
+            "offset": {
+                "x": 64,
+                "y": 39
+            },
+            "parameters": {
+                "db": "0.9469697"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 90,
+            "uid": "musicbx::std::util::Amp",
+            "offset": {
+                "x": 72,
+                "y": 71
+            },
+            "parameters": {
+                "db": "0.62936366"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 91,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 127,
+                "y": 43
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 93,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 128,
+                "y": 19
+            },
+            "parameters": {
+                "b": "0.853"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 63,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 2,
+                "y": 50
+            },
+            "parameters": {
+                "b": "1.666"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 57,
+            "uid": "musicbx::std::util::HardClip",
+            "offset": {
+                "x": 64,
+                "y": 26
+            },
+            "parameters": {
+            },
+            "collapsed": false
+        },
+        {
+            "id": 89,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 100,
+                "y": 74
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 83,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 70,
+                "y": 55
+            },
+            "parameters": {
+                "b": "0.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 115,
+            "uid": "musicbx::std::util::Amp",
+            "offset": {
+                "x": 126,
+                "y": 52
+            },
+            "parameters": {
+                "db": "0.9055227"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 80,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 52,
+                "y": 62
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 112,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 72,
+                "y": 62
+            },
+            "parameters": {
+                "b": "0.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 47,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 4,
+                "y": 22
+            },
+            "parameters": {
+                "b": "-1.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 79,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 43,
+                "y": 27
+            },
+            "parameters": {
+                "b": "0.0"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 45,
+            "uid": "musicbx::std::util::HardClip",
+            "offset": {
+                "x": 3,
+                "y": 42
+            },
+            "parameters": {
+            },
+            "collapsed": true
+        },
+        {
+            "id": 77,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 26,
+                "y": 21
+            },
+            "parameters": {
+                "b": "3.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 44,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 3,
+                "y": 33
+            },
+            "parameters": {
+                "b": "-0.8"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 76,
+            "uid": "musicbx::std::util::HardClip",
+            "offset": {
+                "x": 27,
+                "y": 27
+            },
+            "parameters": {
+            },
+            "collapsed": false
+        },
+        {
+            "id": 108,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 169,
+                "y": 36
+            },
+            "parameters": {
+                "b": "0.499"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 75,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 44,
+                "y": 8
+            },
+            "parameters": {
+                "b": "0.208"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 107,
+            "uid": "musicbx::std::osc::SinOsc",
+            "offset": {
+                "x": 169,
+                "y": 2
+            },
+            "parameters": {
+                "freq": "0.3133884"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 40,
+            "uid": "_synthetic_output",
+            "offset": {
+                "x": 64,
+                "y": 2
+            },
+            "parameters": {
+            },
+            "collapsed": true
+        },
+        {
+            "id": 104,
+            "uid": "musicbx::std::util::Amp",
+            "offset": {
+                "x": 147,
+                "y": 62
+            },
+            "parameters": {
+                "db": "0.9055227"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 39,
+            "uid": "musicbx::std::util::Amp",
+            "offset": {
+                "x": 64,
+                "y": 10
+            },
+            "parameters": {
+                "db": "0.7153333"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 71,
+            "uid": "musicbx::std::osc::SinOsc",
+            "offset": {
+                "x": 27,
+                "y": 58
+            },
+            "parameters": {
+                "freq": "0.6267768"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 103,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 148,
+                "y": 43
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 70,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 4,
+                "y": 90
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 102,
+            "uid": "musicbx::std::util::HardClip",
+            "offset": {
+                "x": 148,
+                "y": 35
+            },
+            "parameters": {
+            },
+            "collapsed": true
+        },
+        {
+            "id": 68,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 24,
+                "y": 79
+            },
+            "parameters": {
+                "b": "0.436"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 100,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 148,
+                "y": 28
+            },
+            "parameters": {
+                "b": "-30.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 67,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 4,
+                "y": 83
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 99,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 148,
+                "y": 19
+            },
+            "parameters": {
+                "b": "0.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 66,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 4,
+                "y": 75
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": true
+        },
+        {
+            "id": 98,
+            "uid": "musicbx::std::osc::SimpleSawOsc",
+            "offset": {
+                "x": 148,
+                "y": 2
+            },
+            "parameters": {
+                "freq": "0.7040884"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 64,
+            "uid": "musicbx::std::util::Add",
+            "offset": {
+                "x": 44,
+                "y": 80
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": false
+        },
+        {
+            "id": 96,
+            "uid": "musicbx::std::util::Mul",
+            "offset": {
+                "x": 71,
+                "y": 91
+            },
+            "parameters": {
+                "b": "1.0"
+            },
+            "collapsed": true
+        }
+    ],
+    "cables": [
+        {
+            "from": {
+                "node_id": 39,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 40,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 44,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 45,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 47,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 44,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 56,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 57,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 57,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 39,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 41,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 47,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 45,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 63,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 63,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 46,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 46,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 65,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 46,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 65,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 65,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 66,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 46,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 66,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 66,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 67,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 46,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 67,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 68,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 64,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 67,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 70,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 46,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 70,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 70,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 68,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 47,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 75,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 75,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 77,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 77,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 76,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 76,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 79,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 71,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 80,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 79,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 81,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 81,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 80,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 64,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 71,
+                "socket_name": "tune"
+            }
+        },
+        {
+            "from": {
+                "node_id": 83,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 56,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 86,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 87,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 84,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 89,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 87,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 91,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 80,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 83,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 85,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 93,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 93,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 86,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 89,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 96,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 89,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 96,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 96,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 90,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 98,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 99,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 101,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 89,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 99,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 100,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 100,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 102,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 102,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 103,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 104,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 101,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 103,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 104,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 107,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 106,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 106,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 108,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 108,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 99,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 112,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 83,
+                "socket_name": "b"
+            }
+        },
+        {
+            "from": {
+                "node_id": 90,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 112,
+                "socket_name": "a"
+            }
+        },
+        {
+            "from": {
+                "node_id": 91,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 115,
+                "socket_name": "input"
+            }
+        },
+        {
+            "from": {
+                "node_id": 115,
+                "socket_name": "output"
+            },
+            "to": {
+                "node_id": 101,
+                "socket_name": "a"
+            }
+        }
+    ]
+}

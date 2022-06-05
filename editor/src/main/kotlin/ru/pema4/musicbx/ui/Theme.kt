@@ -11,15 +11,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.jthemedetecor.OsThemeDetector
 import ru.pema4.musicbx.model.preferences.PreferredTheme
-import ru.pema4.musicbx.service.PreferencesService
 
 private val themeDetector = OsThemeDetector.getDetector()
 
 @Composable
 fun EditorTheme(
+    preferredTheme: PreferredTheme = AppContext.preferences.theme,
     content: @Composable () -> Unit,
 ) {
-    val isDarkTheme = when (PreferencesService.theme) {
+    val isDarkTheme = when (preferredTheme) {
         PreferredTheme.Dark -> true
         PreferredTheme.Light -> false
         else -> isSystemInDarkTheme()

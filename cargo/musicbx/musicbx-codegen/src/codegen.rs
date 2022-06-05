@@ -87,10 +87,6 @@ impl MusicbxCodegen {
                 let input_file = extract_name_from_input_file(input)?;
                 format!("{input_file}.rs")
             });
-            println!(
-                "cargo:rerun-if-changed={}",
-                input.as_os_str().to_str().unwrap()
-            );
             self.generate(input, &out_file)?;
         }
 
@@ -160,8 +156,6 @@ impl MusicbxCodegen {
             .map(|cable_end| (cable_end.node_id, cable_end.socket_name.as_str()))
             .collect();
 
-        println!("overriden: {overridden_parameters:?}");
-
         nodes
             .values()
             .flat_map(|node| {
@@ -192,10 +186,8 @@ impl MusicbxCodegen {
                 let param_value: f32 = param_value.parse().map_err(|_| {
                     MusicbxExecutionError::InvalidParameterValue(param_value.to_string())
                 })?;
-                println!("name: {param_name}, value: {param_value}, kind: {param_kind:?}");
-                let param_value = param_kind.denormalize(param_value);
-                println!("name: {param_value}");
 
+                let param_value = param_kind.denormalize(param_value);
                 Ok((node_id, param_name, param_value.to_string()))
             })
             .collect()

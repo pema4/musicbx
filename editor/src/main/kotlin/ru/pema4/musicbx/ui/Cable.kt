@@ -47,7 +47,7 @@ fun CableView(
             lerp(
                 MaterialTheme.colors.onSurface,
                 Color.Red,
-                0.5f,
+                0.8f,
             )
         }
         else -> MaterialTheme.colors.onSurface

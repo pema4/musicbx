@@ -30,7 +30,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import ru.pema4.musicbx.model.patch.NodeParameter
 import ru.pema4.musicbx.model.patch.NodeParameterKind
-import ru.pema4.musicbx.util.explainedAs
+import ru.pema4.musicbx.util.pointerHoverTip
 
 @Composable
 fun ParameterView(
@@ -67,7 +67,7 @@ fun ParameterView(
             value = current.normalized,
             onValueChange = { current.normalized = it },
             modifier = modifier
-                .explainedAs("${state.parameter.description}: ${current.text}")
+                .pointerHoverTip("${state.parameter.description}: ${current.text}. Click on the name to set precise value")
         )
     }
 }
@@ -90,8 +90,10 @@ private fun ParameterValueDropdown(
         )
     }
 
-    val isError by derivedStateOf {
-        state.parameter.kind.tryNormalize(textFieldValue.text) == null
+    val isError by remember {
+        derivedStateOf {
+            state.parameter.kind.tryNormalize(textFieldValue.text) == null
+        }
     }
 
     DropdownMenu(

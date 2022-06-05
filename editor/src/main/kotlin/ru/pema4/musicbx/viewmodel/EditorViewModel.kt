@@ -2,7 +2,6 @@ package ru.pema4.musicbx.viewmodel
 
 import androidx.compose.foundation.ScrollState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -16,47 +15,45 @@ import ru.pema4.musicbx.model.patch.Cable
 import ru.pema4.musicbx.model.patch.CableEnd
 import ru.pema4.musicbx.model.patch.CableFrom
 import ru.pema4.musicbx.model.patch.CableTo
+import ru.pema4.musicbx.model.patch.InputSocket
 import ru.pema4.musicbx.model.patch.Node
+import ru.pema4.musicbx.model.patch.OutputSocket
 import ru.pema4.musicbx.model.patch.Patch
 import ru.pema4.musicbx.service.AvailableNodesService
 import ru.pema4.musicbx.service.EditorService
-import ru.pema4.musicbx.service.PreferencesService
 import ru.pema4.musicbx.ui.CableFromState
 import ru.pema4.musicbx.ui.CableToState
 import ru.pema4.musicbx.ui.DraftCableState
 import ru.pema4.musicbx.ui.EditorState
 import ru.pema4.musicbx.ui.EditorViewModel
 import ru.pema4.musicbx.ui.FullCableState
-import ru.pema4.musicbx.ui.NodeState
-import ru.pema4.musicbx.ui.SocketType
+import ru.pema4.musicbx.ui.NodeViewModel
 import ru.pema4.musicbx.ui.toFullCableStateOrNull
 
 @Stable
 class EditorViewModelImpl(
-    nodes: Collection<NodeState> = emptyList(),
+    nodes: Collection<NodeViewModel> = emptyList(),
     cables: Collection<FullCableState> = emptyList(),
+    private val editorService: EditorService = EditorService.Unspecified,
 ) : EditorViewModel {
     override val uiState = EditorStateImpl()
-
-    override val nodes: SnapshotStateMap<Int, NodeState> = nodes
-        .associateByTo(mutableStateMapOf(), NodeState::id)
+    override val nodes: SnapshotStateMap<Int, NodeViewModel> = nodes
+        .associateByTo(mutableStateMapOf(), NodeViewModel::id)
     override val cables: SnapshotStateList<FullCableState> = cables.toMutableStateList()
     override var draftCable: DraftCableState? by mutableStateOf(null)
 
-    override val scale: Float by derivedStateOf { PreferencesService.zoom.scale }
-
-    override suspend fun recreateGraphOnBackend() {
-        EditorService.reset()
+    override fun recreateGraphOnBackend() {
+        editorService.reset()
 
         for ((id, node) in nodes.entries.sortedBy { it.key }) {
-            val newId = EditorService.addNode(uid = node.uid, id = id)
+            val newId = editorService.addNode(uid = node.model.uid, nodeId = id)
             for (parameter in node.parameters) {
-                EditorService.setParameter(newId, parameter.parameter.number, parameter.current.normalized)
+                editorService.setParameter(newId, parameter.parameter.number, parameter.current.normalized)
             }
         }
 
         for (cable in cables) {
-            EditorService.connectNodes(cable.from.end, cable.to.end)
+            editorService.connectNodes(cable.from.end, cable.to.end)
         }
     }
 
@@ -97,7 +94,7 @@ class EditorViewModelImpl(
         )
 
         val newCable = draftCable?.toFullCableStateOrNull() ?: return
-        EditorService.connectNodes(
+        editorService.connectNodes(
             from = newCable.from.end,
             to = newCable.to.end,
         )
@@ -114,7 +111,7 @@ class EditorViewModelImpl(
             ?.also { cables.remove(it) }
             ?: return
 
-        EditorService.disconnectNodes(
+        editorService.disconnectNodes(
             from = editedCable.from.end,
             to = editedCable.to.end,
         )
@@ -131,27 +128,39 @@ class EditorViewModelImpl(
     }
 
     override fun addNode(description: NodeDescription) {
-        val id = EditorService.addNode(description.uid)
+        val id = editorService.addNode(description.uid)
 
         for (parameter in description.parameters) {
-            EditorService.setParameter(
+            editorService.setParameter(
                 nodeId = id,
                 parameterNum = parameter.number,
                 normalizedValue = parameter.kind.normalize(parameter.default),
             )
         }
 
-        nodes[id] = NodeStateImpl(
-            node = EditorService.activePatch.value.nodes.single { it.id == id },
+        nodes[id] = NodeViewModelImpl(
+            node = editorService.activePatch.value.nodes.single { it.id == id },
             description = description,
-            editorViewModel = this,
         )
     }
 
     override fun removeNode(nodeId: Int) {
-        EditorService.removeNode(nodeId)
+        editorService.removeNode(nodeId)
         nodes.remove(nodeId)
         cables.removeAll { it.to.end.nodeId == nodeId || it.from.end.nodeId == nodeId }
+    }
+
+    override fun startCablePreview(end: CableEnd) {
+        cables
+            .filter { it.from.end == end || it.to.end == end }
+            .takeLast(1)
+            .forEach { it.isHovered = true }
+    }
+
+    override fun endCablePreview(end: CableEnd) {
+        cables
+            .filter { it.from.end == end || it.to.end == end }
+            .forEach { it.isHovered = false }
     }
 }
 
@@ -161,31 +170,33 @@ private fun EditorViewModelImpl.getSocketOffsetCalculation(cableEnd: CableEnd): 
         is CableTo -> node.inputs
         is CableFrom -> node.outputs
     }
-    val socket = sockets.first { it.name == cableEnd.socketName }
+    val socket = sockets.first { it.model.name == cableEnd.socketName }
 
     return {
         when {
-            node.expanded -> node.topStartOffset + socket.offsetInNode
-            socket.type == SocketType.Input -> node.topStartOffset + node.centerStartOffset
-            socket.type == SocketType.Output -> node.topStartOffset + node.centerEndOffset
+            node.isExpanded -> node.topStartOffset + socket.offsetInNode
+            socket.model is InputSocket -> node.topStartOffset + node.centerStartOffset
+            socket.model is OutputSocket -> node.topStartOffset + node.centerEndOffset
             else -> DpOffset.Unspecified
         }
     }
 }
 
-fun EditorViewModelImpl(patch: Patch): EditorViewModelImpl {
-    val viewModel = EditorViewModelImpl()
+fun EditorViewModelImpl(
+    patch: Patch,
+    editorService: EditorService,
+): EditorViewModelImpl {
+    val viewModel = EditorViewModelImpl(editorService = editorService)
 
-    val nodeStatesById = patch.nodes
+    val nodeViewModelsById = patch.nodes
         .associateBy(Node::id) {
-            NodeStateImpl(
+            NodeViewModelImpl(
                 node = it,
-                description = AvailableNodesService.availableNodes.value.getValue(it.uid),
-                editorViewModel = viewModel,
+                description = AvailableNodesService.Native.availableNodes.value.getValue(it.uid),
             )
         }
 
-    viewModel.nodes += nodeStatesById
+    viewModel.nodes += nodeViewModelsById
 
     viewModel.cables += patch.cables.map { (from, to) ->
         with(viewModel) {

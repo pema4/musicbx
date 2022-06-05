@@ -39,6 +39,30 @@ import ru.pema4.musicbx.util.pointerMoveFilter
 import ru.pema4.musicbx.viewmodel.EditorViewModelImpl
 import kotlin.math.roundToInt
 
+interface EditorViewModel {
+    val uiState: EditorState
+    val nodes: Map<Int, NodeViewModel>
+    val cables: List<FullCableState>
+    val draftCable: DraftCableState?
+
+    fun recreateGraphOnBackend()
+    fun extractPatch(): Patch
+
+    fun createCable(end: CableEnd)
+    fun editCable(end: CableEnd)
+    fun startCablePreview(end: CableEnd)
+    fun endCablePreview(end: CableEnd)
+    fun resetDraftCable()
+    fun addNode(description: NodeDescription)
+    fun removeNode(nodeId: Int)
+}
+
+interface EditorState {
+    val verticalScroll: ScrollState
+    val horizontalScroll: ScrollState
+    var cursorOffset: DpOffset
+}
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun EditorView(
@@ -48,8 +72,8 @@ fun EditorView(
     val uiState = viewModel.uiState
 
     // Used for determining cursor location inside the scrollable area
-    var parent: LayoutCoordinates? by mutableStateOf(null)
-    var child: LayoutCoordinates? by mutableStateOf(null)
+    var parent: LayoutCoordinates? by remember { mutableStateOf(null) }
+    var child: LayoutCoordinates? by remember { mutableStateOf(null) }
 
     Scrollable(
         horizontalScrollState = uiState.horizontalScroll,
@@ -70,17 +94,19 @@ fun EditorView(
             ),
         hideHorizontalScrollbarAutomatically = true,
     ) {
-        ScaledLayout(scale = viewModel.scale) {
+        val scale = AppContext.preferences.zoom.scale
+
+        ScaledLayout(scale = scale) {
             Box(
                 modifier = Modifier
                     .graphicsLayer {
-                        scaleX = viewModel.scale
-                        scaleY = viewModel.scale
+                        scaleX = scale
+                        scaleY = scale
                         transformOrigin = TransformOrigin(0.0f, 0.0f)
                     }
                     .onGloballyPositioned { child = it }
             ) {
-                EditorContentView(viewModel)
+                EditorContentView()
             }
         }
     }
@@ -88,7 +114,7 @@ fun EditorView(
 
 @Composable
 private fun ScaledLayout(
-    scale: Float,
+    scale: Float = AppContext.preferences.zoom.scale,
     content: @Composable () -> Unit,
 ) {
     val measurePolicy = remember(scale) {
@@ -107,20 +133,20 @@ private fun ScaledLayout(
 }
 
 @Composable
-private fun EditorContentView(
-    viewModel: EditorViewModel,
-) {
-    EditorNodesView(viewModel)
-    EditorCablesView(viewModel)
-    EditorDraftCableView(viewModel)
+private fun EditorContentView() {
+    EditorNodesView()
+    EditorCablesView()
+    EditorDraftCableView()
 }
 
 @Composable
-private fun EditorNodesView(viewModel: EditorViewModel) {
-    for ((id, nodeState) in viewModel.nodes) {
+private fun EditorNodesView(
+    viewModel: EditorViewModel = AppContext.editorViewModel,
+) {
+    for ((id, nodeViewModel) in viewModel.nodes) {
         key(id) {
-            var zIndex = nodeState.id.toFloat()
-            if (!nodeState.expanded) {
+            var zIndex = nodeViewModel.id.toFloat()
+            if (!nodeViewModel.isExpanded) {
                 zIndex -= 1_000_000
             }
 
@@ -129,21 +155,21 @@ private fun EditorNodesView(viewModel: EditorViewModel) {
                     .zIndex(zIndex)
                     .composed {
                         diagonallyDraggable(
-                            key1 = nodeState,
-                            offset = nodeState.topStartOffset,
-                            onChange = { nodeState.topStartOffset = it }
+                            key1 = nodeViewModel,
+                            offset = nodeViewModel.topStartOffset,
+                            onChange = { nodeViewModel.topStartOffset = it }
                         )
                     }
             ) {
                 val density = LocalDensity.current
                 NodeView(
-                    state = nodeState,
+                    viewModel = nodeViewModel,
                     modifier = Modifier
                         .widthIn(max = 150.dp)
                         .onGloballyPositioned {
                             val size = with(density) { it.size.toSize().toDpSize() }
-                            nodeState.centerStartOffset = size.center.copy(x = 0.dp)
-                            nodeState.centerEndOffset = size.center.copy(x = size.width)
+                            nodeViewModel.centerStartOffset = size.center.copy(x = 0.dp)
+                            nodeViewModel.centerEndOffset = size.center.copy(x = size.width)
                         }
                 )
             }
@@ -152,7 +178,9 @@ private fun EditorNodesView(viewModel: EditorViewModel) {
 }
 
 @Composable
-private fun EditorCablesView(viewModel: EditorViewModel) {
+private fun EditorCablesView(
+    viewModel: EditorViewModel = AppContext.editorViewModel,
+) {
     for (cable in viewModel.cables) {
         key(cable.from.end, cable.to.end) {
             CableView(cable)
@@ -161,33 +189,13 @@ private fun EditorCablesView(viewModel: EditorViewModel) {
 }
 
 @Composable
-private fun EditorDraftCableView(viewModel: EditorViewModel) {
+private fun EditorDraftCableView(
+    viewModel: EditorViewModel = AppContext.editorViewModel,
+) {
     val draftCable = viewModel.draftCable
     if (draftCable != null) {
         CableView(draftCable)
     }
-}
-
-interface EditorViewModel {
-    val uiState: EditorState
-    val nodes: Map<Int, NodeState>
-    val cables: List<FullCableState>
-    val draftCable: DraftCableState?
-    val scale: Float
-
-    suspend fun recreateGraphOnBackend()
-    fun extractPatch(): Patch
-    fun createCable(end: CableEnd) = Unit
-    fun editCable(end: CableEnd) = Unit
-    fun resetDraftCable() = Unit
-    fun addNode(description: NodeDescription) = Unit
-    fun removeNode(nodeId: Int) = Unit
-}
-
-interface EditorState {
-    val verticalScroll: ScrollState
-    val horizontalScroll: ScrollState
-    var cursorOffset: DpOffset
 }
 
 @Preview

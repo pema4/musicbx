@@ -8,7 +8,7 @@ use crate::app::{App, AppMsg};
 use crate::unwrap_or_throw;
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_reset(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeEditorService_reset(
     _env: JNIEnv,
     _class: JClass,
 ) {
@@ -16,7 +16,7 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_reset(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_addNodeOnBackend(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeEditorService_addNodeOnBackend(
     env: JNIEnv,
     _class: JClass,
     uid: JString,
@@ -29,7 +29,7 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_addNodeOnBack
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_removeNode(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeEditorService_removeNode(
     env: JNIEnv,
     _: JClass,
     id: jint,
@@ -39,7 +39,7 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_removeNode(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_connectNodes(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeEditorService_connectNodes(
     env: JNIEnv,
     _: JClass,
     from_node_id: jint,
@@ -80,7 +80,7 @@ fn connect_nodes(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_disconnectNodes(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeEditorService_disconnectNodes(
     env: JNIEnv,
     _: JClass,
     from_node_id: jint,
@@ -121,7 +121,7 @@ fn disconnect_nodes(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_EditorService_setParameter(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeEditorService_setParameter(
     env: JNIEnv,
     _: JClass,
     node_id: jint,

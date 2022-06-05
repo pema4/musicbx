@@ -32,11 +32,17 @@ import ru.pema4.musicbx.model.config.TestNodeDescription
 import ru.pema4.musicbx.model.patch.CableFrom
 import ru.pema4.musicbx.model.patch.CableTo
 import ru.pema4.musicbx.model.patch.InputSocket
-import ru.pema4.musicbx.model.patch.Node
 import ru.pema4.musicbx.model.patch.OutputSocket
 import ru.pema4.musicbx.model.patch.Socket
-import ru.pema4.musicbx.util.explainedAs
-import ru.pema4.musicbx.viewmodel.NodeStateImpl
+import ru.pema4.musicbx.util.pointerHoverTip
+
+@Stable
+data class SocketState(
+    val model: Socket,
+) {
+    var offsetInNode by mutableStateOf(DpOffset.Zero)
+    var hoverInteractionSource = MutableInteractionSource()
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -44,35 +50,43 @@ fun SocketView(
     state: SocketState,
     modifier: Modifier = Modifier,
 ) {
-    val color = when (state.type) {
-        SocketType.Input -> MaterialTheme.colors.primary
-        SocketType.Output -> MaterialTheme.colors.secondary
+    val nodeId = AppContext.nodeViewModel.id
+    val socketEnd = when (state.model) {
+        is InputSocket -> CableTo(nodeId = nodeId, socketName = state.model.name)
+        is OutputSocket -> CableFrom(nodeId = nodeId, socketName = state.model.name)
+    }
+    val color = when (state.model) {
+        is InputSocket -> MaterialTheme.colors.primary
+        is OutputSocket -> MaterialTheme.colors.secondary
     }
 
+    val editor = AppContext.editorViewModel
     val isHovered by state.hoverInteractionSource.collectIsHoveredAsState()
     LaunchedEffect(state) {
         snapshotFlow { isHovered }
             .onEach {
                 if (it) {
-                    state.startPreview()
+                    editor.startCablePreview(socketEnd)
                 } else {
-                    state.endPreview()
+                    editor.endCablePreview(socketEnd)
                 }
             }
             .collect()
     }
 
+    val app = AppContext.appViewModel
     Canvas(
         modifier = modifier
             .size(24.dp)
             .mouseClickable {
                 when {
-                    buttons.isSecondaryPressed -> state.edit()
-                    else -> state.create()
+                    buttons.isSecondaryPressed -> editor.editCable(socketEnd)
+                    else -> editor.createCable(socketEnd)
                 }
+                app.markFileAsChanged()
             }
             .hoverable(state.hoverInteractionSource)
-            .explainedAs("${state.description}. Right Click to reassign"),
+            .pointerHoverTip("${state.model.description}. Left Click to connect. Right Click to disconnect"),
     ) {
         drawCircle(color = color)
         drawCircle(
@@ -82,57 +96,13 @@ fun SocketView(
     }
 }
 
-@Stable
-data class SocketState(
-    val type: SocketType,
-    val model: Socket,
-    private val nodeState: NodeState,
-) {
-    var offsetInNode by mutableStateOf(DpOffset.Zero)
-    var hoverInteractionSource = MutableInteractionSource()
-    private val end = when (type) {
-        SocketType.Input -> CableTo(nodeId = nodeState.id, socketName = name)
-        SocketType.Output -> CableFrom(nodeId = nodeState.id, socketName = name)
-    }
-
-    val number: Int get() = model.number
-    val name: String get() = model.name
-    val description: String get() = model.description
-
-    fun create() = nodeState.createCable(end)
-    fun edit() = nodeState.editCable(end)
-    fun startPreview() = nodeState.startCablePreview(end)
-    fun endPreview() = nodeState.endCablePreview(end)
-}
-
-enum class SocketType {
-    Input,
-    Output,
-}
-
-fun SocketState(model: Socket, nodeState: NodeState): SocketState {
-    return SocketState(
-        type = when (model) {
-            is InputSocket -> SocketType.Input
-            is OutputSocket -> SocketType.Output
-        },
-        model = model,
-        nodeState = nodeState
-    )
-}
-
 @Preview
 @Composable
 private fun SocketViewPreview() {
-    val node = Node(
-        id = 0,
-        uid = TestNodeDescription.uid,
-    )
     val description = TestNodeDescription
-    val nodeState = NodeStateImpl(node, description)
     Row {
-        SocketView(state = SocketState(description.inputs[0], nodeState))
+        SocketView(state = SocketState(description.inputs[0]))
         Spacer(Modifier.width(10.dp))
-        SocketView(state = SocketState(description.outputs[0], nodeState))
+        SocketView(state = SocketState(description.outputs[0]))
     }
 }

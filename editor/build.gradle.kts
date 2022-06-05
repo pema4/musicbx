@@ -6,6 +6,7 @@ plugins {
     kotlin("jvm") version "1.6.10"
     kotlin("plugin.serialization") version "1.6.10"
     id("org.jetbrains.compose") version "1.1.1"
+    id("idea")
 }
 
 group = "ru.pema4"
@@ -28,6 +29,14 @@ dependencies {
 
     runtimeOnly("org.slf4j:slf4j-simple:1.7.29")
 }
+
+idea {
+    module {
+        isDownloadJavadoc = true
+        isDownloadSources = true
+    }
+}
+
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
@@ -72,7 +81,7 @@ val syncBackend = task<Sync>("syncBackend") {
     into(project.layout.projectDirectory.dir("resources/macos"))
 }
 
-val cleanBackend = task<DefaultTask>("cleanBackend") {
+val cleanBackend = task<Task>("cleanBackend") {
     description = "cargo clean"
     group = "native backend"
 
@@ -89,25 +98,44 @@ val cleanBackend = task<DefaultTask>("cleanBackend") {
     }
 }
 
+val patchUiDesktopLib = task<Exec>("patchUiDesktopLib") {
+    description = "Applies the fix from https://github.com/JetBrains/compose-jb/issues/1969#issuecomment-1100604793"
+    group = "native backend"
+    dependsOn(tasks.compileKotlin)
+
+    val uiDesktopJarFile = configurations.runtimeClasspath.get().resolve()
+        .first { "ui-desktop-1.1.1.jar" in it.absolutePath }
+    val classesRootDir = project.layout.buildDirectory.file("classes/kotlin/main").get().asFile
+
+    commandLine(
+        "echo",
+        "jar",
+        "-uf",
+        "\"${uiDesktopJarFile.absolutePath}\"",
+        "-C",
+        "\"$classesRootDir\"",
+        "androidx/compose/ui/util/UpdateEffect_desktopKt.class"
+    )
+}
+
+tasks.clean {
+    dependsOn(cleanBackend)
+}
+
+tasks.processResources {
+    dependsOn(syncBackend)
+
+    val resourcesDir = destinationDir
+    doLast {
+        copy {
+            from(syncBackend.destinationDir)
+            into(resourcesDir)
+        }
+    }
+}
+
 project.afterEvaluate {
     tasks.named("prepareAppResources") {
         dependsOn(syncBackend)
-    }
-
-    tasks.clean {
-        dependsOn(cleanBackend)
-    }
-
-    tasks.processResources {
-        dependsOn(syncBackend)
-
-        val resourcesDir = destinationDir
-        doLast {
-            copy {
-                println(syncBackend.destinationDir)
-                from(syncBackend.destinationDir)
-                into(resourcesDir)
-            }
-        }
     }
 }

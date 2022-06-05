@@ -9,20 +9,38 @@ import ru.pema4.musicbx.model.patch.CableTo
 import ru.pema4.musicbx.model.patch.Node
 import ru.pema4.musicbx.model.patch.Patch
 
-object EditorService {
-    private val _activePatch = MutableStateFlow(Patch.Initial)
+interface EditorService {
     val activePatch: StateFlow<Patch>
+
+    fun reset()
+    fun addNode(uid: NodeUid, nodeId: Int? = null): Int
+    fun removeNode(nodeId: Int)
+    fun connectNodes(from: CableFrom, to: CableTo)
+    fun disconnectNodes(from: CableFrom, to: CableTo)
+    fun setParameter(nodeId: Int, parameterNum: Int, normalizedValue: Float)
+
+    companion object {
+        val Native: EditorService = NativeEditorService()
+        val Unspecified: EditorService = NoOpEditorService()
+    }
+}
+
+private class NativeEditorService(
+    private val availableNodesService: AvailableNodesService = AvailableNodesService.Native,
+) : EditorService {
+    private val _activePatch = MutableStateFlow(Patch.Initial)
+    override val activePatch: StateFlow<Patch>
         get() = _activePatch.asStateFlow()
 
-    external fun reset()
+    external override fun reset()
 
     private external fun addNodeOnBackend(uid: String, id: Int)
-    fun addNode(uid: NodeUid, id: Int? = null): Int {
+    override fun addNode(uid: NodeUid, nodeId: Int?): Int {
         val currentPatch = activePatch.value
 
-        val newId = id ?: currentPatch.nextNodeId()
+        val newId = nodeId ?: currentPatch.nextNodeId()
 
-        val description = AvailableNodesService
+        val description = availableNodesService
             .availableNodes
             .value
             .getValue(uid)
@@ -46,10 +64,10 @@ object EditorService {
             ?.coerceAtLeast(0)
             ?: 0
 
-    external fun removeNode(nodeId: Int)
+    external override fun removeNode(nodeId: Int)
 
     private external fun connectNodes(from: Int, fromOutput: String, to: Int, toInput: String)
-    fun connectNodes(from: CableFrom, to: CableTo) {
+    override fun connectNodes(from: CableFrom, to: CableTo) {
         connectNodes(
             from = from.nodeId,
             fromOutput = from.socketName,
@@ -59,7 +77,7 @@ object EditorService {
     }
 
     private external fun disconnectNodes(from: Int, fromOutput: String, to: Int, toInput: String)
-    fun disconnectNodes(from: CableFrom, to: CableTo) {
+    override fun disconnectNodes(from: CableFrom, to: CableTo) {
         disconnectNodes(
             from = from.nodeId,
             fromOutput = from.socketName,
@@ -68,5 +86,19 @@ object EditorService {
         )
     }
 
-    external fun setParameter(nodeId: Int, parameterNum: Int, normalizedValue: Float)
+    external override fun setParameter(nodeId: Int, parameterNum: Int, normalizedValue: Float)
+}
+
+private class NoOpEditorService(
+    patch: Patch = Patch.Initial,
+) : EditorService {
+    override val activePatch: StateFlow<Patch> =
+        MutableStateFlow(patch)
+
+    override fun reset() = Unit
+    override fun addNode(uid: NodeUid, nodeId: Int?): Int = 0
+    override fun removeNode(nodeId: Int) = Unit
+    override fun connectNodes(from: CableFrom, to: CableTo) = Unit
+    override fun disconnectNodes(from: CableFrom, to: CableTo) = Unit
+    override fun setParameter(nodeId: Int, parameterNum: Int, normalizedValue: Float) = Unit
 }

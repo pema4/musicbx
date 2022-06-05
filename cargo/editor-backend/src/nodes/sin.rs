@@ -97,7 +97,6 @@ struct SinOscNodeImpl {
 
 impl<const N: usize> glicol_synth::Node<N> for SinOscNodeImpl {
     fn process(&mut self, inputs: &mut HashMap<usize, Input<N>>, output: &mut [Buffer<N>]) {
-        // println!("inputs.size: {}", inputs.len());
         self.inner.process::<N>(
             N,
             SinOscParameters {

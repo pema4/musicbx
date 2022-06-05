@@ -15,13 +15,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 
-interface TooltipManager {
+interface HoverTipManager {
     val activeTooltip: String?
 }
 
-val LocalTooltipManager = compositionLocalOf<TooltipManager?> { null }
+val LocalHoverTipManager = compositionLocalOf<HoverTipManager?> { null }
 
-class MutableTooltipManager : TooltipManager {
+class MutableHoverTipManager : HoverTipManager {
     private val tooltips = mutableStateListOf<String?>()
     override val activeTooltip: String? by derivedStateOf { tooltips.lastOrNull() }
 
@@ -35,28 +35,29 @@ class MutableTooltipManager : TooltipManager {
 }
 
 @Composable
-fun TooltipManagerProvider(
-    tooltipManager: TooltipManager? = LocalTooltipManager.current,
+fun HoverTipManagerProvider(
+    hoverTipManager: HoverTipManager? = LocalHoverTipManager.current,
     content: @Composable () -> Unit,
 ) {
     CompositionLocalProvider(
-        LocalTooltipManager provides tooltipManager,
+        LocalHoverTipManager provides hoverTipManager,
     ) {
         content()
     }
 }
 
-fun Modifier.explainedAs(
-    text: String?,
+fun Modifier.pointerHoverTip(
+    text: String? = null,
 ): Modifier = composed {
-    val tooltipManager = LocalTooltipManager.current
-    if (tooltipManager !is MutableTooltipManager) {
+    val tooltipManager = LocalHoverTipManager.current
+    if (tooltipManager !is MutableHoverTipManager) {
         return@composed this
     }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
-    val tooltipText by rememberUpdatedState(text)
+    val activeText = LocalHoverTipManager.current?.activeTooltip
+    val tooltipText by rememberUpdatedState(text ?: activeText)
 
     if (isHovered) {
         DisposableEffect(tooltipText) {

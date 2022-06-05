@@ -7,7 +7,7 @@ use crate::model::configuration::IOConfiguration;
 use crate::{unwrap_or_throw, App, AppMsg};
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_ConfigurationService_registerListener(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeConfigurationService_registerListener(
     env: JNIEnv,
     _class: JClass,
     callback: JObject,
@@ -34,7 +34,7 @@ fn invoke_listener(env: JNIEnv, listener: JObject, config: &IOConfiguration) -> 
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_ConfigurationService_changeCurrentOutput(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeConfigurationService_changeCurrentOutput(
     env: JNIEnv,
     _class: JClass,
     output: JString,
@@ -47,7 +47,7 @@ pub extern "system" fn Java_ru_pema4_musicbx_service_ConfigurationService_change
 }
 
 #[no_mangle]
-pub extern "system" fn Java_ru_pema4_musicbx_service_ConfigurationService_refresh(
+pub extern "system" fn Java_ru_pema4_musicbx_service_NativeConfigurationService_refresh(
     _env: JNIEnv,
     _class: JClass,
 ) {
