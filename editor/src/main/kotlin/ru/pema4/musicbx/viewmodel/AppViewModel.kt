@@ -89,7 +89,7 @@ private class AppViewModelImpl(
             openedFile = file
         }
 
-        menuBar.uiState.showingSaveDialog = false
+        menuBar.uiState.showingOpenDialog = false
     }
 
     override fun markFileAsChanged() {

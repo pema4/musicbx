@@ -73,7 +73,7 @@ fun ApplicationScope.App(
         EditorTheme {
             AppWindow {
                 AppMenuBar()
-                AppDialogWindows()
+                AppDialogs()
                 AppWindowContent()
             }
         }
@@ -220,11 +220,12 @@ private fun HandleScope.VerticalHandle() {
 }
 
 @Composable
-private fun AppDialogWindows(
+private fun AppDialogs(
     viewModel: AppViewModel = AppContext.appViewModel,
 ) {
     val menuBarState = viewModel.menuBar.uiState
 
+    println("Open dialog: ${menuBarState.showingOpenDialog}")
     if (menuBarState.showingOpenDialog) {
         FileDialog(
             title = "Choose a file",
