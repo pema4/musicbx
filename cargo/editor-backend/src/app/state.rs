@@ -8,9 +8,9 @@ use musicbx::types::patch::Cable;
 use crate::app::delegate::{AppDelegate, CpalAppDelegate};
 use crate::model::configuration::IOConfiguration;
 use crate::nodes::{
-    AddNodeDescription, AmpNodeDescription, HardClipNodeDescription, MulNodeDescription, Node,
-    NodeFactory, NodeInfo, NoiseNodeDescription, OutputNodeDescription, SimpleSawNodeDescription,
-    SinNodeDescription, TestFmNodeDescription,
+    AddNodeDescription, AmpNodeDescription, HardClipNodeDescription, MulNodeDescription,
+    NodeFactory, NodeInfo, NodeWrapper, NoiseNodeDescription, OutputNodeDescription,
+    SimpleSawNodeDescription, SinNodeDescription, TestFmNodeDescription,
 };
 use crate::util::Observable;
 use crate::{App, AppMsg};
@@ -20,7 +20,7 @@ pub struct AppState {
     delegate: Box<dyn AppDelegate>,
     available_nodes: Observable<Vec<Box<dyn NodeFactory>>>,
     configuration: Observable<IOConfiguration>,
-    nodes: HashMap<usize, Box<dyn Node>>,
+    nodes: HashMap<usize, Box<dyn NodeWrapper>>,
     cables: Vec<Cable>,
     parameters: HashMap<(usize, u8), f32>,
 }

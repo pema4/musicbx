@@ -5,9 +5,11 @@ use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 
 use musicbx::std::osc::{SimpleSawOsc, SimpleSawOscParameters};
-use musicbx::{DataMut, DataRef, FromSampleRate};
+use musicbx::{DataMut, DataRef, FromSampleRate, Node};
 
-use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind};
+use crate::nodes::{
+    Description, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind, NodeWrapper,
+};
 
 pub struct SimpleSawNodeDescription;
 
@@ -20,7 +22,7 @@ impl NodeFactory for SimpleSawNodeDescription {
         &INFO
     }
 
-    fn create_instance(&self, id: usize) -> Box<dyn Node> {
+    fn create_instance(&self, id: usize) -> Box<dyn NodeWrapper> {
         Box::new(SimpleSawNode {
             id,
             ..SimpleSawNode::default()
@@ -44,7 +46,7 @@ pub struct SimpleSawNode {
     node_index: Option<NodeIndex>,
 }
 
-impl Node for SimpleSawNode {
+impl NodeWrapper for SimpleSawNode {
     fn id(&self) -> usize {
         self.id
     }

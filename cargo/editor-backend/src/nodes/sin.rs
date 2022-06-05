@@ -5,9 +5,11 @@ use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 
 use musicbx::std::osc::{SinOsc, SinOscParameters};
-use musicbx::{DataMut, DataRef, FromSampleRate};
+use musicbx::{DataMut, DataRef, FromSampleRate, Node};
 
-use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind};
+use crate::nodes::{
+    Description, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind, NodeWrapper,
+};
 
 pub struct SinNodeDescription;
 
@@ -20,7 +22,7 @@ impl NodeFactory for SinNodeDescription {
         &INFO
     }
 
-    fn create_instance(&self, id: usize) -> Box<dyn Node> {
+    fn create_instance(&self, id: usize) -> Box<dyn NodeWrapper> {
         Box::new(SinOscNode {
             id,
             ..SinOscNode::default()
@@ -47,7 +49,7 @@ pub struct SinOscNode {
     sin_index: Option<NodeIndex>,
 }
 
-impl Node for SinOscNode {
+impl NodeWrapper for SinOscNode {
     fn id(&self) -> usize {
         self.id
     }

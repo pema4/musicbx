@@ -1,35 +1,30 @@
+use musicbx::Node;
 use musicbx_core::{DataMut, DataRef};
 use musicbx_types::{NodeDefinition, NodeInput, NodeOutput, NodeParameter, NodeParameterKind};
 
 #[derive(Default, Debug, Copy, Clone)]
 pub struct Add;
 
+#[derive(Default)]
 pub struct AddParameters<'a> {
     pub a: DataRef<'a>,
     pub b: DataRef<'a>,
     pub output: DataMut<'a>,
 }
 
-impl Default for AddParameters<'static> {
-    #[inline]
-    fn default() -> Self {
-        Self {
-            a: DataRef::Float(0.0),
-            b: DataRef::Float(0.0),
-            output: DataMut::Float(0.0),
-        }
-    }
-}
+impl<'a> Node<'a> for Add {
+    type Parameters = AddParameters<'a>;
 
-impl Add {
-    pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: AddParameters) {
+    fn process<const N: usize>(&mut self, n: usize, parameters: Self::Parameters) {
         let AddParameters { a, b, mut output } = parameters;
 
         for i in 0..n {
             output[i] = a[i] + b[i]
         }
     }
+}
 
+impl Add {
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
             uid: "musicbx::std::util::Add",

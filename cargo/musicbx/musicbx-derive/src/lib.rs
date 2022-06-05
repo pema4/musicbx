@@ -1,5 +1,6 @@
-use node::Routing;
 use syn::{parse_macro_input, DeriveInput};
+
+use node::Routing;
 
 mod from_sample_rate;
 mod node;

@@ -3,7 +3,7 @@ use petgraph::graph::NodeIndex;
 
 use musicbx::types::{NodeDefinition, NodeInput};
 
-use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo};
+use crate::nodes::{Description, NodeDescription, NodeFactory, NodeInfo, NodeWrapper};
 
 pub struct OutputNodeDescription;
 
@@ -16,7 +16,7 @@ impl NodeFactory for OutputNodeDescription {
         &INFO
     }
 
-    fn create_instance(&self, id: usize) -> Box<dyn Node> {
+    fn create_instance(&self, id: usize) -> Box<dyn NodeWrapper> {
         Box::new(OutputNode {
             id,
             node_index: None,
@@ -47,7 +47,7 @@ struct OutputNode {
     node_index: Option<NodeIndex>,
 }
 
-impl Node for OutputNode {
+impl NodeWrapper for OutputNode {
     fn id(&self) -> usize {
         self.id
     }

@@ -1,3 +1,4 @@
+use musicbx::Node;
 use musicbx_core::{DataMut, DataRef};
 use musicbx_types::{NodeDefinition, NodeInput, NodeOutput};
 
@@ -9,7 +10,7 @@ pub struct HardClipParameters<'a> {
     pub output: DataMut<'a>,
 }
 
-impl Default for HardClipParameters<'static> {
+impl<'a> Default for HardClipParameters<'a> {
     #[inline]
     fn default() -> Self {
         Self {
@@ -19,9 +20,11 @@ impl Default for HardClipParameters<'static> {
     }
 }
 
-impl HardClip {
-    pub fn process<'a, const N: usize>(&mut self, n: usize, parameters: HardClipParameters) {
-        let HardClipParameters { input, mut output } = parameters;
+impl<'a> Node<'a> for HardClip {
+    type Parameters = HardClipParameters<'a>;
+
+    fn process<const N: usize>(&mut self, n: usize, parameters: Self::Parameters) {
+        let Self::Parameters { input, mut output } = parameters;
 
         for i in 0..n {
             output[i] = if input[i] <= -1.0 {
@@ -33,7 +36,9 @@ impl HardClip {
             }
         }
     }
+}
 
+impl HardClip {
     pub const fn definition() -> NodeDefinition {
         NodeDefinition {
             uid: "musicbx::std::util::HardClip",

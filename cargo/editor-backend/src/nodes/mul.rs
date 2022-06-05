@@ -5,9 +5,11 @@ use hashbrown::HashMap;
 use petgraph::prelude::NodeIndex;
 
 use musicbx::std::util::{Mul, MulParameters};
-use musicbx::{DataMut, DataRef};
+use musicbx::{DataMut, DataRef, Node};
 
-use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind};
+use crate::nodes::{
+    Description, NodeDescription, NodeFactory, NodeInfo, NodeParameterKind, NodeWrapper,
+};
 
 pub struct MulNodeDescription;
 
@@ -20,7 +22,7 @@ impl NodeFactory for MulNodeDescription {
         &INFO
     }
 
-    fn create_instance(&self, id: usize) -> Box<dyn Node> {
+    fn create_instance(&self, id: usize) -> Box<dyn NodeWrapper> {
         Box::new(MulNode {
             id,
             ..MulNode::default()
@@ -47,7 +49,7 @@ pub struct MulNode {
     node_index: Option<NodeIndex>,
 }
 
-impl Node for MulNode {
+impl NodeWrapper for MulNode {
     fn id(&self) -> usize {
         self.id
     }

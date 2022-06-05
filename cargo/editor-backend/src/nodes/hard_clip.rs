@@ -5,9 +5,9 @@ use hashbrown::HashMap;
 use petgraph::prelude::NodeIndex;
 
 use musicbx::std::util::{HardClip, HardClipParameters};
-use musicbx::{DataMut, DataRef, FromSampleRate};
+use musicbx::{DataMut, DataRef, FromSampleRate, Node};
 
-use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo};
+use crate::nodes::{Description, NodeDescription, NodeFactory, NodeInfo, NodeWrapper};
 
 pub struct HardClipNodeDescription;
 
@@ -30,7 +30,7 @@ impl NodeFactory for HardClipNodeDescription {
         &INFO
     }
 
-    fn create_instance(&self, id: usize) -> Box<dyn Node> {
+    fn create_instance(&self, id: usize) -> Box<dyn NodeWrapper> {
         Box::new(HardClipNode {
             id,
             ..HardClipNode::default()
@@ -44,7 +44,7 @@ pub struct HardClipNode {
     node_index: Option<NodeIndex>,
 }
 
-impl Node for HardClipNode {
+impl NodeWrapper for HardClipNode {
     fn id(&self) -> usize {
         self.id
     }

@@ -5,9 +5,10 @@ use hashbrown::HashMap;
 use petgraph::graph::NodeIndex;
 
 use additional_nodes::test_fm::TestFm;
+use musicbx::Node;
 use musicbx::{DataMut, FromSampleRate};
 
-use crate::nodes::{Description, Node, NodeDescription, NodeFactory, NodeInfo};
+use crate::nodes::{Description, NodeDescription, NodeFactory, NodeInfo, NodeWrapper};
 
 pub struct TestFmNodeDescription;
 
@@ -20,7 +21,7 @@ impl NodeFactory for TestFmNodeDescription {
         &INFO
     }
 
-    fn create_instance(&self, id: usize) -> Box<dyn Node> {
+    fn create_instance(&self, id: usize) -> Box<dyn NodeWrapper> {
         Box::new(TestFmNode {
             id,
             ..TestFmNode::default()
@@ -44,7 +45,7 @@ pub struct TestFmNode {
     node_index: Option<NodeIndex>,
 }
 
-impl Node for TestFmNode {
+impl NodeWrapper for TestFmNode {
     fn id(&self) -> usize {
         self.id
     }

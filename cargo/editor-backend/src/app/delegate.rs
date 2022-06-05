@@ -1,5 +1,5 @@
-use crate::model::configuration::{DeviceConfiguration, SampleRateConfiguration};
-use crate::nodes::Node;
+use std::sync::{Arc, Mutex};
+
 use anyhow::anyhow;
 use cpal::{
     traits::{DeviceTrait, HostTrait, StreamTrait},
@@ -7,12 +7,20 @@ use cpal::{
     StreamError, SupportedStreamConfig,
 };
 use glicol_synth::{AudioContext, AudioContextBuilder};
-use std::sync::{Arc, Mutex};
+
+use crate::model::configuration::{DeviceConfiguration, SampleRateConfiguration};
+use crate::nodes::NodeWrapper;
 
 pub trait AppDelegate {
-    fn add_node(&self, node: &mut dyn Node);
-    fn connect_nodes(&self, from: &dyn Node, from_output: &str, to: &dyn Node, to_input: &str);
-    fn set_parameter(&self, node: &dyn Node, param_idx: u8, param_value: f32);
+    fn add_node(&self, node: &mut dyn NodeWrapper);
+    fn connect_nodes(
+        &self,
+        from: &dyn NodeWrapper,
+        from_output: &str,
+        to: &dyn NodeWrapper,
+        to_input: &str,
+    );
+    fn set_parameter(&self, node: &dyn NodeWrapper, param_idx: u8, param_value: f32);
     fn reset(&self);
     fn output_configuration(&self) -> DeviceConfiguration;
 }
@@ -27,9 +35,9 @@ impl Default for Box<dyn AppDelegate> {
 pub struct NoopAppDelegate;
 
 impl AppDelegate for NoopAppDelegate {
-    fn add_node(&self, _: &mut dyn Node) {}
-    fn connect_nodes(&self, _: &dyn Node, _: &str, _: &dyn Node, _: &str) {}
-    fn set_parameter(&self, _: &dyn Node, _: u8, _: f32) {}
+    fn add_node(&self, _: &mut dyn NodeWrapper) {}
+    fn connect_nodes(&self, _: &dyn NodeWrapper, _: &str, _: &dyn NodeWrapper, _: &str) {}
+    fn set_parameter(&self, _: &dyn NodeWrapper, _: u8, _: f32) {}
     fn reset(&self) {}
     fn output_configuration(&self) -> DeviceConfiguration {
         DeviceConfiguration {
@@ -198,19 +206,25 @@ fn start_audio_stream<T: Sample, const N: usize>(
 }
 
 impl AppDelegate for CpalAppDelegate {
-    fn add_node(&self, node: &mut dyn Node) {
+    fn add_node(&self, node: &mut dyn NodeWrapper) {
         let context = &mut self.context.lock().unwrap();
         node.add_to_context(context);
     }
 
-    fn connect_nodes(&self, from: &dyn Node, from_output: &str, to: &dyn Node, to_input: &str) {
+    fn connect_nodes(
+        &self,
+        from: &dyn NodeWrapper,
+        from_output: &str,
+        to: &dyn NodeWrapper,
+        to_input: &str,
+    ) {
         let from = from.output(from_output).unwrap();
         let (order, to) = to.input(to_input).unwrap();
         let context = &mut self.context.lock().unwrap();
         context.connect_with_order(from, to, order);
     }
 
-    fn set_parameter(&self, node: &dyn Node, param_idx: u8, param_value: f32) {
+    fn set_parameter(&self, node: &dyn NodeWrapper, param_idx: u8, param_value: f32) {
         let context = &mut self.context.lock().unwrap();
         node.set_parameter(context, param_idx, param_value);
     }
