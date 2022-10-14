@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 fun Modifier.diagonallyDraggable(
     key1: Any? = null,
     offset: DpOffset,
-    onChange: (DpOffset) -> Unit,
+    onChange: (DpOffset) -> Unit
 ): Modifier = composed {
     val coroutineScope = rememberCoroutineScope()
     var rawNodeOffset by remember(key1) { mutableStateOf(offset) }
@@ -59,20 +59,20 @@ fun Modifier.diagonallyDraggable(
                     coroutineScope.launch { appliedOffsetFraction.animateTo(1.0f) }
                 },
                 onDrag = { change, dragAmount ->
-                    change.consumeAllChanges()
+                    change.consume()
                     rawNodeOffset += DpOffset(dragAmount.x.toDp(), dragAmount.y.toDp())
                     val targetOffset = DpOffset(
                         x = rawNodeOffset.x.coerceAtLeast(0.dp),
-                        y = rawNodeOffset.y.coerceAtLeast(0.dp),
+                        y = rawNodeOffset.y.coerceAtLeast(0.dp)
                     )
                     onChange(targetOffset)
-                },
+                }
             )
         }
 }
 
 fun Modifier.pointerMoveFilter(
-    onMove: Density.(Offset) -> Boolean,
+    onMove: Density.(Offset) -> Boolean
 ): Modifier {
     return pointerInput(onMove) {
         awaitPointerEventScope {

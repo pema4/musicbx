@@ -25,7 +25,7 @@ class NodeViewModelImpl(
     expanded: Boolean = true,
     inputs: List<SocketState> = emptyList(),
     outputs: List<SocketState> = emptyList(),
-    parameters: List<ParameterState> = emptyList(),
+    parameters: List<ParameterState> = emptyList()
 ) : NodeViewModel {
     override var topStartOffset: DpOffset by mutableStateOf(offset)
     override var centerStartOffset: DpOffset by mutableStateOf(DpOffset.Unspecified)
@@ -39,13 +39,13 @@ class NodeViewModelImpl(
 
 fun NodeViewModelImpl(
     node: Node,
-    description: NodeDescription,
+    description: NodeDescription
 ): NodeViewModelImpl {
     val state = NodeViewModelImpl(
         model = node,
         description = description,
         offset = node.offset.toDpOffset(),
-        expanded = !node.collapsed,
+        expanded = !node.collapsed
     )
 
     description.inputs.mapTo(state.inputs) { SocketState(it) }
@@ -66,7 +66,7 @@ fun NodeViewModelImpl(
         ParameterState(
             model = it,
             current = ParameterValue(initial = initialValue, kind = it.kind, onChange = onChange),
-            default = ParameterValue(initial = it.default, kind = it.kind),
+            default = ParameterValue(initial = it.default, kind = it.kind)
         )
     }
 
@@ -78,8 +78,8 @@ fun NodeViewModel.toNode(): Node {
         offset = topStartOffset.toGridOffset(),
         parameterValues = parameters.associateBy(
             keySelector = { it.parameter.name },
-            valueTransform = { it.current.normalized.toString() },
+            valueTransform = { it.current.normalized.toString() }
         ),
-        collapsed = !isExpanded,
+        collapsed = !isExpanded
     )
 }

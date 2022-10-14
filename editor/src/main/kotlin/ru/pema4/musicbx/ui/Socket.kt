@@ -3,6 +3,7 @@ package ru.pema4.musicbx.ui
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.PointerMatcher
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -10,7 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.mouseClickable
+import androidx.compose.foundation.onClick
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collect
@@ -38,7 +39,7 @@ import ru.pema4.musicbx.util.pointerHoverTip
 
 @Stable
 data class SocketState(
-    val model: Socket,
+    val model: Socket
 ) {
     var offsetInNode by mutableStateOf(DpOffset.Zero)
     var hoverInteractionSource = MutableInteractionSource()
@@ -48,7 +49,7 @@ data class SocketState(
 @Composable
 fun SocketView(
     state: SocketState,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val nodeId = AppContext.nodeViewModel.id
     val socketEnd = when (state.model) {
@@ -78,15 +79,18 @@ fun SocketView(
     Canvas(
         modifier = modifier
             .size(24.dp)
-            .mouseClickable {
-                when {
-                    buttons.isSecondaryPressed -> editor.editCable(socketEnd)
-                    else -> editor.createCable(socketEnd)
-                }
-                app.markFileAsChanged()
+            .onClick(
+                matcher = PointerMatcher.mouse(PointerButton.Secondary)
+            ) {
+                editor.editCable(socketEnd)
+            }
+            .onClick(
+                matcher = PointerMatcher.Primary
+            ) {
+                editor.createCable(socketEnd)
             }
             .hoverable(state.hoverInteractionSource)
-            .pointerHoverTip("${state.model.description}. Left Click to connect. Right Click to disconnect"),
+            .pointerHoverTip("${state.model.description}. Left Click to connect. Right Click to disconnect")
     ) {
         drawCircle(color = color)
         drawCircle(

@@ -17,7 +17,7 @@ private val themeDetector = OsThemeDetector.getDetector()
 @Composable
 fun EditorTheme(
     preferredTheme: PreferredTheme = AppContext.preferences.theme,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val isDarkTheme = when (preferredTheme) {
         PreferredTheme.Dark -> true
@@ -26,7 +26,7 @@ fun EditorTheme(
     }
 
     MaterialTheme(
-        colors = if (isDarkTheme) darkColors() else lightColors(),
+        colors = if (isDarkTheme) darkColors() else lightColors()
     ) {
         content()
     }

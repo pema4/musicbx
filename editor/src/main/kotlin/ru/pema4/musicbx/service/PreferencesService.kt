@@ -51,5 +51,5 @@ private fun String.toPreferredTheme(): PreferredTheme {
 
 private class NoOpPreferencesService(
     override var theme: PreferredTheme = PreferredTheme.Auto,
-    override var zoom: Zoom = Zoom.Default,
+    override var zoom: Zoom = Zoom.Default
 ) : PreferencesService

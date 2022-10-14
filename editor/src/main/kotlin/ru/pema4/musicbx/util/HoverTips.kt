@@ -37,17 +37,17 @@ class MutableHoverTipManager : HoverTipManager {
 @Composable
 fun HoverTipManagerProvider(
     hoverTipManager: HoverTipManager? = LocalHoverTipManager.current,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     CompositionLocalProvider(
-        LocalHoverTipManager provides hoverTipManager,
+        LocalHoverTipManager provides hoverTipManager
     ) {
         content()
     }
 }
 
 fun Modifier.pointerHoverTip(
-    text: String? = null,
+    text: String? = null
 ): Modifier = composed {
     val tooltipManager = LocalHoverTipManager.current
     if (tooltipManager !is MutableHoverTipManager) {

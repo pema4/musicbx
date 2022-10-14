@@ -22,7 +22,7 @@ data class NodeDescription(
     val summary: String,
     val inputs: List<InputSocket> = emptyList(),
     val outputs: List<OutputSocket> = emptyList(),
-    val parameters: List<NodeParameter> = emptyList(),
+    val parameters: List<NodeParameter> = emptyList()
 )
 
 val TestNodeDescription = NodeDescription(
@@ -31,9 +31,9 @@ val TestNodeDescription = NodeDescription(
     summary = "Oscillator",
     inputs = listOf(
         InputSocket(0),
-        InputSocket(1),
+        InputSocket(1)
     ),
     outputs = listOf(
-        OutputSocket(0),
-    ),
+        OutputSocket(0)
+    )
 )

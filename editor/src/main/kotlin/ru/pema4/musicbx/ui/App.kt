@@ -31,7 +31,6 @@ import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.splitpane.ExperimentalSplitPaneApi
-import org.jetbrains.compose.splitpane.HandleScope
 import org.jetbrains.compose.splitpane.HorizontalSplitPane
 import ru.pema4.musicbx.model.patch.TestPatch
 import ru.pema4.musicbx.service.AvailableNodesService
@@ -47,7 +46,6 @@ import java.awt.Cursor
 import java.nio.file.Path
 import kotlin.io.path.nameWithoutExtension
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
 
 @Stable
 interface AppViewModel {
@@ -67,7 +65,7 @@ interface AppViewModel {
 
 @Composable
 fun ApplicationScope.App(
-    viewModel: AppViewModel = rememberAppViewModel(),
+    viewModel: AppViewModel = rememberAppViewModel()
 ) {
     AppContext(appViewModel = viewModel) {
         EditorTheme {
@@ -83,7 +81,7 @@ fun ApplicationScope.App(
 @Composable
 fun ApplicationScope.AppWindow(
     viewModel: AppViewModel = AppContext.appViewModel,
-    content: @Composable FrameWindowScope.() -> Unit,
+    content: @Composable FrameWindowScope.() -> Unit
 ) {
     val title by remember {
         derivedStateOf {
@@ -101,21 +99,21 @@ fun ApplicationScope.AppWindow(
     Window(
         onCloseRequest = ::exitApplication,
         title = title,
-        content = content,
+        content = content
     )
 }
 
 @Composable
 fun AppWindowContent(
     viewModel: AppViewModel = AppContext.appViewModel,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     AppWindowLayout(
         sideBar = {
             NodeGalleryView(
                 appViewModel = viewModel,
                 modifier = Modifier
-                    .fillMaxSize(),
+                    .fillMaxSize()
             )
         },
         editor = {
@@ -130,12 +128,12 @@ fun AppWindowContent(
 
                 EditorTipArea(
                     appViewModel = viewModel,
-                    modifier = Modifier.pointerHoverTip(),
+                    modifier = Modifier.pointerHoverTip()
                 )
             }
         },
         modifier = modifier
-            .background(MaterialTheme.colors.background),
+            .background(MaterialTheme.colors.background)
     )
 }
 
@@ -146,10 +144,10 @@ fun AppWindowLayout(
     editor: @Composable ColumnScope.() -> Unit,
     firstPaneMinSize: Dp = 300.dp,
     secondPanelMinSize: Dp = 100.dp,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     HorizontalSplitPane(
-        modifier = modifier,
+        modifier = modifier
     ) {
         first(firstPaneMinSize) {
             sideBar()
@@ -171,15 +169,16 @@ fun AppWindowLayout(
             }
 
             handle {
-                VerticalHandle()
+                VerticalHandle(modifier = Modifier.markAsHandle())
             }
         }
     }
 }
 
-@OptIn(ExperimentalTime::class, ExperimentalSplitPaneApi::class)
 @Composable
-private fun HandleScope.VerticalHandle() {
+private fun VerticalHandle(
+    modifier: Modifier = Modifier
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     val transparency = remember { Animatable(0.0f) }
@@ -202,8 +201,7 @@ private fun HandleScope.VerticalHandle() {
     }
 
     Spacer(
-        modifier = Modifier
-            .markAsHandle()
+        modifier = modifier
             .hoverable(interactionSource)
             .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
             .background(bigDividerColor)
@@ -221,7 +219,7 @@ private fun HandleScope.VerticalHandle() {
 
 @Composable
 private fun AppDialogs(
-    viewModel: AppViewModel = AppContext.appViewModel,
+    viewModel: AppViewModel = AppContext.appViewModel
 ) {
     val menuBarState = viewModel.menuBar.uiState
 
@@ -229,7 +227,7 @@ private fun AppDialogs(
     if (menuBarState.showingOpenDialog) {
         FileDialog(
             title = "Choose a file",
-            mode = FileDialogMode.Load,
+            mode = FileDialogMode.Load
         ) { path ->
             viewModel.open(path)
         }
@@ -238,7 +236,7 @@ private fun AppDialogs(
     if (menuBarState.showingSaveDialog) {
         FileDialog(
             title = "Saving a file",
-            mode = FileDialogMode.Save,
+            mode = FileDialogMode.Save
         ) { path ->
             viewModel.save(path)
         }

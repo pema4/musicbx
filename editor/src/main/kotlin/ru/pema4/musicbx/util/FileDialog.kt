@@ -15,7 +15,7 @@ fun FileDialog(
     mode: FileDialogMode,
     directory: Path? = null,
     parent: Frame? = null,
-    onCloseRequest: (result: Path?) -> Unit,
+    onCloseRequest: (result: Path?) -> Unit
 ) = AwtWindow(
     create = {
         object : FileDialog(parent, title, mode.awtMode) {
@@ -40,7 +40,7 @@ fun FileDialog(
 )
 
 enum class FileDialogMode(
-    val awtMode: Int,
+    val awtMode: Int
 ) {
     Load(FileDialog.LOAD),
     Save(FileDialog.SAVE)

@@ -11,12 +11,12 @@ import kotlin.random.Random
 @Serializable
 data class Patch(
     val nodes: List<Node>,
-    val cables: List<Cable>,
+    val cables: List<Cable>
 ) {
     companion object Constants {
         val Initial = Patch(
             nodes = emptyList(),
-            cables = emptyList(),
+            cables = emptyList()
         )
     }
 }
@@ -25,7 +25,7 @@ val TestPatch = Patch(
     nodes = listOf(
         Node(
             id = 0,
-            uid = TestNodeDescription.uid,
+            uid = TestNodeDescription.uid
         ),
         Node(
             id = 1,
@@ -41,7 +41,7 @@ val TestPatch = Patch(
     cables = listOf(
         Cable(
             from = CableFrom(nodeId = 1, socketName = "out"),
-            to = CableTo(nodeId = 0, socketName = "in"),
+            to = CableTo(nodeId = 0, socketName = "in")
         )
-    ),
+    )
 )

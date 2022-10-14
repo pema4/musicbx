@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Cable(
     val from: CableFrom,
-    val to: CableTo,
+    val to: CableTo
 )
 
 @Immutable
@@ -23,7 +23,7 @@ data class CableFrom(
     @SerialName("node_id")
     override val nodeId: Int,
     @SerialName("socket_name")
-    override val socketName: String,
+    override val socketName: String
 ) : CableEnd
 
 @Immutable
@@ -32,5 +32,5 @@ data class CableTo(
     @SerialName("node_id")
     override val nodeId: Int,
     @SerialName("socket_name")
-    override val socketName: String,
+    override val socketName: String
 ) : CableEnd

@@ -13,7 +13,7 @@ value class GridSize(val number: Int)
 @Serializable
 data class GridOffset(
     val x: GridSize,
-    val y: GridSize,
+    val y: GridSize
 ) {
     companion object Constants {
         val Zero = GridOffset(x = GridSize(0), y = GridSize(0))

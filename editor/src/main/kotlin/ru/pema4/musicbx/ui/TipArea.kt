@@ -17,8 +17,8 @@ import ru.pema4.musicbx.util.LocalHoverTipManager
 
 @Composable
 fun EditorTipArea(
-    appViewModel: AppViewModel,
-    modifier: Modifier = Modifier,
+    appViewModel: AppViewModel = AppContext.appViewModel,
+    modifier: Modifier = Modifier
 ) {
     val outputSettings by appViewModel.configuration.output.collectAsState()
     val sampleRate = outputSettings.sampleRate?.current.toString()
@@ -27,7 +27,7 @@ fun EditorTipArea(
         modifier = modifier
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         TipArea()
 
@@ -41,7 +41,7 @@ fun EditorTipArea(
                     style = MaterialTheme.typography.body2,
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .padding(end = 4.dp),
+                        .padding(end = 4.dp)
                 )
             }
         }
@@ -51,12 +51,12 @@ fun EditorTipArea(
 @Composable
 fun TipArea(
     tip: String? = LocalHoverTipManager.current?.activeTooltip,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     Text(
         text = tip.orEmpty(),
         color = MaterialTheme.colors.onSurface,
         style = MaterialTheme.typography.body2,
-        modifier = modifier.padding(4.dp),
+        modifier = modifier.padding(4.dp)
     )
 }

@@ -67,7 +67,7 @@ interface EditorState {
 @Composable
 fun EditorView(
     viewModel: EditorViewModel,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val uiState = viewModel.uiState
 
@@ -92,7 +92,7 @@ fun EditorView(
                     false
                 }
             ),
-        hideHorizontalScrollbarAutomatically = true,
+        hideHorizontalScrollbarAutomatically = true
     ) {
         val scale = AppContext.preferences.zoom.scale
 
@@ -115,7 +115,7 @@ fun EditorView(
 @Composable
 private fun ScaledLayout(
     scale: Float = AppContext.preferences.zoom.scale,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val measurePolicy = remember(scale) {
         MeasurePolicy { measurables, constraints ->
@@ -141,7 +141,7 @@ private fun EditorContentView() {
 
 @Composable
 private fun EditorNodesView(
-    viewModel: EditorViewModel = AppContext.editorViewModel,
+    viewModel: EditorViewModel = AppContext.editorViewModel
 ) {
     for ((id, nodeViewModel) in viewModel.nodes) {
         key(id) {
@@ -179,7 +179,7 @@ private fun EditorNodesView(
 
 @Composable
 private fun EditorCablesView(
-    viewModel: EditorViewModel = AppContext.editorViewModel,
+    viewModel: EditorViewModel = AppContext.editorViewModel
 ) {
     for (cable in viewModel.cables) {
         key(cable.from.end, cable.to.end) {
@@ -190,7 +190,7 @@ private fun EditorCablesView(
 
 @Composable
 private fun EditorDraftCableView(
-    viewModel: EditorViewModel = AppContext.editorViewModel,
+    viewModel: EditorViewModel = AppContext.editorViewModel
 ) {
     val draftCable = viewModel.draftCable
     if (draftCable != null) {

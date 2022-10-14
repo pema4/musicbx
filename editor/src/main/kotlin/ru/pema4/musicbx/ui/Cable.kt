@@ -29,7 +29,7 @@ import ru.pema4.musicbx.model.patch.CableTo
 
 @Composable
 fun CableView(
-    state: CableState,
+    state: CableState
 ) {
     val hoverInteractionSource = remember { MutableInteractionSource() }
     val isHovered by hoverInteractionSource.collectIsHoveredAsState()
@@ -47,7 +47,7 @@ fun CableView(
             lerp(
                 MaterialTheme.colors.onSurface,
                 Color.Red,
-                0.8f,
+                0.8f
             )
         }
         else -> MaterialTheme.colors.onSurface
@@ -74,13 +74,13 @@ fun CableView(
                 color = color,
                 start = from,
                 end = to,
-                strokeWidth = 3.dp.toPx(),
+                strokeWidth = 3.dp.toPx()
             )
 
             drawCircle(
                 color = color,
                 center = from,
-                radius = 5.dp.toPx(),
+                radius = 5.dp.toPx()
             )
         }
     }
@@ -106,13 +106,13 @@ fun CableView(
                 color = color,
                 start = to,
                 end = from,
-                strokeWidth = 3.dp.toPx(),
+                strokeWidth = 3.dp.toPx()
             )
 
             drawCircle(
                 color = color,
                 center = to,
-                radius = 5.dp.toPx(),
+                radius = 5.dp.toPx()
             )
         }
     }
@@ -137,7 +137,7 @@ sealed interface CableEndState {
 class CableFromState(
     override val end: CableFrom,
     offsetCalculation: () -> DpOffset,
-    override val zIndex: Float,
+    override val zIndex: Float
 ) : CableEndState {
     override val offset: DpOffset by derivedStateOf(offsetCalculation)
 }
@@ -145,7 +145,7 @@ class CableFromState(
 class CableToState(
     override val end: CableTo,
     offsetCalculation: () -> DpOffset,
-    override val zIndex: Float,
+    override val zIndex: Float
 ) : CableEndState {
     override val offset: DpOffset by derivedStateOf(offsetCalculation)
 }
@@ -153,7 +153,7 @@ class CableToState(
 @Stable
 data class FullCableState(
     override val from: CableFromState,
-    override val to: CableToState,
+    override val to: CableToState
 ) : CableState {
     var isHovered by mutableStateOf(false)
 }
@@ -162,7 +162,7 @@ data class FullCableState(
 class DraftCableState(
     override val from: CableFromState?,
     override val to: CableToState?,
-    cursorOffsetCalculation: () -> DpOffset,
+    cursorOffsetCalculation: () -> DpOffset
 ) : CableState {
     val cursorOffset: DpOffset by derivedStateOf(cursorOffsetCalculation)
 }
@@ -171,7 +171,7 @@ fun DraftCableState.toFullCableStateOrNull(): FullCableState? {
     return if (from != null && to != null) {
         return FullCableState(
             from = from,
-            to = to,
+            to = to
         )
     } else {
         null

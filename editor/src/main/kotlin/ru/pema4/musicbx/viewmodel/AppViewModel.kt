@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -23,7 +22,7 @@ import kotlin.io.path.writeText
 
 @Composable
 fun rememberAppViewModel(
-    initialPatch: Patch = Patch.Initial,
+    initialPatch: Patch = Patch.Initial
 ): AppViewModel {
     return remember {
         AppViewModelImpl(
@@ -31,7 +30,7 @@ fun rememberAppViewModel(
             preferences = PreferencesService.Default,
             configuration = ConfigurationService.Native,
             availableNodesService = AvailableNodesService.Native,
-            editorService = EditorService.Native,
+            editorService = EditorService.Native
         )
     }
 }
@@ -42,12 +41,12 @@ private class AppViewModelImpl(
     override val preferences: PreferencesService = PreferencesService.Unspecified,
     override val configuration: ConfigurationService = ConfigurationService.Unspecified,
     override val availableNodesService: AvailableNodesService = AvailableNodesService.Unspecified,
-    private val editorService: EditorService = EditorService.Unspecified,
+    private val editorService: EditorService = EditorService.Unspecified
 ) : AppViewModel {
     override var editor: EditorViewModelImpl by run {
         val editorViewModel = EditorViewModelImpl(
             patch = initialPatch,
-            editorService = editorService,
+            editorService = editorService
         )
         mutableStateOf(editorViewModel)
     }

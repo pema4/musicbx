@@ -16,15 +16,9 @@
 
 package androidx.compose.ui.util
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshots.SnapshotStateObserver
-import kotlinx.coroutines.channels.Channel
 
+/*
 /**
  * When [UpdateEffect] enters the composition it will call [update] and will capture all state
  * which is used in this function.
@@ -54,7 +48,7 @@ fun UpdateEffect(update: () -> Unit) {
         fun performUpdate() {
             snapshotObserver.observeReads(
                 Unit,
-                onValueChangedForScope = onValueChangedForScope,
+                onValueChangedForScope = onValueChangedForScope
             ) {
                 currentUpdate()
             }
@@ -69,3 +63,4 @@ fun UpdateEffect(update: () -> Unit) {
         }
     }
 }
+*/

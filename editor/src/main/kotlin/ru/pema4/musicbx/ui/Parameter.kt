@@ -35,19 +35,19 @@ import ru.pema4.musicbx.util.pointerHoverTip
 @Composable
 fun ParameterView(
     state: ParameterState,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val current = state.current
 
     Row(
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         var showDropdown by remember { mutableStateOf(false) }
 
         Text(
             text = state.parameter.name,
             style = MaterialTheme.typography.body1,
-            modifier = Modifier.clickable { showDropdown = true },
+            modifier = Modifier.clickable { showDropdown = true }
         )
 
         ParameterValueDropdown(
@@ -58,7 +58,7 @@ fun ParameterView(
                     current.text = lastValidValue
                 }
                 showDropdown = false
-            },
+            }
         )
 
         Spacer(modifier.width(8.dp))
@@ -78,14 +78,14 @@ private fun ParameterValueDropdown(
     state: ParameterState,
     enabled: Boolean,
     onDismissRequest: (lastValidValue: String?) -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val initialText = state.current.text
     var textFieldValue by remember(initialText) {
         mutableStateOf(
             TextFieldValue(
                 text = initialText,
-                selection = TextRange(0, Int.MAX_VALUE),
+                selection = TextRange(0, Int.MAX_VALUE)
             )
         )
     }
@@ -133,7 +133,7 @@ interface ParameterState {
 fun ParameterState(
     model: NodeParameter,
     current: ParameterValue,
-    default: ParameterValue,
+    default: ParameterValue
 ): ParameterState {
     return object : ParameterState {
         override val parameter: NodeParameter = model
@@ -152,7 +152,7 @@ fun ParameterValue(
     initialNormalized: Float,
     toDisplay: (Float) -> String = Any::toString,
     toNormalized: (String) -> Float = String::toFloat,
-    onChange: (Float) -> Unit = {},
+    onChange: (Float) -> Unit = {}
 ): ParameterValue {
     return object : ParameterValue {
         var _normalized: Float by mutableStateOf(initialNormalized)
@@ -176,12 +176,12 @@ fun ParameterValue(
 fun ParameterValue(
     initial: String,
     kind: NodeParameterKind,
-    onChange: (Float) -> Unit = {},
+    onChange: (Float) -> Unit = {}
 ): ParameterValue {
     return ParameterValue(
         initialNormalized = kind.normalize(initial),
         toDisplay = kind::display,
         toNormalized = kind::normalize,
-        onChange = onChange,
+        onChange = onChange
     )
 }
