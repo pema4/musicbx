@@ -59,50 +59,50 @@ fun FrameWindowScope.AppMenuBar() {
 
 @Composable
 private fun MenuScope.New(
-    viewModel: AppViewModel = AppContext.appViewModel,
+    viewModel: AppViewModel = AppContext.appViewModel
 ) {
     Item(
         text = "New patch",
-        onClick = viewModel::reset,
+        onClick = viewModel::reset
     )
 }
 
 @Composable
 private fun MenuScope.Open(
-    viewModel: MenuBarViewModel = AppContext.menuBarViewModel,
+    viewModel: MenuBarViewModel = AppContext.menuBarViewModel
 ) {
     Item(
         text = "Open...",
         shortcut = KeyShortcut(Key.O, meta = true),
-        onClick = viewModel::showOpenDialog,
+        onClick = viewModel::showOpenDialog
     )
 }
 
 @Composable
 private fun MenuScope.Save(
-    viewModel: MenuBarViewModel = AppContext.menuBarViewModel,
+    viewModel: MenuBarViewModel = AppContext.menuBarViewModel
 ) {
     Item(
         text = "Save",
         shortcut = KeyShortcut(Key.S, meta = true),
-        onClick = viewModel::showSaveDialog,
+        onClick = viewModel::showSaveDialog
     )
 }
 
 @Composable
 private fun MenuScope.SaveAs(
-    viewModel: MenuBarViewModel = AppContext.menuBarViewModel,
+    viewModel: MenuBarViewModel = AppContext.menuBarViewModel
 ) {
     Item(
         text = "Save As...",
         shortcut = KeyShortcut(Key.S, meta = true, shift = true),
-        onClick = viewModel::showSaveAsDialog,
+        onClick = viewModel::showSaveAsDialog
     )
 }
 
 @Composable
 private fun MenuScope.AppearanceSelection(
-    preferences: PreferencesService = AppContext.preferences,
+    preferences: PreferencesService = AppContext.preferences
 ) {
     var theme by preferences::theme
 
@@ -110,50 +110,50 @@ private fun MenuScope.AppearanceSelection(
         RadioButtonItem(
             text = "System Theme",
             selected = theme == PreferredTheme.Auto,
-            onClick = { theme = PreferredTheme.Auto },
+            onClick = { theme = PreferredTheme.Auto }
         )
         RadioButtonItem(
             text = "Light Theme",
             selected = theme == PreferredTheme.Light,
-            onClick = { theme = PreferredTheme.Light },
+            onClick = { theme = PreferredTheme.Light }
         )
         RadioButtonItem(
             text = "Dark Theme",
             selected = theme == PreferredTheme.Dark,
-            onClick = { theme = PreferredTheme.Dark },
+            onClick = { theme = PreferredTheme.Dark }
         )
     }
 }
 
 @Composable
 private fun MenuScope.ZoomIn(
-    preferences: PreferencesService = AppContext.preferences,
+    preferences: PreferencesService = AppContext.preferences
 ) {
     var zoom by preferences::zoom
 
     Item(
         text = "Zoom In",
         shortcut = KeyShortcut(Key.Equals, meta = true),
-        onClick = { zoom = zoom.increase() },
+        onClick = { zoom = zoom.increase() }
     )
 }
 
 @Composable
 private fun MenuScope.ZoomOut(
-    preferences: PreferencesService = AppContext.preferences,
+    preferences: PreferencesService = AppContext.preferences
 ) {
     var zoom by preferences::zoom
 
     Item(
         text = "Zoom Out",
         shortcut = KeyShortcut(Key.Minus, meta = true),
-        onClick = { zoom = zoom.decrease() },
+        onClick = { zoom = zoom.decrease() }
     )
 }
 
 @Composable
 private fun MenuScope.ActualSize(
-    preferences: PreferencesService = AppContext.preferences,
+    preferences: PreferencesService = AppContext.preferences
 ) {
     var zoom by preferences::zoom
 
@@ -161,19 +161,19 @@ private fun MenuScope.ActualSize(
         text = "Actual Size",
         enabled = abs(zoom.scale - 1.0f) > 1e-5,
         shortcut = KeyShortcut(Key.Zero, meta = true),
-        onClick = { zoom = Zoom.Default },
+        onClick = { zoom = Zoom.Default }
     )
 }
 
 @Composable
 private fun MenuScope.OutputSelection(
-    configuration: ConfigurationService = AppContext.configuration,
+    configuration: ConfigurationService = AppContext.configuration
 ) {
     val outputs by configuration.output.collectAsState()
 
     Menu(
         text = "Select Output...",
-        enabled = outputs.available.isNotEmpty(),
+        enabled = outputs.available.isNotEmpty()
     ) {
         for (output in outputs.available) {
             RadioButtonItem(
@@ -187,7 +187,7 @@ private fun MenuScope.OutputSelection(
 
         Item(
             text = "Refresh",
-            onClick = { configuration.refresh() },
+            onClick = { configuration.refresh() }
         )
     }
 }

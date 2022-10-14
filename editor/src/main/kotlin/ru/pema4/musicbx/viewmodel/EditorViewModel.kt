@@ -34,7 +34,7 @@ import ru.pema4.musicbx.ui.toFullCableStateOrNull
 class EditorViewModelImpl(
     nodes: Collection<NodeViewModel> = emptyList(),
     cables: Collection<FullCableState> = emptyList(),
-    private val editorService: EditorService = EditorService.Unspecified,
+    private val editorService: EditorService = EditorService.Unspecified
 ) : EditorViewModel {
     override val uiState = EditorStateImpl()
     override val nodes: SnapshotStateMap<Int, NodeViewModel> = nodes
@@ -63,9 +63,9 @@ class EditorViewModelImpl(
             cables = cables.map { (from, to) ->
                 Cable(
                     from = from.end,
-                    to = to.end,
+                    to = to.end
                 )
-            },
+            }
         )
     }
 
@@ -90,13 +90,13 @@ class EditorViewModelImpl(
                     )
                 }
                 ?: draftCable?.to,
-            cursorOffsetCalculation = uiState::cursorOffset,
+            cursorOffsetCalculation = uiState::cursorOffset
         )
 
         val newCable = draftCable?.toFullCableStateOrNull() ?: return
         editorService.connectNodes(
             from = newCable.from.end,
-            to = newCable.to.end,
+            to = newCable.to.end
         )
 
         draftCable = null
@@ -113,13 +113,13 @@ class EditorViewModelImpl(
 
         editorService.disconnectNodes(
             from = editedCable.from.end,
-            to = editedCable.to.end,
+            to = editedCable.to.end
         )
 
         draftCable = DraftCableState(
             from = editedCable.from.takeIf { it.end != end },
             to = editedCable.to.takeIf { it.end != end },
-            cursorOffsetCalculation = uiState::cursorOffset,
+            cursorOffsetCalculation = uiState::cursorOffset
         )
     }
 
@@ -134,13 +134,13 @@ class EditorViewModelImpl(
             editorService.setParameter(
                 nodeId = id,
                 parameterNum = parameter.number,
-                normalizedValue = parameter.kind.normalize(parameter.default),
+                normalizedValue = parameter.kind.normalize(parameter.default)
             )
         }
 
         nodes[id] = NodeViewModelImpl(
             node = editorService.activePatch.value.nodes.single { it.id == id },
-            description = description,
+            description = description
         )
     }
 
@@ -184,7 +184,7 @@ private fun EditorViewModelImpl.getSocketOffsetCalculation(cableEnd: CableEnd): 
 
 fun EditorViewModelImpl(
     patch: Patch,
-    editorService: EditorService,
+    editorService: EditorService
 ): EditorViewModelImpl {
     val viewModel = EditorViewModelImpl(editorService = editorService)
 
@@ -192,7 +192,7 @@ fun EditorViewModelImpl(
         .associateBy(Node::id) {
             NodeViewModelImpl(
                 node = it,
-                description = AvailableNodesService.Native.availableNodes.value.getValue(it.uid),
+                description = AvailableNodesService.Native.availableNodes.value.getValue(it.uid)
             )
         }
 

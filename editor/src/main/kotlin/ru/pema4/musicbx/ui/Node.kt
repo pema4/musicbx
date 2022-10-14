@@ -77,7 +77,7 @@ interface NodeViewModel {
 @Composable
 fun NodeView(
     viewModel: NodeViewModel,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     var layoutCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
 
@@ -93,7 +93,7 @@ fun NodeView(
                 .onGloballyPositioned { layoutCoordinates = it }
                 .pointerHoverTip(viewModel.description.summary),
             shape = RoundedCornerShape(8.dp),
-            elevation = elevation.value.dp,
+            elevation = elevation.value.dp
         ) {
             Column {
                 Row(
@@ -102,7 +102,7 @@ fun NodeView(
                     Text(
                         text = viewModel.description.name,
                         modifier = Modifier.weight(1.0f).padding(8.dp),
-                        style = MaterialTheme.typography.h6,
+                        style = MaterialTheme.typography.h6
                     )
 
                     Column(
@@ -140,7 +140,7 @@ fun NodeView(
 
                 NodeSettingsView(
                     viewModel = viewModel,
-                    parentLayoutCoordinates = layoutCoordinates,
+                    parentLayoutCoordinates = layoutCoordinates
                 )
             }
         }
@@ -150,12 +150,12 @@ fun NodeView(
 @Composable
 private fun NodeSettingsView(
     viewModel: NodeViewModel = AppContext.nodeViewModel,
-    parentLayoutCoordinates: LayoutCoordinates?,
+    parentLayoutCoordinates: LayoutCoordinates?
 ) {
     AnimatedVisibility(
         visible = viewModel.isExpanded,
         enter = expandVertically(),
-        exit = shrinkVertically(),
+        exit = shrinkVertically()
     ) {
         Divider()
         Column(
@@ -177,7 +177,7 @@ private fun NodeSettingsView(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom,
+                verticalAlignment = Alignment.Bottom
             ) {
                 NodeSocketsView(viewModel.inputs, parentLayoutCoordinates)
                 NodeSocketsView(viewModel.outputs, parentLayoutCoordinates)
@@ -189,7 +189,7 @@ private fun NodeSettingsView(
 @Composable
 private fun NodeSocketsView(
     sockets: List<SocketState>,
-    parentLayoutCoordinates: LayoutCoordinates?,
+    parentLayoutCoordinates: LayoutCoordinates?
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -209,7 +209,7 @@ private fun NodeSocketsView(
                                     DpOffset(x = offset.x.toDp(), y = offset.y.toDp())
                                 }
                             }
-                        },
+                        }
                 )
             }
         }
@@ -228,9 +228,9 @@ private fun NodeViewPreview() {
             val viewModel = NodeViewModelImpl(
                 node = Node(
                     id = 0,
-                    uid = TestNodeDescription.uid,
+                    uid = TestNodeDescription.uid
                 ),
-                description = TestNodeDescription,
+                description = TestNodeDescription
             )
             NodeView(viewModel)
         }

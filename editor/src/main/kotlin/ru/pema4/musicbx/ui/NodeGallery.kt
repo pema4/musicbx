@@ -23,7 +23,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.pema4.musicbx.model.config.NodeDescription
@@ -34,7 +33,7 @@ import ru.pema4.musicbx.util.pointerHoverTip
 @Composable
 fun NodeGalleryView(
     appViewModel: AppViewModel = AppContext.appViewModel,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     val descriptionsMap by appViewModel.availableNodesService.availableNodes.collectAsState()
     val descriptions by remember {
@@ -53,13 +52,13 @@ fun NodeGalleryView(
                 text = "Nodes Gallery",
                 modifier = Modifier.padding(8.dp),
                 color = MaterialTheme.colors.onBackground,
-                style = MaterialTheme.typography.h5,
+                style = MaterialTheme.typography.h5
             )
         },
         nodeListContent = {
             items(
                 count = descriptions.size,
-                key = { descriptions[it].uid },
+                key = { descriptions[it].uid }
             ) {
                 val description = descriptions[it]
                 val editor = AppContext.editorViewModel
@@ -71,7 +70,7 @@ fun NodeGalleryView(
                     },
                     modifier = Modifier
                         .pointerHoverTip(description.summary)
-                        .widthIn(max = 100.dp),
+                        .widthIn(max = 100.dp)
                 )
             }
         },
@@ -86,7 +85,7 @@ private fun NodeGalleryLayout(
     header: @Composable () -> Unit,
     nodeListContent: LazyListScope.() -> Unit,
     bottomBar: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     HoverTipManagerProvider(MutableHoverTipManager()) {
         Column(modifier = modifier.fillMaxWidth()) {
@@ -99,7 +98,7 @@ private fun NodeGalleryLayout(
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(8.dp),
-                content = nodeListContent,
+                content = nodeListContent
             )
 
             Divider(Modifier.fillMaxWidth(), thickness = Dp.Hairline)
@@ -113,21 +112,20 @@ private fun NodeGalleryLayout(
 private fun NodeCard(
     description: NodeDescription,
     onClick: () -> Unit = {},
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier
 ) {
     CompositionLocalProvider(
-        LocalMinimumTouchTargetEnforcement provides false,
+        LocalMinimumTouchTargetEnforcement provides false
     ) {
         Card(
             onClick = onClick,
             modifier = modifier,
-            shape = RoundedCornerShape(8.dp),
-            role = Role.Button,
+            shape = RoundedCornerShape(8.dp)
         ) {
             Text(
                 text = description.name,
                 modifier = Modifier.padding(8.dp),
-                style = MaterialTheme.typography.h6,
+                style = MaterialTheme.typography.h6
             )
         }
     }

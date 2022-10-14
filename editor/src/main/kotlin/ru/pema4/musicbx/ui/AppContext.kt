@@ -1,6 +1,5 @@
 package ru.pema4.musicbx.ui
 
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -12,12 +11,12 @@ object AppContext {
     val appViewModel: AppViewModel
         @Composable
         @ReadOnlyComposable
-        get() = LocalAppViewModel.current ?: error("AppViewModel is not provided")
+        get() = LocalAppViewModel.current ?: error("AppViewModel is not in the composition")
 
     val nodeViewModel: NodeViewModel
         @Composable
         @ReadOnlyComposable
-        get() = LocalNodeViewModel.current ?: error("NodeViewModel is not provided")
+        get() = LocalNodeViewModel.current ?: error("NodeViewModel is not in the composition")
 }
 
 val AppContext.editorViewModel: EditorViewModel
@@ -44,12 +43,11 @@ val AppContext.configuration: ConfigurationService
 fun AppContext(
     appViewModel: AppViewModel? = LocalAppViewModel.current,
     nodeViewModel: NodeViewModel? = LocalNodeViewModel.current,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
-    MaterialTheme { }
     CompositionLocalProvider(
         LocalAppViewModel provides appViewModel,
-        LocalNodeViewModel provides nodeViewModel,
+        LocalNodeViewModel provides nodeViewModel
     ) {
         content()
     }

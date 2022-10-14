@@ -26,7 +26,7 @@ interface EditorService {
 }
 
 private class NativeEditorService(
-    private val availableNodesService: AvailableNodesService = AvailableNodesService.Native,
+    private val availableNodesService: AvailableNodesService = AvailableNodesService.Native
 ) : EditorService {
     private val _activePatch = MutableStateFlow(Patch.Initial)
     override val activePatch: StateFlow<Patch>
@@ -47,7 +47,7 @@ private class NativeEditorService(
 
         val node = Node(
             id = newId,
-            uid = description.uid,
+            uid = description.uid
         )
 
         _activePatch.value = currentPatch
@@ -72,7 +72,7 @@ private class NativeEditorService(
             from = from.nodeId,
             fromOutput = from.socketName,
             to = to.nodeId,
-            toInput = to.socketName,
+            toInput = to.socketName
         )
     }
 
@@ -82,7 +82,7 @@ private class NativeEditorService(
             from = from.nodeId,
             fromOutput = from.socketName,
             to = to.nodeId,
-            toInput = to.socketName,
+            toInput = to.socketName
         )
     }
 
@@ -90,7 +90,7 @@ private class NativeEditorService(
 }
 
 private class NoOpEditorService(
-    patch: Patch = Patch.Initial,
+    patch: Patch = Patch.Initial
 ) : EditorService {
     override val activePatch: StateFlow<Patch> =
         MutableStateFlow(patch)

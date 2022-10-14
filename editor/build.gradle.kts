@@ -3,9 +3,9 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.6.10"
-    kotlin("plugin.serialization") version "1.6.10"
-    id("org.jetbrains.compose") version "1.1.1"
+    kotlin("jvm")
+    kotlin("plugin.serialization")
+    id("org.jetbrains.compose")
     id("idea")
 }
 
@@ -19,38 +19,49 @@ repositories {
     maven("https://jitpack.io")
 }
 
-@OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
 dependencies {
-    implementation(compose.desktop.currentOs)
-    implementation(compose.desktop.components.splitPane)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
-    implementation("com.github.Dansoftowner:jSystemThemeDetector:3.6")
-    implementation("io.github.microutils:kotlin-logging-jvm:2.1.20")
+    implementation(project(":cargo"))
 
-    runtimeOnly("org.slf4j:slf4j-simple:1.7.29")
+    implementation(compose.desktop.currentOs)
+    @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
+    implementation(compose.desktop.components.splitPane)
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
+    implementation("com.github.Dansoftowner:jSystemThemeDetector:3.8")
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.2")
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
+
+    runtimeOnly("org.slf4j:slf4j-simple:2.0.3")
 }
 
 idea {
     module {
         isDownloadJavadoc = true
         isDownloadSources = true
+        excludeDirs = setOf(file("resources"))
     }
 }
 
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+        vendor.set(JvmVendorSpec.ADOPTIUM)
+    }
+}
 
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "17"
     kotlinOptions.freeCompilerArgs = listOf(
-        "-opt-in=kotlin.RequiresOptIn",
+        "-opt-in=kotlin.RequiresOptIn"
     )
 }
 
 compose.desktop {
     application {
         mainClass = "ru.pema4.musicbx.MainKt"
+
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "editor"
+            packageName = "musicbx"
             packageVersion = "1.0.0"
 
             appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
@@ -58,44 +69,18 @@ compose.desktop {
     }
 }
 
-val buildBackendInRelease = true
-val buildBackend = task<Exec>("buildBackend") {
-    description = "cargo build --release"
-    group = "native backend"
-
-    workingDir = File("../cargo")
-    val args = listOfNotNull(
-        "cargo",
-        "build",
-        if (buildBackendInRelease) "--release" else null,
-    )
-    commandLine(args)
-}
-
 val syncBackend = task<Sync>("syncBackend") {
     group = "native backend"
-    dependsOn(buildBackend)
+    dependsOn(":cargo:build")
+
+    val buildBackendInRelease = rootProject
+        .extra["cargo.build_backend_in_release"]
+        .toString()
+        .toBoolean()
 
     val targetFolder = if (buildBackendInRelease) "release" else "debug"
     from("../cargo/target/$targetFolder/libeditor_backend.dylib")
     into(project.layout.projectDirectory.dir("resources/macos"))
-}
-
-val cleanBackend = task<Task>("cleanBackend") {
-    description = "cargo clean"
-    group = "native backend"
-
-    doFirst {
-        exec {
-            workingDir = File("../cargo")
-            commandLine(
-                "cargo",
-                "clean",
-            )
-        }
-
-        delete(project.layout.projectDirectory.dir("resources"))
-    }
 }
 
 val patchUiDesktopLib = task<Exec>("patchUiDesktopLib") {
@@ -104,7 +89,8 @@ val patchUiDesktopLib = task<Exec>("patchUiDesktopLib") {
     dependsOn(tasks.compileKotlin)
 
     val uiDesktopJarFile = configurations.runtimeClasspath.get().resolve()
-        .first { "ui-desktop-1.1.1.jar" in it.absolutePath }
+        .firstOrNull { "ui-desktop-1.1.1.jar" in it.absolutePath }
+        ?: return@task
     val classesRootDir = project.layout.buildDirectory.file("classes/kotlin/main").get().asFile
 
     commandLine(
@@ -119,7 +105,7 @@ val patchUiDesktopLib = task<Exec>("patchUiDesktopLib") {
 }
 
 tasks.clean {
-    dependsOn(cleanBackend)
+    delete("resources")
 }
 
 tasks.processResources {

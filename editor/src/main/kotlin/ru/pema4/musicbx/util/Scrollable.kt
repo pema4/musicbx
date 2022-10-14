@@ -36,7 +36,7 @@ fun Scrollable(
     modifier: Modifier = Modifier,
     hideHorizontalScrollbarAutomatically: Boolean = false,
     hideVerticalScrollbarAutomatically: Boolean = false,
-    content: @Composable BoxScope.() -> Unit,
+    content: @Composable BoxScope.() -> Unit
 ) {
     var scrollModifier: Modifier = Modifier
 
@@ -51,7 +51,7 @@ fun Scrollable(
                     .align(Alignment.BottomCenter)
                     .zIndex(1.0f)
                     .padding(all = 3.dp)
-                    .padding(end = 10.dp),
+                    .padding(end = 10.dp)
             ) {
                 HorizontalScrollbar(rememberScrollbarAdapter(horizontalScrollState))
             }
@@ -66,7 +66,7 @@ fun Scrollable(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .zIndex(1.0f)
-                    .padding(all = 3.dp),
+                    .padding(all = 3.dp)
             ) {
                 VerticalScrollbar(rememberScrollbarAdapter(verticalScrollState))
             }
@@ -76,7 +76,7 @@ fun Scrollable(
             modifier = Modifier
                 .fillMaxSize()
                 .then(scrollModifier),
-            content = content,
+            content = content
         )
     }
 }
@@ -86,7 +86,7 @@ private fun AnimatedScrollbarVisibility(
     enabled: Boolean,
     scrollState: ScrollState,
     modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     if (enabled) {
         val currentScrollState by rememberUpdatedState(scrollState)
@@ -97,13 +97,13 @@ private fun AnimatedScrollbarVisibility(
             visible = scrollChanged,
             modifier = modifier,
             enter = fadeIn(snap()),
-            exit = fadeOut(),
+            exit = fadeOut()
         ) {
             content()
         }
     } else {
         Box(
-            modifier = modifier,
+            modifier = modifier
         ) {
             content()
         }

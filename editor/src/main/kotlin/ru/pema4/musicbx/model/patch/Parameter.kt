@@ -12,13 +12,13 @@ data class NodeParameter(
     val name: String,
     val description: String,
     val kind: NodeParameterKind,
-    val default: String,
+    val default: String
 )
 
 @Serializable
 enum class NodeParameterKind(
     val min: Float,
-    val max: Float,
+    val max: Float
 ) {
     Number(min = 0.0f, max = 1.0f),
     HzSlow(min = log2(0.001f), max = log2(200.0f)),
