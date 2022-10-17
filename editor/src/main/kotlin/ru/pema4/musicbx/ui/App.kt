@@ -142,7 +142,7 @@ fun AppWindowContent(
 fun AppWindowLayout(
     sideBar: @Composable () -> Unit,
     editor: @Composable ColumnScope.() -> Unit,
-    firstPaneMinSize: Dp = 300.dp,
+    firstPaneMinSize: Dp = 200.dp,
     secondPanelMinSize: Dp = 100.dp,
     modifier: Modifier = Modifier
 ) {

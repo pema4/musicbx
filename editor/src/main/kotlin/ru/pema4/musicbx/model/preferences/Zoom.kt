@@ -15,9 +15,9 @@ value class Zoom(val step: Int) {
     companion object {
         private val zoomSteps: List<Float> = listOf(
             0.25f,
-            1f / 3f,
+            0.33f,
             0.50f,
-            2f / 3f,
+            0.67f,
             0.75f,
             0.8f,
             0.9f,

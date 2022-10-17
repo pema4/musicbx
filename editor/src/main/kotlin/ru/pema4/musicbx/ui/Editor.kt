@@ -5,6 +5,7 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -12,19 +13,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.center
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
@@ -37,7 +33,6 @@ import ru.pema4.musicbx.util.Scrollable
 import ru.pema4.musicbx.util.diagonallyDraggable
 import ru.pema4.musicbx.util.pointerMoveFilter
 import ru.pema4.musicbx.viewmodel.EditorViewModelImpl
-import kotlin.math.roundToInt
 
 interface EditorViewModel {
     val uiState: EditorState
@@ -70,6 +65,7 @@ fun EditorView(
     modifier: Modifier = Modifier
 ) {
     val uiState = viewModel.uiState
+    val userScale = AppContext.preferences.zoom.scale
 
     // Used for determining cursor location inside the scrollable area
     var parent: LayoutCoordinates? by remember { mutableStateOf(null) }
@@ -80,56 +76,51 @@ fun EditorView(
         verticalScrollState = uiState.verticalScroll,
         modifier = modifier
             .onGloballyPositioned { parent = it }
-            .onPointerEvent(PointerEventType.Press) {
-                if (it.buttons.isSecondaryPressed) {
-                    viewModel.resetDraftCable()
-                }
-            }
             .pointerMoveFilter(
                 onMove = { offset ->
                     val localOffset = child!!.localPositionOf(parent!!, offset)
-                    uiState.cursorOffset = DpOffset(x = localOffset.x.toDp(), y = localOffset.y.toDp())
+                    uiState.cursorOffset = DpOffset(
+                        x = localOffset.x.toDp() / userScale,
+                        y = localOffset.y.toDp() / userScale,
+                    )
                     false
                 }
             ),
         hideHorizontalScrollbarAutomatically = true
     ) {
-        val scale = AppContext.preferences.zoom.scale
-
-        ScaledLayout(scale = scale) {
-            Box(
-                modifier = Modifier
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                        transformOrigin = TransformOrigin(0.0f, 0.0f)
+        ScaledLayout(
+            scale = AppContext.preferences.zoom.scale,
+            modifier = Modifier
+                .onGloballyPositioned { child = it }
+                .onPointerEvent(PointerEventType.Press) {
+                    if (it.buttons.isSecondaryPressed) {
+                        viewModel.resetDraftCable()
                     }
-                    .onGloballyPositioned { child = it }
-            ) {
-                EditorContentView()
-            }
+                },
+        ) {
+            EditorContentView()
         }
     }
 }
 
 @Composable
 private fun ScaledLayout(
-    scale: Float = AppContext.preferences.zoom.scale,
+    scale: Float,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val measurePolicy = remember(scale) {
-        MeasurePolicy { measurables, constraints ->
-            val placeables = measurables.map { it.measure(constraints) }
-            val width = (placeables.maxOf { it.measuredWidth } * scale).roundToInt()
-            val height = (placeables.maxOf { it.measuredHeight } * scale).roundToInt()
-            layout(width = width, height = height) {
-                for (placeable in placeables) {
-                    placeable.place(IntOffset.Zero)
-                }
-            }
+    val currentDensity = LocalDensity.current
+
+    CompositionLocalProvider(
+        LocalDensity provides Density(
+            density = currentDensity.density * scale,
+            fontScale = currentDensity.fontScale
+        )
+    ) {
+        Box(modifier) {
+            content()
         }
     }
-    Layout(content = content, measurePolicy = measurePolicy)
 }
 
 @Composable
@@ -153,13 +144,11 @@ private fun EditorNodesView(
             Box(
                 modifier = Modifier
                     .zIndex(zIndex)
-                    .composed {
-                        diagonallyDraggable(
-                            key1 = nodeViewModel,
-                            offset = nodeViewModel.topStartOffset,
-                            onChange = { nodeViewModel.topStartOffset = it }
-                        )
-                    }
+                    .diagonallyDraggable(
+                        key1 = nodeViewModel,
+                        offset = nodeViewModel.topStartOffset,
+                        onChange = { nodeViewModel.topStartOffset = it }
+                    )
             ) {
                 val density = LocalDensity.current
                 NodeView(
