@@ -1,4 +1,3 @@
-import org.jetbrains.compose.compose
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -37,7 +36,7 @@ idea {
     module {
         isDownloadJavadoc = true
         isDownloadSources = true
-        excludeDirs = setOf(file("resources"))
+        excludeDirs.add(file("resources"))
     }
 }
 
